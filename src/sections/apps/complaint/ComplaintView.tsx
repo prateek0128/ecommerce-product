@@ -63,6 +63,8 @@ const PreviewModal = ({ open, onClose, imgSrc, imgAlt }: { open: boolean; onClos
 );
 
 export default function ComplaintView({ data }: any, { modalToggler }: Props) {
+  console.log('ComplaintData', data);
+  console.log('ComplaintDataId', data.id);
   const theme = useTheme();
   const matchDownMD = useMediaQuery(theme.breakpoints.down('md'));
   const [assignTechnicianModal, setAssignTechnicianModal] = useState<boolean>(false);

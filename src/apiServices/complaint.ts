@@ -57,3 +57,14 @@ export const deleteComplaint = async <T>(id: number, config?: AxiosRequestConfig
     throw error;
   }
 };
+// Add Assign Technician
+export const assignTechnician = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.post<T>('assignTechnician', data, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    console.log('Error', error);
+    throw error;
+  }
+};

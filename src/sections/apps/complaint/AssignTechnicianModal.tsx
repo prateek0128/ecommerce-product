@@ -22,9 +22,11 @@ import CircularWithPath from 'components/@extended/progress/CircularWithPath';
 import { CustomerList } from 'types/customer';
 import { TechnicianList } from 'types/technician';
 import { getAllTechnicians } from 'apiServices/technician';
+import { assignTechnician } from 'apiServices/complaint';
 interface Props {
   open: boolean;
   modalToggler: (state: boolean) => void;
+  complaintId: number;
 }
 
 // Sample data
@@ -41,26 +43,13 @@ const sampleData = [
   { name: 'Laura Jackson', contact: '888-999-0000', email: 'laura@example.com', role: 'Technician', availability: 'Available' }
 ];
 
-// Define columns
-const columns: ColumnDef<any>[] = [
-  { header: 'Technician Name', accessorKey: 'name' },
-  { header: 'Contact', accessorKey: 'contact' },
-  { header: 'Email', accessorKey: 'email' },
-  { header: 'Role', accessorKey: 'techRole' },
-  {
-    header: 'Availability',
-    accessorKey: 'availability',
-    cell: ({ row }) => (row.original.availability == 0 ? <Button variant="contained">Assign</Button> : 'Not Available')
-  }
-];
-
 // HeaderSort component for sorting indicators
 const HeaderSort = ({ column }: { column: any }) => {
   const sortDirection = column.getIsSorted();
   return <Box sx={{ ml: 1 }}>{sortDirection ? (sortDirection === 'desc' ? '▼' : '▲') : null}</Box>;
 };
 
-export default function AssignTechnicianModal({ open, modalToggler }: Props) {
+export default function AssignTechnicianModal({ open, modalToggler, complaintId }: Props) {
   const { customersLoading: loading } = useGetCustomer();
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
   const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
@@ -88,6 +77,31 @@ export default function AssignTechnicianModal({ open, modalToggler }: Props) {
 
     fetchTechnicians();
   }, []);
+  const assignTechnicianAPI = () => {
+    const assignTechnicianData = { customerId: complaintId, technicianId: 1, complaintId: 1 };
+    assignTechnician(assignTechnicianData)
+      .then((response) => console.log('assignTechnicianAPI', response))
+      .catch((error) => console.log(error));
+  };
+  // Define columns
+  const columns: ColumnDef<any>[] = [
+    { header: 'Technician Name', accessorKey: 'name' },
+    { header: 'Contact', accessorKey: 'contact' },
+    { header: 'Email', accessorKey: 'email' },
+    { header: 'Role', accessorKey: 'techRole' },
+    {
+      header: 'Availability',
+      accessorKey: 'availability',
+      cell: ({ row }) =>
+        row.original.availability == 0 ? (
+          <Button variant="contained" onClick={assignTechnicianAPI}>
+            Assign
+          </Button>
+        ) : (
+          'Not Available'
+        )
+    }
+  ];
   const closeModal = () => modalToggler(false);
   // Table setup
   const table = useReactTable({
