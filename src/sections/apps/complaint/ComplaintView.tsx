@@ -164,7 +164,9 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
             </Button>
           </Grid>
         </Grid>
-        {assignTechnicianModal && <AssignTechnicianModal open={assignTechnicianModal} modalToggler={handleModalToggler} />}
+        {assignTechnicianModal && (
+          <AssignTechnicianModal open={assignTechnicianModal} modalToggler={handleModalToggler} complaintId={data.id} />
+        )}
         {/* Image Preview Modal */}
         <PreviewModal open={previewOpen} onClose={closePreview} imgSrc={previewImage} imgAlt="Preview Image" />
       </MainCard>

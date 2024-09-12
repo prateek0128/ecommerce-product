@@ -23,7 +23,8 @@ import Breadcrumbs from 'components/@extended/Breadcrumbs';
 import { APP_DEFAULT_PATH } from 'config';
 import repairParts from './repairParts';
 import { width } from '@mui/system';
-
+import { assignCategory } from 'apiServices/category';
+import { getAllTechnicians } from 'apiServices/technician';
 // Define categories and subcategories explicitly
 type Category =
   | 'Electronics'
@@ -772,19 +773,38 @@ const categories = [
 
 export default function AssignCategory() {
   const history = useNavigate();
+  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Assign Category' }];
   const [roles, setRoles] = useState<string[]>([]);
   const [technicianName, setTechnicianName] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | false>(false);
-
-  const handleCancel = () => {
-    history(`/apps/e-commerce/product-list`);
-  };
-  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Assign Category' }];
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | ''>('');
   const [selectedRepairParts, setSelectedRepairParts] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [tabs, setTabs] = useState<{ category: string; subcategory: string; parts: string[] }[]>([]);
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
+
+  const handleCancel = () => {
+    history(`/apps/e-commerce/product-list`);
+  };
+
+  const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
+    return technician.First_Name + ' ' + technician.Last_Name;
+  });
+  console.log('allTechniciansList', allTechnicians);
+  useEffect(() => {
+    const fetchTechnicians = async () => {
+      try {
+        const response = await getAllTechnicians();
+        console.log('getAllTechniciansAPI', response.data);
+        setAllTechniciansData(response.data || []);
+      } catch (error) {
+        console.error('Error fetching technicians:', error);
+      }
+    };
+
+    fetchTechnicians();
+  }, []);
   const handleCategoryChange = (event: SelectChangeEvent) => {
     const newCategory = event.target.value;
 
@@ -835,6 +855,20 @@ export default function AssignCategory() {
   };
   const categoryNames = categories.map((category) => category.name);
   console.log('categoryNames', categoryNames);
+
+  const assignCategoryAPI = () => {
+    const assignCategoryData = {
+      technicianName: technicianName,
+      technicianRole: roles,
+      category: selectedCategory,
+      subCategory: selectedSubcategory,
+      repairParts: selectedRepairParts
+    };
+    assignCategory(assignCategoryData)
+      .then((response) => console.log('assignCategoryAPI', response))
+      .catch((error) => console.log(error));
+  };
+
   return (
     <>
       <Breadcrumbs custom heading="Assign Category" links={breadcrumbLinks} />
@@ -850,7 +884,7 @@ export default function AssignCategory() {
                   <Autocomplete
                     fullWidth
                     id="techinicians"
-                    options={technicians}
+                    options={allTechnicians}
                     value={technicianName}
                     onChange={(event: React.SyntheticEvent, newValue: string | null) => {
                       setTechnicianName(newValue); // This should work now
@@ -909,7 +943,7 @@ export default function AssignCategory() {
                     <Button variant="outlined" color="secondary" onClick={handleCancel}>
                       Cancel
                     </Button>
-                    <Button variant="contained" sx={{ textTransform: 'none' }}>
+                    <Button variant="contained" sx={{ textTransform: 'none' }} onClick={assignCategoryAPI}>
                       Assign Item
                     </Button>
                   </Stack>
