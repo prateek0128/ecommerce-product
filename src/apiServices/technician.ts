@@ -57,3 +57,13 @@ export const deleteTechnician = async <T>(id: number, config?: AxiosRequestConfi
     throw error;
   }
 };
+//Get Technician Details
+export const getTechnicianDetails = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get<T>(`technician/technicianDetails?id=${id}`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};

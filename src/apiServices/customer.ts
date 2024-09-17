@@ -58,3 +58,14 @@ export const deleteCustomer = async <T>(id: number, config?: AxiosRequestConfig)
     throw error;
   }
 };
+
+//Get Customer Details
+export const getCustomerDetails = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get<T>(`customer/customerDetails?id=${id}`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};

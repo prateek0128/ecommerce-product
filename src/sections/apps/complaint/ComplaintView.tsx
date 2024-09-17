@@ -1,4 +1,4 @@
-import { useMemo, useState, Fragment, MouseEvent } from 'react';
+import { useMemo, useState, Fragment, MouseEvent, useEffect } from 'react';
 // material-ui
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -32,6 +32,7 @@ import CustomerModal from '../customer/CustomerModal';
 import AssignTechnicianModal from './AssignTechnicianModal';
 import { Dialog, DialogTitle, IconButton, Modal } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { getComplaintDetails } from 'apiServices/complaint';
 
 // ==============================|| CUSTOMER - VIEW ||============================== //
 
@@ -39,6 +40,15 @@ interface Props {
   modalToggler: () => void;
 }
 
+interface ComplaintDetails {
+  Complaint_Id: number;
+  Customer_Name: string;
+  Item: string;
+  Description: string;
+  Status: string;
+  Warranty: string;
+  // Add other properties that exist in the response data
+}
 // Preview Modal Component
 const PreviewModal = ({ open, onClose, imgSrc, imgAlt }: { open: boolean; onClose: () => void; imgSrc: string; imgAlt: string }) => (
   <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -70,6 +80,14 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
   const [assignTechnicianModal, setAssignTechnicianModal] = useState<boolean>(false);
   const [previewOpen, setPreviewOpen] = useState<boolean>(false); // state for preview modal
   const [previewImage, setPreviewImage] = useState<string>(''); // state for image URL
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerEmail, setCustomerEmail] = useState<string>('');
+  const [customerConatct, setCustomerContact] = useState<string>('');
+  const [customerAddress, setCustomerAddress] = useState<string>('');
+  const [complaintDescription, setComplaintDescription] = useState<string>('');
+  const [item, setItem] = useState<string>('');
+  const [status, setStatus] = useState<string>('');
+  const [warranty, setWarranty] = useState<string>('');
   const handleModalToggler = () => {
     setAssignTechnicianModal((prev) => !prev);
   };
@@ -82,6 +100,25 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
   const closePreview = () => {
     setPreviewOpen(false);
   };
+  useEffect(() => {
+    const fetchComplaintDetails = async () => {
+      try {
+        const response = await getComplaintDetails(data.id);
+        console.log('fetchComplaintDetails', response.data);
+        const complaintDetails = response.data as ComplaintDetails[]; // Cast to expected type
+        console.log('fetchComplaintDetails2', complaintDetails[0]);
+        setCustomerName(complaintDetails[0].Customer_Name || '');
+        setComplaintDescription(complaintDetails[0].Description || '');
+        setItem(complaintDetails[0].Item || '');
+        setStatus(complaintDetails[0].Status || '');
+        setWarranty(complaintDetails[0].Warranty || '');
+      } catch (error) {
+        console.error('Error fetching technicians:', error);
+      }
+    };
+
+    fetchComplaintDetails();
+  }, []);
   return (
     <Transitions type="slide" direction="down" in={true}>
       <MainCard sx={{ ml: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
@@ -95,7 +132,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
                       <Stack spacing={1}>
                         <Typography color="secondary">Full Name</Typography>
                         {/* <Typography>{data.firstName}</Typography> */}
-                        <Typography>Aaron Carter</Typography>
+                        <Typography>{customerName}</Typography>
                       </Stack>
                     </Grid>
                     <Grid item xs={4} md={4}>
@@ -127,7 +164,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
                 <ListItem>
                   <Stack spacing={1}>
                     <Typography color="secondary">Description</Typography>
-                    <Typography>{data.address}</Typography>
+                    <Typography>{complaintDescription}</Typography>
                     <Typography>
                       {`I recently purchased a laptop from your store, and within two weeks, 
                         it began to malfunction. The screen often freezes, the battery drains quickly, and the device
@@ -165,7 +202,12 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
           </Grid>
         </Grid>
         {assignTechnicianModal && (
-          <AssignTechnicianModal open={assignTechnicianModal} modalToggler={handleModalToggler} complaintId={data.id} />
+          <AssignTechnicianModal
+            open={assignTechnicianModal}
+            modalToggler={handleModalToggler}
+            complaintId={data.id}
+            customerId={data.customerId}
+          />
         )}
         {/* Image Preview Modal */}
         <PreviewModal open={previewOpen} onClose={closePreview} imgSrc={previewImage} imgAlt="Preview Image" />

@@ -57,3 +57,14 @@ export const deleteProduct = async <T>(id: number, config?: AxiosRequestConfig):
     throw error;
   }
 };
+
+//Get Product Details
+export const getProductDetails = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get<T>(`product/productDetails?id=${id}`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};

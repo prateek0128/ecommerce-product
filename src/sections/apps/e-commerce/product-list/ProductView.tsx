@@ -9,12 +9,28 @@ import Box from '@mui/material/Box';
 
 // project-imports
 import { ImagePath, getImageUrl } from 'utils/getImageUrl';
+import { useEffect } from 'react';
+import { getProductDetails } from 'apiServices/products';
+import capitalize from '@mui/utils/capitalize';
 
 // ==============================|| PRODUCT - VIEW ||============================== //
 
 export default function ProductView({ data }: any) {
   const theme = useTheme();
+  console.log('ProductViewData', data);
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      try {
+        const response = await getProductDetails(data.id);
+        console.log('fetchProductDetails', response.data);
+        //setAllTechniciansData(response.data || []);
+      } catch (error) {
+        console.error('Error fetching technicians:', error);
+      }
+    };
 
+    fetchProductDetails();
+  }, []);
   return (
     <Grid container spacing={2.5} sx={{ pl: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
       <Grid item xs={6} sm={5} md={4} lg={3}>
@@ -35,7 +51,7 @@ export default function ProductView({ data }: any) {
       <Grid item xs={12} sm={7} md={8} lg={9}>
         <Stack spacing={1} sx={{ px: 2 }}>
           <Typography variant="h5">{data?.name}</Typography>
-          <Typography color="text.secondary">{data?.about}</Typography>
+          <Typography color="text.secondary">{data?.description}</Typography>
           <Rating name="read-only" value={data.rating} readOnly />
           <Box sx={{ width: '80%', pt: 2 }}>
             <Grid container spacing={1}>
@@ -43,13 +59,10 @@ export default function ProductView({ data }: any) {
                 <Typography color="text.secondary">Categories</Typography>
               </Grid>
               <Grid item xs={8} md={9}>
-                <Stack direction="row" spacing={0.5}>
-                  {data?.categories?.map((item: any, index: number) => (
-                    <Typography key={index} variant="h6" sx={{ textTransform: 'capitalize' }}>
-                      {item}
-                      {data?.categories.length > index + 1 ? ',' : ''}
-                    </Typography>
-                  ))}
+                <Stack direction="row" spacing={0.25}>
+                  <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
+                    {capitalize(data.category)} {'-'} {data.item}
+                  </Typography>
                 </Stack>
               </Grid>
               <Grid item xs={4} md={3}>
@@ -62,7 +75,7 @@ export default function ProductView({ data }: any) {
                 <Typography color="text.secondary">Price</Typography>
               </Grid>
               <Grid item xs={8} md={9}>
-                <Typography variant="h5">{data?.salePrice ? `$${data?.salePrice}` : `$${data?.offerPrice}`}</Typography>
+                <Typography variant="h5">{data?.price}</Typography>
               </Grid>
             </Grid>
           </Box>

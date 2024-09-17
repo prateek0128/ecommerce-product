@@ -247,7 +247,8 @@ export default function ComplaintListPage() {
       item: complaint.Item,
       status: complaint.Status,
       itemImage: complaint.Item_Image,
-      billImage: complaint.Bill_Image
+      billImage: complaint.Bill_Image,
+      customerId: complaint.customer_id
     };
   });
   const handleClose = () => {

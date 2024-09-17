@@ -59,8 +59,8 @@ export default function AuthLogin({ forgot }: { forgot?: string }) {
         //   submit: null
         // }}
         initialValues={{
-          email: 'exy@gmail.com',
-          password: 'asdfghjkl',
+          email: 'miisco@gmail.com',
+          password: 'miisco@123',
           submit: null
         }}
         validationSchema={Yup.object().shape({

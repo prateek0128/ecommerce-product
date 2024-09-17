@@ -23,10 +23,13 @@ import { CustomerList } from 'types/customer';
 import { TechnicianList } from 'types/technician';
 import { getAllTechnicians } from 'apiServices/technician';
 import { assignTechnician } from 'apiServices/complaint';
+import { SnackbarProps } from 'types/snackbar';
+import { openSnackbar } from 'api/snackbar';
 interface Props {
   open: boolean;
   modalToggler: (state: boolean) => void;
   complaintId: number;
+  customerId: number;
 }
 
 // Sample data
@@ -49,7 +52,7 @@ const HeaderSort = ({ column }: { column: any }) => {
   return <Box sx={{ ml: 1 }}>{sortDirection ? (sortDirection === 'desc' ? '▼' : '▲') : null}</Box>;
 };
 
-export default function AssignTechnicianModal({ open, modalToggler, complaintId }: Props) {
+export default function AssignTechnicianModal({ open, modalToggler, complaintId, customerId }: Props) {
   const { customersLoading: loading } = useGetCustomer();
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
   const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
@@ -77,10 +80,21 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId 
 
     fetchTechnicians();
   }, []);
-  const assignTechnicianAPI = () => {
-    const assignTechnicianData = { customerId: complaintId, technicianId: 1, complaintId: 1 };
+  const assignTechnicianAPI = (row: any) => {
+    // console.log('Techrow', row.original.id);
+    const assignTechnicianData = { customerId: 1, technicianId: row.original.id, complaintId: complaintId };
     assignTechnician(assignTechnicianData)
-      .then((response) => console.log('assignTechnicianAPI', response))
+      .then((response) => {
+        console.log('assignTechnicianAPI', response);
+        openSnackbar({
+          open: true,
+          message: 'Technician assigned successfully.',
+          variant: 'alert',
+          alert: {
+            color: 'success'
+          }
+        } as SnackbarProps);
+      })
       .catch((error) => console.log(error));
   };
   // Define columns
@@ -94,7 +108,12 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId 
       accessorKey: 'availability',
       cell: ({ row }) =>
         row.original.availability == 0 ? (
-          <Button variant="contained" onClick={assignTechnicianAPI}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              assignTechnicianAPI(row);
+            }}
+          >
             Assign
           </Button>
         ) : (
