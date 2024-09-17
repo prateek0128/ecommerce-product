@@ -25,7 +25,6 @@ import useScriptRef from 'hooks/useScriptRef';
 import IconButton from 'components/@extended/IconButton';
 import AnimateButton from 'components/@extended/AnimateButton';
 import { fetcher } from 'utils/axios';
-
 import { loginUser } from 'apiServices/authentication';
 
 // assets

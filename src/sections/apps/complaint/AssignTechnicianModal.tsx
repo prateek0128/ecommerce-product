@@ -107,7 +107,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
       header: 'Availability',
       accessorKey: 'availability',
       cell: ({ row }) =>
-        row.original.availability == 0 ? (
+        row.original.availability == 1 ? (
           <Button
             variant="contained"
             onClick={() => {

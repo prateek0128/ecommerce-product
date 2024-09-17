@@ -24,14 +24,14 @@ interface Props {
 // ==============================|| CUSTOMER ADD / EDIT ||============================== //
 
 export default function TechnicianModal({ open, modalToggler, technician }: Props) {
-  const { customersLoading: loading } = useGetCustomer();
+  //const { customersLoading: loading } = useGetCustomer();
 
   const closeModal = () => modalToggler(false);
 
   const customerForm = useMemo(
-    () => !loading && <FormTechicianAdd technician={technician || null} closeModal={closeModal} />,
+    () => <FormTechicianAdd technician={technician || null} closeModal={closeModal} />,
     // eslint-disable-next-line
-    [technician, loading]
+    [technician]
   );
 
   return (
@@ -50,15 +50,7 @@ export default function TechnicianModal({ open, modalToggler, technician }: Prop
             content={false}
           >
             <SimpleBar sx={{ maxHeight: `calc(100vh - 48px)`, '& .simplebar-content': { display: 'flex', flexDirection: 'column' } }}>
-              {loading ? (
-                <Box sx={{ p: 5 }}>
-                  <Stack direction="row" justifyContent="center">
-                    <CircularWithPath />
-                  </Stack>
-                </Box>
-              ) : (
-                customerForm
-              )}
+              {customerForm}
             </SimpleBar>
           </MainCard>
         </Modal>

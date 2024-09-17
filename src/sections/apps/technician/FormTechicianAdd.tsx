@@ -56,69 +56,12 @@ import { TechnicianList } from 'types/technician';
 
 //api imoorts
 import { addTechnician, updateTechnician } from 'apiServices/technician';
-
+import { roles } from './technicianRoles';
 interface StatusProps {
   value: number;
   label: string;
 }
-const roles = [
-  'Mechanical Engineering Technician',
-  'Electrical Engineering Technician',
-  'Electronics Technician',
-  'HVAC Technician (Heating, Ventilation, and Air Conditioning)',
-  'Automotive Technician',
-  'Aerospace Technician',
-  'Civil Engineering Technician',
-  'Industrial Engineering Technician',
-  'Quality Control Technician',
-  'Robotics Technician',
-  'Maintenance Technician',
-  'Instrumentation Technician',
-  'CNC Technician (Computer Numerical Control)',
-  'Telecommunications Technician',
-  'Cable Technician',
-  'Fiber Optic Technician',
-  'RF Technician (Radio Frequency Technician)',
-  'Satellite Technician',
-  'Automotive Service Technician',
-  'Diesel Technician',
-  'Aviation Technician',
-  'Marine Technician',
-  'Motorcycle Technician',
-  'Electrical Technician',
-  'Wind Turbine Technician',
-  'Solar Technician',
-  'Power Plant Technician',
-  'Gas Technician',
-  'Water Treatment Technician',
-  'Construction Technician',
-  'Elevator Technician',
-  'Building Maintenance Technician',
-  'Plumbing Technician',
-  'Carpentry Technician',
-  'Audio/Visual Technician',
-  'Broadcast Technician',
-  'Sound Technician',
-  'Lighting Technician',
-  'Stage Technician',
-  'Agricultural Technician',
-  'Forestry Technician',
-  'Environmental Field Technician',
-  'Horticulture Technician',
-  'Veterinary Technician',
-  'Pest Control Technician',
-  'Crime Scene Technician',
-  'Nail Technician',
-  'Esthetician Technician',
-  'IT Support Technician',
-  'Network Technician',
-  'Help Desk Technician',
-  'System Technician',
-  'Hardware Technician',
-  'Field Service Technician',
-  'Data Center Technician',
-  'Cybersecurity Technician'
-];
+
 // CONSTANT
 const getInitialValues = (technician: TechnicianList | null) => {
   const newCustomer = {
@@ -149,22 +92,24 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
 
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [avatar, setAvatar] = useState<string | undefined>(
     getImageUrl(
       `avatar-${technician && technician !== null && technician?.profilePicture ? technician.profilePicture : 1}.png`,
       ImagePath.USERS
     )
   );
-
   useEffect(() => {
     if (selectedImage) {
+      console.log('imageProduct2', selectedImage);
       setAvatar(URL.createObjectURL(selectedImage));
+      setSelectedFile(selectedImage);
     }
   }, [selectedImage]);
 
-  useEffect(() => {
-    setLoading(false);
-  }, []);
+  // useEffect(() => {
+  //   setLoading(false);
+  // }, []);
   console.log('newcustomer2', technician);
   const CustomerSchema = Yup.object().shape({
     firstName: Yup.string().max(255).required('First Name is required'),
@@ -226,8 +171,8 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
       }
     }
   });
-  const addTechnicianAPI = async (event: { preventDefault: () => void }) => {
-    event?.preventDefault();
+  const addTechnicianAPI = async () => {
+    //event?.preventDefault();
     const { values } = formik;
     const newTechnicianData = {
       firstName: values.firstName,
@@ -239,35 +184,47 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
       contact: values.contact,
       location: values.location
     };
-    if (!avatar) {
-      alert('Please select image.');
+    if (!selectedFile) {
+      console.log('Please select image.');
       return;
     } else {
-      console.log('addCustomerImage', avatar);
+      console.log('addCustomerImage', selectedFile);
     }
 
     // Create a FormData object
     const formData = new FormData();
-    formData.append('file', avatar);
+    formData.append('file', selectedFile);
     formData.append('data', JSON.stringify(newTechnicianData));
     try {
       const response = await addTechnician(formData);
-      console.log('addTechnicianAPI', response);
-      openSnackbar({
-        open: true,
-        message: 'Technician added successfully.',
-        variant: 'alert',
-        alert: {
-          color: 'success'
-        }
-      } as SnackbarProps);
-      closeModal();
+      console.log('addTechnicianAPI', response.data);
+      if (response.status == 200 || response.status == 201) {
+        openSnackbar({
+          open: true,
+          message: 'Technician added successfully.',
+          variant: 'alert',
+          alert: {
+            color: 'success'
+          }
+        } as SnackbarProps);
+        closeModal();
+      } else {
+        console.log('addTechnicianAPI', response.data);
+        openSnackbar({
+          open: true,
+          message: response.data,
+          variant: 'alert',
+          alert: {
+            color: 'success'
+          }
+        } as SnackbarProps);
+      }
     } catch (error) {
+      console.log('addTechnicianAPI', error);
       console.error('Error fetching technicians:', error);
     }
   };
-  const updateTechnicianAPI = async (event: { preventDefault: () => void }, technician: TechnicianList) => {
-    event?.preventDefault();
+  const updateTechnicianAPI = async () => {
     const { values } = formik;
     const newTechnicianData = {
       id: values.id,
@@ -280,16 +237,16 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
       contact: values.contact,
       location: values.location
     };
-    if (!avatar) {
-      alert('Please select image.');
+    if (!selectedFile) {
+      console.log('Please select image.');
       return;
     } else {
-      console.log('addCustomerImage', avatar);
+      console.log('addCustomerImage', selectedFile);
     }
 
     // Create a FormData object
     const formData = new FormData();
-    formData.append('file', avatar);
+    formData.append('file', selectedFile);
     formData.append('data', JSON.stringify(newTechnicianData));
     try {
       const response = await updateTechnician(newTechnicianData);
@@ -311,14 +268,14 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
   const newTechnician = values.firstName + ' ' + values.lastName;
   console.log('roleValue', values.techRole);
 
-  if (loading)
-    return (
-      <Box sx={{ p: 5 }}>
-        <Stack direction="row" justifyContent="center">
-          <CircularWithPath />
-        </Stack>
-      </Box>
-    );
+  // if (loading)
+  //   return (
+  //     <Box sx={{ p: 5 }}>
+  //       <Stack direction="row" justifyContent="center">
+  //         <CircularWithPath />
+  //       </Stack>
+  //     </Box>
+  //   );
 
   return (
     <>
@@ -327,9 +284,10 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
           <Form
             autoComplete="off"
             noValidate
-            onSubmit={(e) => {
-              technician ? updateTechnicianAPI(e, technician) : addTechnicianAPI;
-            }}
+            // onSubmit={(e) => {
+            //   e.preventDefault();
+            //   technician ? updateTechnicianAPI(e, technician) : addTechnicianAPI(e);
+            // }}
           >
             <DialogTitle>{technician ? 'Edit Technicain' : 'New Technician'}</DialogTitle>
             <Divider />
@@ -540,7 +498,14 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
                     <Button color="error" onClick={closeModal}>
                       Cancel
                     </Button>
-                    <Button type="submit" variant="contained" disabled={isSubmitting}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={isSubmitting}
+                      onClick={(e) => {
+                        technician ? updateTechnicianAPI() : addTechnicianAPI();
+                      }}
+                    >
                       {technician ? 'Edit' : 'Add'}
                     </Button>
                   </Stack>

@@ -12,14 +12,21 @@ const apiClient: AxiosInstance = axios.create({
     // Add other headers here if needed
   }
 });
-
+const formApiClient: AxiosInstance = axios.create({
+  baseURL: apiUrl, // Replace with your API base URL
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `Bearer ${accessToken}`
+    // Add other headers here if needed
+  }
+});
 // Define common request and response types
 export type ApiResponse<T> = AxiosResponse<T>;
 
 // Add New Teechnicain
 export const addTechnician = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
-    const response = await apiClient.post<T>('technician/newTechnician', data, config);
+    const response = await formApiClient.post<T>('technician/newTechnician', data, config);
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)

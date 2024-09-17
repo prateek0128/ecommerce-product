@@ -149,19 +149,22 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
   console.log('customerUpdate1', customer);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [avatar, setAvatar] = useState<string | undefined>(
     getImageUrl(`avatar-${customer && customer !== null && customer?.profilePicture ? customer.profilePicture : 1}.png`, ImagePath.USERS)
   );
 
   useEffect(() => {
     if (selectedImage) {
+      console.log('imageProduct2', selectedImage);
       setAvatar(URL.createObjectURL(selectedImage));
+      setSelectedFile(selectedImage);
     }
   }, [selectedImage]);
 
-  useEffect(() => {
-    setLoading(false);
-  }, []);
+  // useEffect(() => {
+  //   setLoading(false);
+  // }, []);
 
   const CustomerSchema = Yup.object().shape({
     firstName: Yup.string().max(255).required('First Name is required'),
@@ -243,8 +246,7 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
     }
   });
 
-  const addCustomerAPI = async (event: { preventDefault: () => void }) => {
-    event.preventDefault();
+  const addCustomerAPI = async () => {
     const { values } = formik;
     const newCustomerData = {
       firstName: values.firstName,
@@ -255,16 +257,16 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
       contact: values.contact,
       location: values.location
     };
-    if (!avatar) {
-      alert('Please select image.');
+    if (!selectedFile) {
+      console.log('Please select image.');
       return;
     } else {
-      console.log('addCustomerImage', avatar);
+      console.log('addCustomerImage', selectedFile);
     }
 
     // Create a FormData object
     const formData = new FormData();
-    formData.append('file', avatar);
+    formData.append('file', selectedFile);
     formData.append('data', JSON.stringify(newCustomerData));
     try {
       const response = await addCustomer(formData);
@@ -282,8 +284,7 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
       console.error('Error fetching technicians:', error);
     }
   };
-  const updateCustomerAPI = async (event: { preventDefault: () => void }) => {
-    event.preventDefault();
+  const updateCustomerAPI = async () => {
     const { values } = formik;
     const updateCustomerData = {
       id: values.id,
@@ -295,11 +296,11 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
       contact: values.contact,
       location: values.location
     };
-    if (!avatar) {
-      alert('Please select image.');
+    if (!selectedFile) {
+      console.log('Please select image.');
       return;
     } else {
-      console.log('addCustomerImage', avatar);
+      console.log('addCustomerImage', selectedFile);
     }
 
     // Create a FormData object
@@ -325,20 +326,27 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
   const { values, errors, touched, handleSubmit, isSubmitting, getFieldProps, setFieldValue } = formik;
   const newTechnician = values.firstName + ' ' + values.lastName;
   console.log('roleValue', values.techRole);
-  if (loading)
-    return (
-      <Box sx={{ p: 5 }}>
-        <Stack direction="row" justifyContent="center">
-          <CircularWithPath />
-        </Stack>
-      </Box>
-    );
+  // if (loading)
+  //   return (
+  //     <Box sx={{ p: 5 }}>
+  //       <Stack direction="row" justifyContent="center">
+  //         <CircularWithPath />
+  //       </Stack>
+  //     </Box>
+  //   );
 
   return (
     <>
       <FormikProvider value={formik}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Form autoComplete="off" noValidate onSubmit={customer ? updateCustomerAPI : addCustomerAPI}>
+          <Form
+            autoComplete="off"
+            noValidate
+            // onSubmit={(e) => {
+            //   e.preventDefault();
+            //   customer ? updateCustomerAPI() : addCustomerAPI();
+            // }}
+          >
             <DialogTitle>{customer ? 'Edit Customer' : 'New Customer'}</DialogTitle>
             <Divider />
             <DialogContent sx={{ p: 2.5 }}>
@@ -641,7 +649,14 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
                     <Button color="error" onClick={closeModal}>
                       Cancel
                     </Button>
-                    <Button type="submit" variant="contained" disabled={isSubmitting}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={isSubmitting}
+                      onClick={(e) => {
+                        customer ? updateCustomerAPI() : addCustomerAPI();
+                      }}
+                    >
                       {customer ? 'Edit' : 'Add'}
                     </Button>
                   </Stack>

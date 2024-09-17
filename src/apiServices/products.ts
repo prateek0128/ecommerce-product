@@ -13,13 +13,22 @@ const apiClient: AxiosInstance = axios.create({
   }
 });
 
+const formApiClient: AxiosInstance = axios.create({
+  baseURL: apiUrl, // Replace with your API base URL
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `Bearer ${accessToken}`
+    // Add other headers here if needed
+  }
+});
+
 // Define common request and response types
 export type ApiResponse<T> = AxiosResponse<T>;
 
 // Add New Product
 export const addProduct = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
-    const response = await apiClient.post<T>('product/addProduct', data, config);
+    const response = await formApiClient.post<T>('product/addProduct', data, config);
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)

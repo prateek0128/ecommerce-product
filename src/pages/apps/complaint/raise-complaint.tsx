@@ -423,10 +423,10 @@ export default function AddNewProduct() {
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
   const [selectedSubcategory, setSelectedSubcategory] = useState('Select Item');
   const [itemImageUrl, setItemImageUrl] = useState<string | undefined>(undefined);
-  const [itemImageByteArray, setItemImageByteArray] = useState<Uint8Array | null>(null);
+  const [itemFile, setItemFile] = useState<File | undefined>(undefined);
   const fileInputRefItem = useRef<HTMLInputElement | null>(null);
   const [billImageUrl, setBillImageUrl] = useState<string | undefined>(undefined);
-  const [billImageByteArray, setBillImageByteArray] = useState<Uint8Array | null>(null);
+  const [billFile, setBillFile] = useState<File | undefined>(undefined);
   const fileInputRefBill = useRef<HTMLInputElement | null>(null);
 
   const handleCancel = () => {
@@ -444,16 +444,6 @@ export default function AddNewProduct() {
   const handleWarranty = (event: ChangeEvent<HTMLInputElement>) => {
     setWarranty(event.target.value);
   };
-  // Helper function to convert Uint8Array to Base64
-  const convertByteArrayToBase64 = (byteArray: Uint8Array | null) => {
-    if (!byteArray) return null;
-    let binary = '';
-    const len = byteArray.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(byteArray[i]);
-    }
-    return window.btoa(binary);
-  };
   const handleButtonClickItem = () => {
     // Trigger the file input when the button is clicked
     fileInputRefItem.current?.click();
@@ -463,6 +453,7 @@ export default function AddNewProduct() {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setItemImageUrl(imageUrl);
+      setItemFile(file);
     }
   };
   const handleButtonClickBill = () => {
@@ -474,6 +465,7 @@ export default function AddNewProduct() {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setBillImageUrl(imageUrl);
+      setBillFile(file);
     }
   };
   const raiseComplaintAPI = async (event: { preventDefault: () => void }) => {
@@ -484,15 +476,15 @@ export default function AddNewProduct() {
       item: selectedSubcategory,
       warranty: warranty
     };
-    if (!itemImageUrl || !billImageUrl) {
+    if (!itemFile || !billFile) {
       alert('Please select both images.');
       return;
     }
 
     // Create a FormData object
     const formData = new FormData();
-    formData.append('file1', itemImageUrl);
-    formData.append('file2', billImageUrl);
+    formData.append('file1', itemFile);
+    formData.append('file2', billFile);
     formData.append('data', JSON.stringify(raiseComplaintData));
     try {
       const response = await raiseComplaint(formData);

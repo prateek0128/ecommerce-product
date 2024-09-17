@@ -165,11 +165,6 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
                   <Stack spacing={1}>
                     <Typography color="secondary">Description</Typography>
                     <Typography>{complaintDescription}</Typography>
-                    <Typography>
-                      {`I recently purchased a laptop from your store, and within two weeks, 
-                        it began to malfunction. The screen often freezes, the battery drains quickly, and the device
-                         overheats even with minimal use. I am requesting a replacement or a full refund due to these defects.`}
-                    </Typography>
                   </Stack>
                 </ListItem>
               </List>

@@ -11,7 +11,14 @@ const apiClient: AxiosInstance = axios.create({
     Authorization: `Bearer ${accessToken}`
   }
 });
-
+const formApiClient: AxiosInstance = axios.create({
+  baseURL: apiUrl, // Replace with your API base URL
+  headers: {
+    'Content-Type': 'multipart/form-data',
+    Authorization: `Bearer ${accessToken}`
+    // Add other headers here if needed
+  }
+});
 export type ApiResponse<T> = AxiosResponse<T>;
 
 //Assign Category
