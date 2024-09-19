@@ -24,7 +24,8 @@ import { openSnackbar } from 'api/snackbar';
 import { SnackbarProps } from 'types/snackbar';
 import { Description } from '@mui/icons-material';
 import { categories } from './productCategories';
-
+import { APP_DEFAULT_PATH } from 'config';
+import Breadcrumbs from 'components/@extended/Breadcrumbs';
 // constant
 const prices = [
   {
@@ -68,7 +69,9 @@ const statuss = [
     label: 'Out of Stock'
   }
 ];
-
+interface ErrorData {
+  response: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AddNewProduct() {
@@ -142,7 +145,7 @@ export default function AddNewProduct() {
       productImage: productImage
     };
     if (!productFile) {
-      alert('Please select image.');
+      console.log('Please select image.');
       return;
     } else {
       console.log('imageUrlProduct2', productFile);
@@ -169,11 +172,22 @@ export default function AddNewProduct() {
       } as SnackbarProps);
       // closeModal();
     } catch (error) {
-      console.error('Error fetching technicians:', error);
+      console.error('Error fetching products:', error);
+      const errorData = error as ErrorData;
+      openSnackbar({
+        open: true,
+        message: errorData.response.data.message,
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      } as SnackbarProps);
     }
   };
+  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Add Product' }];
   return (
     <>
+      <Breadcrumbs custom heading="Add Product" links={breadcrumbLinks} />
       <MainCard>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>

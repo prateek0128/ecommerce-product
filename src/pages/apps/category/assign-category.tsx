@@ -312,6 +312,9 @@ type RepairParts = {
     [key in Subcategory]?: string[]; // Optional subcategories
   };
 };
+interface ErrorData {
+  response: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AssignCategory() {
@@ -418,14 +421,25 @@ export default function AssignCategory() {
         console.log('assignCategoryAPI', response);
         openSnackbar({
           open: true,
-          message: 'Technician assigned successfully.',
+          message: 'Item assigned successfully.',
           variant: 'alert',
           alert: {
             color: 'success'
           }
         } as SnackbarProps);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.error('Error assigning items:', error);
+        const errorData = error as ErrorData;
+        openSnackbar({
+          open: true,
+          message: errorData.response.data.message,
+          variant: 'alert',
+          alert: {
+            color: 'error'
+          }
+        } as SnackbarProps);
+      });
   };
 
   return (

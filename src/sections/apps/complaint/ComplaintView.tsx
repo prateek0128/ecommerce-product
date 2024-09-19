@@ -41,6 +41,7 @@ interface Props {
 }
 
 interface ComplaintDetails {
+  Customer_Details: any;
   Complaint_Id: number;
   Customer_Name: string;
   Item: string;
@@ -48,6 +49,16 @@ interface ComplaintDetails {
   Status: string;
   Warranty: string;
   // Add other properties that exist in the response data
+}
+interface CustomerDetails {
+  Contact: number;
+  Email: string;
+  First_Name: string;
+  Gender: string;
+  Last_Name: string;
+  Location: string;
+  Profile_Picture: any;
+  age: any;
 }
 // Preview Modal Component
 const PreviewModal = ({ open, onClose, imgSrc, imgAlt }: { open: boolean; onClose: () => void; imgSrc: string; imgAlt: string }) => (
@@ -107,7 +118,12 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
         console.log('fetchComplaintDetails', response.data);
         const complaintDetails = response.data as ComplaintDetails[]; // Cast to expected type
         console.log('fetchComplaintDetails2', complaintDetails[0]);
+        const customerDetails = complaintDetails[0].Customer_Details;
+        console.log('fetchComplaintDetails3', customerDetails[0]);
         setCustomerName(complaintDetails[0].Customer_Name || '');
+        setCustomerContact(customerDetails[0].Contact);
+        setCustomerEmail(customerDetails[0].Email);
+        setCustomerAddress(customerDetails[0].Location);
         setComplaintDescription(complaintDetails[0].Description || '');
         setItem(complaintDetails[0].Item || '');
         setStatus(complaintDetails[0].Status || '');
@@ -123,7 +139,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
     <Transitions type="slide" direction="down" in={true}>
       <MainCard sx={{ ml: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
         <Grid container xs={12} sm={12} md={12} lg={12} xl={12}>
-          <Grid item xs={6} sm={8} md={5} lg={7} xl={8}>
+          <Grid item xs={6} sm={9} md={9} lg={8} xl={8}>
             <Stack spacing={2.5}>
               <List sx={{ py: 0 }}>
                 <ListItem divider={!matchDownMD}>
@@ -138,7 +154,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
                     <Grid item xs={4} md={4}>
                       <Stack spacing={1}>
                         <Typography color="secondary">Email</Typography>
-                        <Typography>{data.email}</Typography>
+                        <Typography>{customerEmail}</Typography>
                       </Stack>
                     </Grid>
                     <Grid item xs={4} md={3}>
@@ -146,7 +162,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
                         <Typography color="secondary">Contact</Typography>
                         <Typography>
                           {/* <PatternFormat displayType="text" format="+1 (###) ###-####" mask="_" defaultValue={data.contact} /> */}
-                          <PatternFormat displayType="text" format="+1 (###) ###-####" mask="_" defaultValue={'+1 (987) 654-3210'} />
+                          <PatternFormat displayType="text" format="+1 (###) ###-####" mask="_" defaultValue={customerConatct} />
                         </Typography>
                       </Stack>
                     </Grid>
@@ -156,9 +172,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
                   <Stack spacing={1}>
                     <Typography color="secondary">Address</Typography>
                     {/* <Typography>{data.address}</Typography> */}
-                    <Typography>
-                      {'Flat No. 202, A-Block Green Valley Apartments MG Road, Near City Mall Bengaluru, Karnataka 560001'}
-                    </Typography>
+                    <Typography>{customerAddress}</Typography>
                   </Stack>
                 </ListItem>
                 <ListItem>
@@ -170,7 +184,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
               </List>
             </Stack>
           </Grid>
-          <Grid container xs={6} sm={4} md={5} lg={5} xl={4} justifyContent="flex-end" sx={{ display: 'flex' }}>
+          <Grid container xs={6} sm={3} md={3} lg={4} xl={4} justifyContent="flex-end" sx={{ display: 'flex' }}>
             <Stack spacing={2.5} sx={{ width: '100%', alignItems: 'flex-end' }}>
               <Grid item xs={6} sm={4} md={4} lg={6}>
                 <Box sx={{}} onClick={() => openPreview(laptop)}>

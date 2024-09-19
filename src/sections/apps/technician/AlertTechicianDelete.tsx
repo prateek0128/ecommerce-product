@@ -27,23 +27,38 @@ interface Props {
   open: boolean;
   handleClose: () => void;
 }
-
+interface ErrorData {
+  response: any;
+}
 // ==============================|| CUSTOMER - DELETE ||============================== //
 
 export default function AlertTechnicianDelete({ id, title, open, handleClose }: Props) {
   const deletehandler = async () => {
-    await deleteTechnician(id).then(() => {
-      openSnackbar({
-        open: true,
-        message: 'Technician deleted successfully',
-        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-        variant: 'alert',
-        alert: {
-          color: 'success'
-        }
-      } as SnackbarProps);
-      handleClose();
-    });
+    await deleteTechnician(id)
+      .then(() => {
+        openSnackbar({
+          open: true,
+          message: 'Technician deleted successfully',
+          anchorOrigin: { vertical: 'top', horizontal: 'right' },
+          variant: 'alert',
+          alert: {
+            color: 'success'
+          }
+        } as SnackbarProps);
+        handleClose();
+      })
+      .catch((error) => {
+        console.error('Error fetching technicians:', error);
+        const errorData = error as ErrorData;
+        openSnackbar({
+          open: true,
+          message: errorData.response.data.message,
+          variant: 'alert',
+          alert: {
+            color: 'error'
+          }
+        } as SnackbarProps);
+      });
   };
 
   return (

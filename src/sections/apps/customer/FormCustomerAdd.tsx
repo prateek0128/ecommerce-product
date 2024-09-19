@@ -141,7 +141,12 @@ const allStatus: StatusProps[] = [
   { value: 1, label: 'Verified' },
   { value: 2, label: 'Pending' }
 ];
-
+interface UsersData {
+  message: any;
+}
+interface ErrorData {
+  response: any;
+}
 // ==============================|| CUSTOMER ADD / EDIT - FORM ||============================== //
 
 export default function FormCustomerAdd({ customer, closeModal }: { customer: CustomerList | null; closeModal: () => void }) {
@@ -270,7 +275,7 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
     formData.append('data', JSON.stringify(newCustomerData));
     try {
       const response = await addCustomer(formData);
-      console.log('addCustomerAPI', response);
+      console.log('addCustomerAPI', response.data);
       openSnackbar({
         open: true,
         message: 'Customer added successfully.',
@@ -281,7 +286,16 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
       } as SnackbarProps);
       closeModal();
     } catch (error) {
-      console.error('Error fetching technicians:', error);
+      console.error('Error fetching customers:', error);
+      const errorData = error as ErrorData;
+      openSnackbar({
+        open: true,
+        message: errorData.response.data.message,
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      } as SnackbarProps);
     }
   };
   const updateCustomerAPI = async () => {
@@ -320,7 +334,16 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
       } as SnackbarProps);
       closeModal();
     } catch (error) {
-      console.error('Error fetching technicians:', error);
+      console.error('Error fetching customers:', error);
+      const errorData = error as ErrorData;
+      openSnackbar({
+        open: true,
+        message: errorData.response.data.message,
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      } as SnackbarProps);
     }
   };
   const { values, errors, touched, handleSubmit, isSubmitting, getFieldProps, setFieldValue } = formik;
@@ -652,7 +675,7 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
                     <Button
                       type="submit"
                       variant="contained"
-                      disabled={isSubmitting}
+                      //disabled={isSubmitting}
                       onClick={(e) => {
                         customer ? updateCustomerAPI() : addCustomerAPI();
                       }}

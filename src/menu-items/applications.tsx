@@ -70,10 +70,11 @@ const applications: NavItemType = {
     // },
     {
       id: 'customer',
-      title: <FormattedMessage id="customer" />,
+      title: <FormattedMessage id="Customers" />,
       type: 'collapse',
       icon: icons.customer,
-      url: '/apps/customer/customer-list'
+      url: '/apps/customer/customer-list',
+      breadcrumbs: true
       // children: [
       //   {
       //     id: 'customer-list',
@@ -142,7 +143,8 @@ const applications: NavItemType = {
       title: <FormattedMessage id="Products" />,
       type: 'collapse',
       icon: icons.ecommerce,
-      url: '/apps/e-commerce/product-list'
+      url: '/apps/e-commerce/product-list',
+      breadcrumbs: false
       // children: [
       //   // {
       //   //   id: 'products',
@@ -211,10 +213,11 @@ const applications: NavItemType = {
     },
     {
       id: 'technician',
-      title: <FormattedMessage id="Technician" />,
+      title: <FormattedMessage id="Technicians" />,
       type: 'collapse',
       icon: icons.customer,
-      url: '/apps/technician/technician-list'
+      url: '/apps/technician/technician-list',
+      breadcrumbs: true
       // children: [
       //   {
       //     id: 'technician-list',

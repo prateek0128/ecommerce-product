@@ -71,7 +71,9 @@ const stockList = [
     label: 'Out of Stock'
   }
 ];
-
+interface ErrorData {
+  response: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AddNewProduct() {
@@ -169,7 +171,16 @@ export default function AddNewProduct() {
       } as SnackbarProps);
       // closeModal();
     } catch (error) {
-      console.error('Error fetching technicians:', error);
+      console.error('Error fetching products:', error);
+      const errorData = error as ErrorData;
+      openSnackbar({
+        open: true,
+        message: errorData.response.data.message,
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      } as SnackbarProps);
     }
   };
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Edit Product' }];

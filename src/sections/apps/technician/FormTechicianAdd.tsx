@@ -61,7 +61,9 @@ interface StatusProps {
   value: number;
   label: string;
 }
-
+interface ErrorData {
+  response: any;
+}
 // CONSTANT
 const getInitialValues = (technician: TechnicianList | null) => {
   const newCustomer = {
@@ -220,8 +222,16 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
         } as SnackbarProps);
       }
     } catch (error) {
-      console.log('addTechnicianAPI', error);
       console.error('Error fetching technicians:', error);
+      const errorData = error as ErrorData;
+      openSnackbar({
+        open: true,
+        message: errorData.response.data.message,
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      } as SnackbarProps);
     }
   };
   const updateTechnicianAPI = async () => {
@@ -262,6 +272,15 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
       closeModal();
     } catch (error) {
       console.error('Error fetching technicians:', error);
+      const errorData = error as ErrorData;
+      openSnackbar({
+        open: true,
+        message: errorData.response.data.message,
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      } as SnackbarProps);
     }
   };
   const { values, errors, touched, handleSubmit, isSubmitting, getFieldProps, setFieldValue } = formik;

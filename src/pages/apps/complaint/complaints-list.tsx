@@ -63,6 +63,8 @@ import capitalize from '@mui/utils/capitalize';
 import { Add, Edit, Eye, Trash } from 'iconsax-react';
 import { LabelKeyObject } from 'react-csv/lib/core';
 import { getAllComplaints } from 'apiServices/complaint';
+import { APP_DEFAULT_PATH } from 'config';
+import Breadcrumbs from 'components/@extended/Breadcrumbs';
 // interface Props {
 //   columns: ColumnDef<CustomerList>[];
 //   data: CustomerList[];
@@ -407,8 +409,10 @@ export default function ComplaintListPage() {
     ],
     [theme]
   );
+  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Complaint List' }];
   return (
     <>
+      <Breadcrumbs custom heading="Complaint List" links={breadcrumbLinks} />
       <ReactTable
         {...{
           data: allComplaints || [],

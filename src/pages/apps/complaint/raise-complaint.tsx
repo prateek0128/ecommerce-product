@@ -22,6 +22,8 @@ import { Autocomplete, FormLabel } from '@mui/material';
 import { raiseComplaint } from 'apiServices/complaint';
 import { openSnackbar } from 'api/snackbar';
 import { SnackbarProps } from 'types/snackbar';
+import { APP_DEFAULT_PATH } from 'config';
+import Breadcrumbs from 'components/@extended/Breadcrumbs';
 // constant
 const warrantyStatus = [
   {
@@ -411,7 +413,9 @@ const categories = [
     ]
   }
 ];
-
+interface ErrorData {
+  response: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AddNewProduct() {
@@ -499,11 +503,22 @@ export default function AddNewProduct() {
       } as SnackbarProps);
       // closeModal();
     } catch (error) {
-      console.error('Error fetching technicians:', error);
+      console.error('Error fetching complaints:', error);
+      const errorData = error as ErrorData;
+      openSnackbar({
+        open: true,
+        message: errorData.response.data.message,
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      } as SnackbarProps);
     }
   };
+  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Add Complaint' }];
   return (
     <>
+      <Breadcrumbs custom heading="Add Complaint" links={breadcrumbLinks} />
       <MainCard>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>

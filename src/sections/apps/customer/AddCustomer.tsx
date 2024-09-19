@@ -18,9 +18,9 @@ import { CustomerList } from 'types/customer';
 // ==============================|| CUSTOMER - ADD / EDIT ||============================== //
 
 export default function AddCustomer() {
-  // const { customerMasterLoading, customerMaster } = useGetCustomerMaster();
-  // const { customersLoading: loading, customers } = useGetCustomer();
-  // const isModal = customerMaster?.modal;
+  const { customerMasterLoading, customerMaster } = useGetCustomerMaster();
+  const { customersLoading: loading, customers } = useGetCustomer();
+  const isModal = customerMaster?.modal;
 
   const [list, setList] = useState<CustomerList | null>(null);
 
@@ -41,30 +41,30 @@ export default function AddCustomer() {
 
   return (
     <>
-      {/* {isModal && ( */}
-      <Modal
-        open={true}
-        onClose={closeModal}
-        aria-labelledby="modal-customer-add-label"
-        aria-describedby="modal-customer-add-description"
-        sx={{ '& .MuiPaper-root:focus': { outline: 'none' } }}
-      >
-        <MainCard
-          sx={{ width: `calc(100% - 48px)`, minWidth: 340, maxWidth: 880, height: 'auto', maxHeight: 'calc(100vh - 48px)' }}
-          modal
-          content={false}
+      {isModal && (
+        <Modal
+          open={true}
+          onClose={closeModal}
+          aria-labelledby="modal-customer-add-label"
+          aria-describedby="modal-customer-add-description"
+          sx={{ '& .MuiPaper-root:focus': { outline: 'none' } }}
         >
-          <SimpleBar
-            sx={{
-              maxHeight: `calc(100vh - 48px)`,
-              '& .simplebar-content': { display: 'flex', flexDirection: 'column' }
-            }}
+          <MainCard
+            sx={{ width: `calc(100% - 48px)`, minWidth: 340, maxWidth: 880, height: 'auto', maxHeight: 'calc(100vh - 48px)' }}
+            modal
+            content={false}
           >
-            {customerForm}
-          </SimpleBar>
-        </MainCard>
-      </Modal>
-      {/* )} */}
+            <SimpleBar
+              sx={{
+                maxHeight: `calc(100vh - 48px)`,
+                '& .simplebar-content': { display: 'flex', flexDirection: 'column' }
+              }}
+            >
+              {customerForm}
+            </SimpleBar>
+          </MainCard>
+        </Modal>
+      )}
     </>
   );
 }

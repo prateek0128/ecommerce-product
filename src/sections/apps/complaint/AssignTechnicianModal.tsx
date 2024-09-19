@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { useReactTable, ColumnDef, flexRender, getCoreRowModel, getSortedRowModel } from '@tanstack/react-table';
 import {
   Modal,
@@ -45,7 +45,9 @@ const sampleData = [
   { name: 'Daniel Moore', contact: '999-000-1111', email: 'daniel@example.com', role: 'Technician', availability: 'Not Available' },
   { name: 'Laura Jackson', contact: '888-999-0000', email: 'laura@example.com', role: 'Technician', availability: 'Available' }
 ];
-
+interface ErrorData {
+  response: any;
+}
 // HeaderSort component for sorting indicators
 const HeaderSort = ({ column }: { column: any }) => {
   const sortDirection = column.getIsSorted();
@@ -53,36 +55,35 @@ const HeaderSort = ({ column }: { column: any }) => {
 };
 
 export default function AssignTechnicianModal({ open, modalToggler, complaintId, customerId }: Props) {
-  const { customersLoading: loading } = useGetCustomer();
+  // const { customersLoading: loading } = useGetCustomer();
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
-  const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
-    console.log('allCustomersObject', technician);
-    const fullName = technician.First_Name + ' ' + technician.Last_Name;
-    return {
-      id: technician.Id,
-      name: fullName,
-      email: technician.Email,
-      contact: technician.Contact,
-      techRole: technician.Tech_Role,
-      availability: technician.Is_Available
-    };
-  });
+  // Memoize the derived allTechnicians to avoid recalculation on each render
+  const allTechnicians = useMemo(
+    () =>
+      allTechniciansData.map((technician: any) => ({
+        id: technician.Id,
+        name: `${technician.First_Name} ${technician.Last_Name}`,
+        email: technician.Email,
+        contact: technician.Contact,
+        techRole: technician.Tech_Role,
+        availability: technician.Is_Available
+      })),
+    [allTechniciansData]
+  );
+  const fetchTechnicians = async () => {
+    try {
+      const response = await getAllTechnicians();
+      // console.log('getAllTechniciansAPI', response.data);
+      setAllTechniciansData(response.data || []);
+    } catch (error) {
+      console.error('Error fetching technicians:', error);
+    }
+  };
   useEffect(() => {
-    const fetchTechnicians = async () => {
-      try {
-        const response = await getAllTechnicians();
-        console.log('getAllTechniciansAPI', response.data);
-        setAllTechniciansData(response.data || []);
-      } catch (error) {
-        console.error('Error fetching technicians:', error);
-      }
-    };
-
     fetchTechnicians();
   }, []);
-  const assignTechnicianAPI = (row: any) => {
-    // console.log('Techrow', row.original.id);
-    const assignTechnicianData = { customerId: 1, technicianId: row.original.id, complaintId: complaintId };
+  const assignTechnicianAPI = (techId: any) => {
+    const assignTechnicianData = { customerId: 1, technicianId: techId, complaintId: complaintId };
     assignTechnician(assignTechnicianData)
       .then((response) => {
         console.log('assignTechnicianAPI', response);
@@ -95,7 +96,18 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
           }
         } as SnackbarProps);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.error('Error assigning technician:', error);
+        const errorData = error as ErrorData;
+        openSnackbar({
+          open: true,
+          message: errorData.response.data.message,
+          variant: 'alert',
+          alert: {
+            color: 'error'
+          }
+        } as SnackbarProps);
+      });
   };
   // Define columns
   const columns: ColumnDef<any>[] = [
@@ -110,8 +122,9 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
         row.original.availability == 1 ? (
           <Button
             variant="contained"
-            onClick={() => {
-              assignTechnicianAPI(row);
+            onClick={(event) => {
+              event.stopPropagation();
+              assignTechnicianAPI(row.original.id);
             }}
           >
             Assign
@@ -150,13 +163,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
           >
             <SimpleBar sx={{ maxHeight: `calc(100vh - 48px)`, '& .simplebar-content': { display: 'flex', flexDirection: 'column' } }}>
               <Box sx={{ position: 'relative' }}></Box>
-              {loading ? (
-                <Box sx={{ p: 5 }}>
-                  <Stack direction="row" justifyContent="center">
-                    <CircularWithPath />
-                  </Stack>
-                </Box>
-              ) : (
+              {
                 <>
                   <Box sx={{ mt: 2 }}>
                     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -206,7 +213,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
                     </TableContainer>
                   </Box>
                 </>
-              )}
+              }
             </SimpleBar>
           </MainCard>
         </Modal>
