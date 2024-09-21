@@ -240,7 +240,6 @@ export default function ComplaintListPage() {
   const [complaintDeleteId, setComplaintDeleteId] = useState<any>('');
   const [allComplaintsData, setAllComplaintsData] = useState<any>([]);
   const allComplaints = allComplaintsData.map((complaint: any, index: any) => {
-    console.log('allCustomersObject', complaint);
     return {
       id: complaint.Complaint_Id,
       name: complaint.Customer_Name,
@@ -257,10 +256,8 @@ export default function ComplaintListPage() {
     setComplaintModal(!complaintModal);
   };
   const getAllComplaintsAPI = () => {
-    console.log('ComplaintListPage');
     getAllComplaints()
       .then((response) => {
-        console.log('getAllComplaintsAPI', response.data);
         setAllComplaintsData(response.data || []);
       })
       .catch((error) => {
@@ -383,7 +380,6 @@ export default function ComplaintListPage() {
                   color="primary"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
-                    console.log('rowDataComplaint1', row.original);
                     navigate('/apps/complaint/edit-complaint', { state: { complaintData: row.original } }); // Pass the data array in state
                   }}
                 >

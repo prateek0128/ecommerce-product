@@ -249,7 +249,6 @@ export default function ProductList() {
   const [productDeleteId, setProductDeleteId] = useState<any>('');
   const [allProductsData, setAllProductsData] = useState<any>([]);
   const allProducts = allProductsData.map((product: any, index: any) => {
-    console.log('allCustomersObject', product);
     return {
       id: product.Id,
       name: product.Product_Name,
@@ -268,7 +267,6 @@ export default function ProductList() {
   const getAllProductsAPI = () => {
     getAllProducts()
       .then((response) => {
-        console.log('getAllProductsAPI', response.data);
         setAllProductsData(response.data || []);
       })
       .catch((error) => {
@@ -394,7 +392,6 @@ export default function ProductList() {
                   color="primary"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
-                    console.log('rowDataProduct1', row.original);
                     navigate('/apps/e-commerce/edit-product', { state: { productData: row.original } }); // Pass the data array in state
                   }}
                 >
@@ -421,7 +418,6 @@ export default function ProductList() {
     []
   );
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Product List' }];
-  //console.log('productsData', productsData);
   return (
     <>
       <Breadcrumbs custom heading="Product List" links={breadcrumbLinks} />

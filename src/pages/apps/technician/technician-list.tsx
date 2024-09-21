@@ -121,7 +121,6 @@ function ReactTable({ data, columns, modalToggler }: any) {
           onFilterChange={(value) => setGlobalFilter(String(value))}
           placeholder={`Search ${data.length} records...`}
         />
-
         <Stack direction="row" alignItems="center" spacing={2}>
           <SelectColumnSorting {...{ getState: table.getState, getAllColumns: table.getAllColumns, setSorting }} />
           <Button variant="contained" startIcon={<Add />} onClick={modalToggler} size="large">
@@ -215,15 +214,12 @@ export default function CustomerListPage() {
   const theme = useTheme();
 
   //const { customersLoading: loading, customers: lists } = useGetCustomer();
-  //console.log('Technicianlists', lists);
   const [open, setOpen] = useState<boolean>(false);
-
   const [customerModal, setCustomerModal] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<TechnicianList | null>(null);
   const [customerDeleteId, setCustomerDeleteId] = useState<any>('');
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
   const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
-    console.log('allCustomersObject', technician);
     const fullName = technician.First_Name + ' ' + technician.Last_Name;
     return {
       id: technician.Id,
@@ -246,7 +242,6 @@ export default function CustomerListPage() {
     const fetchTechnicians = async () => {
       try {
         const response = await getAllTechnicians();
-        console.log('getAllTechniciansAPI', response.data);
         setAllTechniciansData(response.data || []);
       } catch (error) {
         console.error('Error fetching technicians:', error);

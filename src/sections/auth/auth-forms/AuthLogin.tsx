@@ -72,10 +72,8 @@ export default function AuthLogin({ forgot }: { forgot?: string }) {
           try {
             await login(values.email, values.password);
             // const response = await loginUser(loginData);
-            // console.log('LoginResponse', response);
             if (scriptedRef.current) {
               // const responseData = response.data as { token: string };
-              // console.log('LoginResponseToken', responseData.token);
               // const responseToken = responseData.token;
               // localStorage.setItem('authToken', responseToken);
               setStatus({ success: true });

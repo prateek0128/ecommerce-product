@@ -80,8 +80,6 @@ export default function AddNewProduct() {
   const history = useNavigate();
   const location = useLocation();
   const { productData } = location.state || {}; // Extract the passed data
-  console.log('rowDataProduct2', productData ?? productData);
-  console.log('rowDataProduct3', productData.category);
   const [productName, setProductName] = useState(productData.name);
   const [productDescription, setProductDescription] = useState(productData.description);
   const [quantity, setQuantity] = useState(productData?.quantity?.toString() || '');
@@ -92,11 +90,9 @@ export default function AddNewProduct() {
   const [productImage, setProductImage] = useState<string | undefined>(undefined);
   const fileInputRefProduct = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
-    console.log('rowDataProduct4', quantity);
     if (productData?.quantity) {
       setQuantity(productData.quantity); // Update state when productData is available
     }
-    console.log('rowDataProduct5', selectedCategory);
     if (productData?.category) {
       setSelectedCategory(productData.category); // Update state when productData is available
     }
@@ -160,7 +156,6 @@ export default function AddNewProduct() {
     };
     try {
       const response = await updateProduct(editProductData);
-      console.log('editProductAPI', response);
       openSnackbar({
         open: true,
         message: 'Product updated successfully.',
@@ -184,7 +179,6 @@ export default function AddNewProduct() {
     }
   };
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Edit Product' }];
-  console.log('stockList', stockList);
 
   return (
     <>

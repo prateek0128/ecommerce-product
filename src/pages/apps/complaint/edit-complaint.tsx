@@ -45,7 +45,6 @@ export default function AddNewProduct() {
   const history = useNavigate();
   const location = useLocation();
   const { complaintData } = location.state || {}; // Extract the passed data
-  console.log('rowDataComplaint2', complaintData ?? complaintData);
   const theme = useTheme();
   const [customerName, setCustomerName] = useState(complaintData.name);
   const [description, setDescription] = useState(complaintData.description);
@@ -62,7 +61,7 @@ export default function AddNewProduct() {
     setWarranty(event.target.value);
   };
   const handleCancel = () => {
-    history('/apps/complaint/complaint-list');
+    history('/apps/complaint/complaints-list');
   };
   const handleCustomerNameChange = (event: ChangeEvent<HTMLInputElement>) => setCustomerName(event.target.value);
   const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => setDescription(event.target.value);
@@ -99,7 +98,6 @@ export default function AddNewProduct() {
   };
   const editComplaintAPI = async (event: { preventDefault: () => void }) => {
     event?.preventDefault();
-    console.log('editComplaintAPIUpdate', complaintData.id);
     const editComplaintData = {
       complaintId: complaintData.id,
       customerName: customerName,
@@ -112,7 +110,6 @@ export default function AddNewProduct() {
     };
     try {
       const response = await updateComplaint(editComplaintData);
-      console.log('editProductAPI', response);
       openSnackbar({
         open: true,
         message: 'Complaint updated successfully.',
@@ -137,7 +134,6 @@ export default function AddNewProduct() {
   };
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Edit Complaint' }];
   const allSubcategories = categories.flatMap((category) => category.subcategories);
-  console.log(allSubcategories);
   return (
     <>
       <Breadcrumbs custom heading="Edit Complaint" links={breadcrumbLinks} />
@@ -253,42 +249,43 @@ export default function AddNewProduct() {
                     </Grid>
                   </Grid>
                 </Grid>
-                <Grid item xs={12}>
-                  <InputLabel sx={{ mb: 1 }}>Image of Bill</InputLabel>
-                  <Typography color="error.main">
-                    *{' '}
-                    <Typography component="span" color="text.secondary">
-                      Recommended resolution is 640*640 with file size
+                {warranty == 'in warranty' && (
+                  <Grid item xs={12}>
+                    <InputLabel sx={{ mb: 1 }}>Image of Bill</InputLabel>
+                    <Typography color="error.main">
+                      *{' '}
+                      <Typography component="span" color="text.secondary">
+                        Recommended resolution is 640*640 with file size
+                      </Typography>
                     </Typography>
-                  </Typography>
-                  <Grid container>
-                    <Grid item xs={12} sm={6}>
-                      {' '}
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        startIcon={<DocumentUpload />}
-                        sx={{ mt: 1, textTransform: 'none' }}
-                        onClick={handleButtonClickBill} // Trigger file input click
-                      >
-                        Click to Upload
-                      </Button>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      {/* Image display section */}
-                      <Stack direction="row" justifyContent="center" sx={{ mt: 3 }}>
-                        <FormLabel
-                          htmlFor="change-avtar"
-                          sx={{
-                            position: 'relative',
-                            // borderRadius: '20%',
-                            overflow: 'hidden',
-                            '&:hover .MuiBox-root': { opacity: 1 },
-                            cursor: 'pointer'
-                          }}
+                    <Grid container>
+                      <Grid item xs={12} sm={6}>
+                        {' '}
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          startIcon={<DocumentUpload />}
+                          sx={{ mt: 1, textTransform: 'none' }}
+                          onClick={handleButtonClickBill} // Trigger file input click
                         >
-                          {billImage && <img alt="Avatar" src={billImage} style={{ width: 72, height: 72 }} />}
-                          {/* <Box
+                          Click to Upload
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {/* Image display section */}
+                        <Stack direction="row" justifyContent="center" sx={{ mt: 3 }}>
+                          <FormLabel
+                            htmlFor="change-avtar"
+                            sx={{
+                              position: 'relative',
+                              // borderRadius: '20%',
+                              overflow: 'hidden',
+                              '&:hover .MuiBox-root': { opacity: 1 },
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {billImage && <img alt="Avatar" src={billImage} style={{ width: 72, height: 72 }} />}
+                            {/* <Box
                         sx={{
                           position: 'absolute',
                           top: 0,
@@ -302,25 +299,26 @@ export default function AddNewProduct() {
                           justifyContent: 'center'
                         }}
                       > */}
-                          <Stack spacing={0.5} alignItems="center">
-                            <Camera style={{ color: 'white', fontSize: '2rem' }} />
-                            <Typography sx={{ color: 'secondary.lighter' }}>Upload</Typography>
-                          </Stack>
-                          {/* </Box> */}
-                        </FormLabel>
+                            <Stack spacing={0.5} alignItems="center">
+                              <Camera style={{ color: 'white', fontSize: '2rem' }} />
+                              <Typography sx={{ color: 'secondary.lighter' }}>Upload</Typography>
+                            </Stack>
+                            {/* </Box> */}
+                          </FormLabel>
 
-                        {/* Hidden file input */}
-                        <TextField
-                          type="file"
-                          id="change-avtar"
-                          inputRef={fileInputRefBill} // Reference to the file input
-                          sx={{ display: 'none' }}
-                          onChange={handleBillChange} // Handle file selection
-                        />
-                      </Stack>
+                          {/* Hidden file input */}
+                          <TextField
+                            type="file"
+                            id="change-avtar"
+                            inputRef={fileInputRefBill} // Reference to the file input
+                            sx={{ display: 'none' }}
+                            onChange={handleBillChange} // Handle file selection
+                          />
+                        </Stack>
+                      </Grid>
                     </Grid>
                   </Grid>
-                </Grid>
+                )}
                 <Grid item xs={12}>
                   <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 6 }}>
                     <Button variant="outlined" color="secondary" onClick={handleCancel}>

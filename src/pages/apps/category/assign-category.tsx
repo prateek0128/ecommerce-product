@@ -336,12 +336,10 @@ export default function AssignCategory() {
   const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
     return technician.First_Name + ' ' + technician.Last_Name;
   });
-  console.log('allTechniciansList', allTechnicians);
   useEffect(() => {
     const fetchTechnicians = async () => {
       try {
         const response = await getAllTechnicians();
-        console.log('getAllTechniciansAPI', response.data);
         setAllTechniciansData(response.data || []);
       } catch (error) {
         console.error('Error fetching technicians:', error);
@@ -405,9 +403,6 @@ export default function AssignCategory() {
     setSelectedRepairParts(selectedTab.parts);
   };
   const categoryNames = categories.map((category) => category.name);
-  console.log('categoryNames', categoryNames);
-  console.log('selectedRepairParts1', selectedRepairParts);
-  console.log('selectedRepairParts2', tabs);
   const assignCategoryAPI = () => {
     const assignCategoryData = {
       technicianName: technicianName,
@@ -418,7 +413,6 @@ export default function AssignCategory() {
     };
     assignCategory(assignCategoryData)
       .then((response) => {
-        console.log('assignCategoryAPI', response);
         openSnackbar({
           open: true,
           message: 'Item assigned successfully.',

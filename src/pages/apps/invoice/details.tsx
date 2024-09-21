@@ -63,22 +63,26 @@ export default function Details() {
 
   useEffect(() => {
     if (id && !invoiceLoading) {
-      seList(invoice.filter((item: InvoiceList) => item.id.toString() === id)[0] || invoice[0]);
+      // seList(invoice.filter((item: InvoiceList) => item.id.toString() === id)[0] || invoice[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, invoiceLoading]);
 
-  const today = new Date(`${list?.date}`).toLocaleDateString('en-GB', {
-    month: 'numeric',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  const today = list?.date
+    ? new Date(`${list?.date}`).toLocaleDateString('en-GB', {
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    : '';
 
-  const due_dates = new Date(`${list?.due_date}`).toLocaleDateString('en-GB', {
-    month: 'numeric',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  const due_dates = list?.due_date
+    ? new Date(`${list?.due_date}`).toLocaleDateString('en-GB', {
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    : '';
 
   const subtotal = list?.invoice_detail?.reduce((prev: any, curr: any) => {
     if (curr.name.trim().length > 0) return prev + Number(curr.price * Math.floor(curr.qty));

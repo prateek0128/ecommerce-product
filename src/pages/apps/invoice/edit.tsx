@@ -591,7 +591,7 @@ export default function EditInvoice() {
 
   useEffect(() => {
     if (id && !invoiceLoading) {
-      seList(invoice.filter((item: InvoiceList) => item.id.toString() === id)[0]);
+      //seList(invoice.filter((item: InvoiceList) => item.id.toString() === id)[0]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, invoiceLoading]);

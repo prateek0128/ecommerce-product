@@ -60,49 +60,6 @@ interface StatusProps {
   value: number;
   label: string;
 }
-
-const skills = [
-  'Adobe XD',
-  'After Effect',
-  'Angular',
-  'Animation',
-  'ASP.Net',
-  'Bootstrap',
-  'C#',
-  'CC',
-  'Corel Draw',
-  'CSS',
-  'DIV',
-  'Dreamweaver',
-  'Figma',
-  'Graphics',
-  'HTML',
-  'Illustrator',
-  'J2Ee',
-  'Java',
-  'Javascript',
-  'JQuery',
-  'Logo Design',
-  'Material UI',
-  'Motion',
-  'MVC',
-  'MySQL',
-  'NodeJS',
-  'npm',
-  'Photoshop',
-  'PHP',
-  'React',
-  'Redux',
-  'Reduxjs & tooltit',
-  'SASS',
-  'SCSS',
-  'SQL Server',
-  'SVG',
-  'UI/UX',
-  'User Interface Designing',
-  'Wordpress'
-];
-
 // CONSTANT
 const getInitialValues = (customer: CustomerList | null) => {
   const newCustomer = {
@@ -151,7 +108,6 @@ interface ErrorData {
 
 export default function FormCustomerAdd({ customer, closeModal }: { customer: CustomerList | null; closeModal: () => void }) {
   const theme = useTheme();
-  console.log('customerUpdate1', customer);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
@@ -161,7 +117,6 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
 
   useEffect(() => {
     if (selectedImage) {
-      console.log('imageProduct2', selectedImage);
       setAvatar(URL.createObjectURL(selectedImage));
       setSelectedFile(selectedImage);
     }
@@ -194,7 +149,6 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
     onSubmit: async (values, { setSubmitting }) => {
       try {
         let newCustomer: CustomerList = values;
-        console.log('newCustomerImage', selectedImage);
         //newCustomer.name = newCustomer.firstName + ' ' + newCustomer.lastName;
         if (customer) {
           // updateCustomer(newCustomer.id!, newCustomer).then(() => {
@@ -220,16 +174,16 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
             contact: values.contact,
             location: values.location
           };
-          if (!avatar) {
-            alert('Please select image.');
+          if (!selectedFile) {
+            console.log('Please select image.');
             return;
           } else {
-            console.log('addCustomerImage', avatar);
+            console.log('addCustomerImage', selectedFile);
           }
 
           // Create a FormData object
           const formData = new FormData();
-          formData.append('file', avatar);
+          formData.append('file', selectedFile);
           formData.append('data', JSON.stringify(newCustomerData));
           // await insertCustomer(newCustomer).then(() => {
           await addCustomer(newCustomer).then(() => {
@@ -262,20 +216,18 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
       contact: values.contact,
       location: values.location
     };
-    if (!selectedFile) {
-      console.log('Please select image.');
-      return;
-    } else {
-      console.log('addCustomerImage', selectedFile);
-    }
-
     // Create a FormData object
     const formData = new FormData();
-    formData.append('file', selectedFile);
     formData.append('data', JSON.stringify(newCustomerData));
+    // Only append the file if it's selected
+    if (selectedFile) {
+      console.log('addCustomerImage', selectedFile);
+      formData.append('file', selectedFile);
+    } else {
+      console.log('No image selected, proceeding without image');
+    }
     try {
       const response = await addCustomer(formData);
-      console.log('addCustomerAPI', response.data);
       openSnackbar({
         open: true,
         message: 'Customer added successfully.',
@@ -310,20 +262,18 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
       contact: values.contact,
       location: values.location
     };
-    if (!selectedFile) {
-      console.log('Please select image.');
-      return;
-    } else {
-      console.log('addCustomerImage', selectedFile);
-    }
-
     // Create a FormData object
     // const formData = new FormData();
-    // formData.append('file', avatar);
     // formData.append('data', JSON.stringify(updateCustomerData));
+    // // Only append the file if it's selected
+    // if (selectedFile) {
+    //   console.log('addCustomerImage', selectedFile);
+    //   formData.append('file', selectedFile);
+    // } else {
+    //   console.log('No image selected, proceeding without image');
+    // }
     try {
       const response = await updateCustomer(updateCustomerData);
-      console.log('addCustomerAPI', response);
       openSnackbar({
         open: true,
         message: 'Customer updated successfully.',
@@ -348,7 +298,6 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
   };
   const { values, errors, touched, handleSubmit, isSubmitting, getFieldProps, setFieldValue } = formik;
   const newTechnician = values.firstName + ' ' + values.lastName;
-  console.log('roleValue', values.techRole);
   // if (loading)
   //   return (
   //     <Box sx={{ p: 5 }}>

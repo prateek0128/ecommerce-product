@@ -30,7 +30,6 @@ export const addTechnician = async <T>(data: any, config?: AxiosRequestConfig): 
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)
-    console.log('Error', error);
     throw error;
   }
 };

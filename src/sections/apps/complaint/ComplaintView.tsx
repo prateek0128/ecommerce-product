@@ -84,8 +84,6 @@ const PreviewModal = ({ open, onClose, imgSrc, imgAlt }: { open: boolean; onClos
 );
 
 export default function ComplaintView({ data }: any, { modalToggler }: Props) {
-  console.log('ComplaintData', data);
-  console.log('ComplaintDataId', data.id);
   const theme = useTheme();
   const matchDownMD = useMediaQuery(theme.breakpoints.down('md'));
   const [assignTechnicianModal, setAssignTechnicianModal] = useState<boolean>(false);
@@ -115,11 +113,8 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
     const fetchComplaintDetails = async () => {
       try {
         const response = await getComplaintDetails(data.id);
-        console.log('fetchComplaintDetails', response.data);
         const complaintDetails = response.data as ComplaintDetails[]; // Cast to expected type
-        console.log('fetchComplaintDetails2', complaintDetails[0]);
         const customerDetails = complaintDetails[0].Customer_Details;
-        console.log('fetchComplaintDetails3', customerDetails[0]);
         setCustomerName(complaintDetails[0].Customer_Name || '');
         setCustomerContact(customerDetails[0].Contact);
         setCustomerEmail(customerDetails[0].Email);

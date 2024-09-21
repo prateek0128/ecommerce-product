@@ -78,7 +78,6 @@ export default function AddNewProduct() {
   const history = useNavigate();
   const location = useLocation();
   const { productData } = location.state || {}; // Extract the passed data
-  console.log('rowDataProduct2', productData ?? productData);
   const [productName, setProductName] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [quantity, setQuantity] = useState('1');
@@ -125,8 +124,6 @@ export default function AddNewProduct() {
     const file = e.target.files?.[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      console.log('imageProduct1', imageUrl);
-      console.log('imageProduct2', file);
       setProductImage(imageUrl);
       setProductFile(file);
     }
@@ -144,24 +141,22 @@ export default function AddNewProduct() {
       stock: stockStatus,
       productImage: productImage
     };
-    if (!productFile) {
-      console.log('Please select image.');
-      return;
-    } else {
-      console.log('imageUrlProduct2', productFile);
-    }
 
-    // Create a FormData object
     const formData = new FormData();
-    formData.append('file', productFile);
     formData.append('data', JSON.stringify(newProductData));
+    // Only append the file if it's selected
+    if (productFile) {
+      console.log('addCustomerImage', productFile);
+      formData.append('file', productFile);
+    } else {
+      console.log('No image selected, proceeding without image');
+    }
     formData.forEach((value, key) => {
       console.log(`${key}:`, value);
     });
 
     try {
       const response = await addProduct(formData);
-      console.log('addTechnicianAPI', response);
       openSnackbar({
         open: true,
         message: 'Product added successfully.',
@@ -247,13 +242,7 @@ export default function AddNewProduct() {
 
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Price (in Rupees)</InputLabel>
-                  <TextField placeholder="Select Price" fullWidth select value={price} onChange={handlePrice}>
-                    {prices.map((option) => (
-                      <MenuItem key={option.id} value={option.label}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  <TextField placeholder="Enter Price" fullWidth type="number" value={price} onChange={handlePrice} />
                 </Grid>
               </Grid>
             </MainCard>

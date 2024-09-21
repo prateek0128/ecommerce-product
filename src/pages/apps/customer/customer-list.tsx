@@ -74,7 +74,6 @@ interface Props {
 // ==============================|| REACT TABLE - LIST ||============================== //
 
 function ReactTable({ data, columns, modalToggler }: any) {
-  console.log('customerData1', data);
   const theme = useTheme();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -103,7 +102,6 @@ function ReactTable({ data, columns, modalToggler }: any) {
     debugTable: true
   });
   const backColor = alpha(theme.palette.primary.lighter, 0.1);
-  console.log('customerData2', data);
   let headers: LabelKeyObject[] = [];
   columns.map(
     (columns: { accessorKey: any; header: string }) =>
@@ -218,7 +216,6 @@ export default function CustomerListPage() {
   const theme = useTheme();
 
   //const { customersLoading: loading, customers: lists } = useGetCustomer();
-  //console.log('Customerlists', lists);
   const [open, setOpen] = useState<boolean>(false);
   const [customerModal, setCustomerModal] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerList | null>(null);
@@ -226,7 +223,6 @@ export default function CustomerListPage() {
   const [allCustomersData, setAllCustomersData] = useState<any>([]);
 
   const allCustomers = allCustomersData.map((customer: any, index: any) => {
-    console.log('allCustomersObject', customer);
     const fullName = customer.First_Name + ' ' + customer.Last_Name;
     return {
       id: customer.Id,
@@ -247,7 +243,6 @@ export default function CustomerListPage() {
   const getAllCustomersAPI = () => {
     getAllCustomers()
       .then((response) => {
-        console.log('getAllCustomersAPI', response.data);
         setAllCustomersData(response.data || []);
       })
       .catch((error) => {

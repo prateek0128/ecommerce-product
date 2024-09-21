@@ -27,7 +27,6 @@ export const assignCategory = async <T>(data: any, config?: AxiosRequestConfig):
     const response = await apiClient.post('assignCategory', data, config);
     return response;
   } catch (error) {
-    console.log(error);
     throw error;
   }
 };

@@ -33,7 +33,6 @@ export default function TechnicianView({ data }: any) {
   const theme = useTheme();
   const matchDownMD = useMediaQuery(theme.breakpoints.down('md'));
 
-  console.log('TechData', data);
   useEffect(() => {
     const fetchTechnicianDetails = async () => {
       try {

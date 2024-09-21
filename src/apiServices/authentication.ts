@@ -20,7 +20,6 @@ export const loginUser = async <T>(loginData: any, config?: AxiosRequestConfig):
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)
-    console.log('Error', error);
     throw error;
   }
 };
@@ -31,7 +30,6 @@ export const registerUser = async <T>(registerData: any, config?: AxiosRequestCo
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)
-    console.log('Error', error);
     throw error;
   }
 };

@@ -32,7 +32,6 @@ export const addProduct = async <T>(data: any, config?: AxiosRequestConfig): Pro
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)
-    console.log('Error', error);
     throw error;
   }
 };

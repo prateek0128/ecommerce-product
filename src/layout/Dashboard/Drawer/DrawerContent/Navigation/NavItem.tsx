@@ -31,7 +31,6 @@ interface Props {
 // ==============================|| NAVIGATION - ITEM ||============================== //
 
 export default function NavItem({ item, level, isParents = false }: Props) {
-  console.log('NavItem', item);
   const theme = useTheme();
   const downLG = useMediaQuery(theme.breakpoints.down('lg'));
 

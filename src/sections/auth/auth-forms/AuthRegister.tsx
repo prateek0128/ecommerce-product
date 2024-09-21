@@ -88,7 +88,6 @@ export default function AuthRegister() {
           };
           try {
             const response = await registerUser(registerData);
-            console.log('RegisterResponse', response);
             if (scriptedRef.current) {
               setStatus({ success: true });
               setSubmitting(false);

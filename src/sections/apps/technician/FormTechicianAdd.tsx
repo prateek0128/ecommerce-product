@@ -1,4 +1,4 @@
-import { useEffect, useState, ChangeEvent } from 'react';
+import { useEffect, useState, ChangeEvent, MouseEvent } from 'react';
 
 // material ui
 import { useTheme } from '@mui/material/styles';
@@ -91,7 +91,6 @@ const getInitialValues = (technician: TechnicianList | null) => {
 
 export default function FormTechnicianAdd({ technician, closeModal }: { technician: TechnicianList | null; closeModal: () => void }) {
   const theme = useTheme();
-
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
@@ -103,16 +102,10 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
   );
   useEffect(() => {
     if (selectedImage) {
-      console.log('imageProduct2', selectedImage);
       setAvatar(URL.createObjectURL(selectedImage));
       setSelectedFile(selectedImage);
     }
   }, [selectedImage]);
-
-  // useEffect(() => {
-  //   setLoading(false);
-  // }, []);
-  console.log('newcustomer2', technician);
   const CustomerSchema = Yup.object().shape({
     firstName: Yup.string().max(255).required('First Name is required'),
     lastName: Yup.string().max(255).required('Last Name is required'),
@@ -133,11 +126,10 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
     initialValues: getInitialValues(technician!),
     validationSchema: CustomerSchema,
     enableReinitialize: true,
-    onSubmit: async (values, { setSubmitting }) => {
+    onSubmit: (values, { setSubmitting }) => {
       try {
         let newCustomer: TechnicianList = values;
         // newCustomer.name = newCustomer.firstName + ' ' + newCustomer.lastName;
-        console.log('newcustomer1', newCustomer);
         if (technician) {
           // updateCustomer(newCustomer.id!, newCustomer).then(() => {
           updateTechnician(newCustomer).then(() => {
@@ -154,8 +146,7 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
           });
         } else {
           //  await insertCustomer(newCustomer).then(() => {
-          await addTechnician(newCustomer).then((response) => {
-            console.log('addTechnicianAPI', response);
+          addTechnician(newCustomer).then((response) => {
             openSnackbar({
               open: true,
               message: 'Technician added successfully.',
@@ -174,7 +165,6 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
     }
   });
   const addTechnicianAPI = async () => {
-    //event?.preventDefault();
     const { values } = formik;
     const newTechnicianData = {
       firstName: values.firstName,
@@ -186,44 +176,32 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
       contact: values.contact,
       location: values.location
     };
-    if (!selectedFile) {
-      console.log('Please select image.');
-      return;
-    } else {
-      console.log('addCustomerImage', selectedFile);
-    }
-
     // Create a FormData object
     const formData = new FormData();
-    formData.append('file', selectedFile);
     formData.append('data', JSON.stringify(newTechnicianData));
+    // Only append the file if it's selected
+    if (selectedFile) {
+      console.log('addCustomerImage', selectedFile);
+      formData.append('file', selectedFile);
+    } else {
+      console.log('No image selected, proceeding without image');
+    }
     try {
       const response = await addTechnician(formData);
-      console.log('addTechnicianAPI', response.data);
-      if (response.status == 200 || response.status == 201) {
-        openSnackbar({
-          open: true,
-          message: 'Technician added successfully.',
-          variant: 'alert',
-          alert: {
-            color: 'success'
-          }
-        } as SnackbarProps);
-        closeModal();
-      } else {
-        console.log('addTechnicianAPI', response.data);
-        openSnackbar({
-          open: true,
-          message: response.data,
-          variant: 'alert',
-          alert: {
-            color: 'success'
-          }
-        } as SnackbarProps);
-      }
+      console;
+      openSnackbar({
+        open: true,
+        message: 'Technician added successfully.',
+        variant: 'alert',
+        alert: {
+          color: 'success'
+        }
+      } as SnackbarProps);
+      closeModal();
     } catch (error) {
-      console.error('Error fetching technicians:', error);
+      //console.error('Error fetching technicians:', error);
       const errorData = error as ErrorData;
+      console.error('Error fetching technicians:', errorData.response.data.message);
       openSnackbar({
         open: true,
         message: errorData.response.data.message,
@@ -236,7 +214,7 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
   };
   const updateTechnicianAPI = async () => {
     const { values } = formik;
-    const newTechnicianData = {
+    const updateTechnicianData = {
       id: values.id,
       firstName: values.firstName,
       lastName: values.lastName,
@@ -247,20 +225,18 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
       contact: values.contact,
       location: values.location
     };
-    if (!selectedFile) {
-      console.log('Please select image.');
-      return;
-    } else {
-      console.log('addCustomerImage', selectedFile);
-    }
-
     // Create a FormData object
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('data', JSON.stringify(newTechnicianData));
+    // const formData = new FormData();
+    // formData.append('data', JSON.stringify(updateTechnicianData));
+    // // Only append the file if it's selected
+    // if (selectedFile) {
+    //   console.log('addCustomerImage', selectedFile);
+    //   formData.append('file', selectedFile);
+    // } else {
+    //   console.log('No image selected, proceeding without image');
+    // }
     try {
-      const response = await updateTechnician(newTechnicianData);
-      console.log('addTechnicianAPI', response);
+      const response = await updateTechnician(updateTechnicianData);
       openSnackbar({
         open: true,
         message: 'Technician updated successfully.',
@@ -285,16 +261,6 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
   };
   const { values, errors, touched, handleSubmit, isSubmitting, getFieldProps, setFieldValue } = formik;
   const newTechnician = values.firstName + ' ' + values.lastName;
-  console.log('roleValue', values.techRole);
-
-  // if (loading)
-  //   return (
-  //     <Box sx={{ p: 5 }}>
-  //       <Stack direction="row" justifyContent="center">
-  //         <CircularWithPath />
-  //       </Stack>
-  //     </Box>
-  //   );
 
   return (
     <>
@@ -518,10 +484,11 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
                       Cancel
                     </Button>
                     <Button
-                      type="submit"
+                      type="button"
                       variant="contained"
-                      disabled={isSubmitting}
+                      // disabled={isSubmitting}
                       onClick={(e) => {
+                        //e.preventDefault(); // Prevent form submission
                         technician ? updateTechnicianAPI() : addTechnicianAPI();
                       }}
                     >

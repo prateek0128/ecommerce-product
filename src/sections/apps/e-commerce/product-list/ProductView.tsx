@@ -30,14 +30,11 @@ const arrayBufferToBase64 = (buffer: any) => {
 export default function ProductView({ data }: any) {
   const theme = useTheme();
   const [productImage, setProductImage] = useState<string | undefined>(undefined);
-  console.log('ProductViewData', data);
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const response = await getProductDetails(data.id);
-        console.log('fetchProductDetails', response.data);
         const productData = response.data as ProductData[];
-        console.log('fetchProductDetails2', productData);
         // Convert the byte array to Base64 and set the product image
         const base64String = arrayBufferToBase64(productData[0].Picture);
         setProductImage(`data:image/jpeg;base64,${base64String}`);
@@ -47,7 +44,6 @@ export default function ProductView({ data }: any) {
     };
     fetchProductDetails();
   }, []);
-  console.log('ProductViewData2', productImage);
   return (
     <Grid container spacing={2.5} sx={{ pl: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
       <Grid item xs={6} sm={5} md={4} lg={3}>

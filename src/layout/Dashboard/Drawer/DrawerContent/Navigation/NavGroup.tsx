@@ -89,7 +89,6 @@ export default function NavGroup({
   setSelectedLevel,
   selectedLevel
 }: Props) {
-  console.log('NavGroup', item);
   const theme = useTheme();
   const { pathname } = useLocation();
 

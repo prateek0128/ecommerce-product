@@ -26,7 +26,6 @@ export function useGetCustomer() {
     revalidateOnFocus: false,
     revalidateOnReconnect: false
   });
-  console.log('useGetCustomer', data);
   const memoizedValue = useMemo(
     () => ({
       customers: data?.customers as CustomerList[],

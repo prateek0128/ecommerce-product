@@ -70,23 +70,23 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
       })),
     [allTechniciansData]
   );
-  const fetchTechnicians = async () => {
-    try {
-      const response = await getAllTechnicians();
-      // console.log('getAllTechniciansAPI', response.data);
-      setAllTechniciansData(response.data || []);
-    } catch (error) {
-      console.error('Error fetching technicians:', error);
-    }
-  };
   useEffect(() => {
-    fetchTechnicians();
-  }, []);
+    const fetchTechnicians = async () => {
+      try {
+        const response = await getAllTechnicians();
+        setAllTechniciansData(response.data || []);
+      } catch (error) {
+        console.error('Error fetching technicians:', error);
+      }
+    };
+    if (allTechniciansData.length == 0) {
+      fetchTechnicians();
+    }
+  }, [allTechniciansData.length]);
   const assignTechnicianAPI = (techId: any) => {
     const assignTechnicianData = { customerId: 1, technicianId: techId, complaintId: complaintId };
     assignTechnician(assignTechnicianData)
       .then((response) => {
-        console.log('assignTechnicianAPI', response);
         openSnackbar({
           open: true,
           message: 'Technician assigned successfully.',
@@ -101,7 +101,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
         const errorData = error as ErrorData;
         openSnackbar({
           open: true,
-          message: errorData.response.data.message,
+          message: errorData.response.data.error,
           variant: 'alert',
           alert: {
             color: 'error'
@@ -121,9 +121,10 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
       cell: ({ row }) =>
         row.original.availability == 1 ? (
           <Button
+            type="button"
             variant="contained"
             onClick={(event) => {
-              event.stopPropagation();
+              // event.stopPropagation();
               assignTechnicianAPI(row.original.id);
             }}
           >

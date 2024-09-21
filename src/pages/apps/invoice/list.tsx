@@ -460,22 +460,23 @@ export default function List() {
       <Grid container direction={matchDownSM ? 'column' : 'row'} spacing={2} sx={{ pb: 2 }}>
         <Grid item md={8}>
           <Grid container direction="row" spacing={2}>
-            {widgetsData.map((widget: InvoiceWidgets, index: number) => (
-              <Grid item sm={4} xs={12} key={index}>
-                <MainCard>
-                  <InvoiceCard
-                    title={widget.title}
-                    count={widget.count}
-                    percentage={widget.percentage}
-                    isLoss={widget.isLoss}
-                    invoice={widget.invoice}
-                    color={widget.color.main}
-                  >
-                    <InvoiceChart color={widget.color} data={widget.chartData} />
-                  </InvoiceCard>
-                </MainCard>
-              </Grid>
-            ))}
+            {widgetsData &&
+              widgetsData.map((widget: InvoiceWidgets, index: number) => (
+                <Grid item sm={4} xs={12} key={index}>
+                  <MainCard>
+                    <InvoiceCard
+                      title={widget.title}
+                      count={widget.count}
+                      percentage={widget.percentage}
+                      isLoss={widget.isLoss}
+                      invoice={widget.invoice}
+                      color={widget.color.main}
+                    >
+                      <InvoiceChart color={widget.color} data={widget.chartData} />
+                    </InvoiceCard>
+                  </MainCard>
+                </Grid>
+              ))}
           </Grid>
         </Grid>
         <Grid item md={4} sm={12} xs={12}>
@@ -526,7 +527,7 @@ export default function List() {
           </Box>
         </Grid>
         <Grid item xs={12}>
-          {invoiceLoading ? <EmptyReactTable /> : <ReactTable {...{ data: list, columns }} />}
+          {invoiceLoading ? <EmptyReactTable /> : <ReactTable {...{ data: list || [], columns }} />}
           <AlertProductDelete
             title={invoiceId.toString()}
             open={invoiceMaster ? invoiceMaster.alertPopup : false}

@@ -48,8 +48,6 @@ export default function Navigation() {
 
   let dashboardMenu = MenuFromAPI();
   let dashboardMenuWidget = MenuFromAPIWidget();
-  console.log('Navigation', menuItem);
-  console.log('dashboardMenu', dashboardMenuWidget);
   useLayoutEffect(() => {
     if (menuLoading && !isFound(menuItem, 'group-dashboard-loading')) {
       //if (menuLoading && !isFound(menuItem, 'group-widget')) {
@@ -83,7 +81,6 @@ export default function Navigation() {
       })
     }));
   }
-  console.log('Navigation', menuItems);
   const navGroups = menuItems.items.slice(1, lastItemIndex + 1).map((item) => {
     switch (item.type) {
       case 'group':

@@ -434,7 +434,7 @@ export default function AddNewProduct() {
   const fileInputRefBill = useRef<HTMLInputElement | null>(null);
 
   const handleCancel = () => {
-    history('/apps/complaint/complaint-list');
+    history('/apps/complaint/complaints-list');
   };
   const handleCustomerNameChange = (event: ChangeEvent<HTMLInputElement>) => setCustomerName(event.target.value);
   const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => setDescription(event.target.value);
@@ -490,9 +490,22 @@ export default function AddNewProduct() {
     formData.append('file1', itemFile);
     formData.append('file2', billFile);
     formData.append('data', JSON.stringify(raiseComplaintData));
+    // Only append the file1 if it's selected
+    // if (itemFile) {
+    //   console.log('addCustomerImage', itemFile);
+    //   formData.append('file1', itemFile);
+    // } else {
+    //   console.log('No image selected, proceeding without image');
+    // }
+    // Only append the file2 if it's selected
+    // if (billFile) {
+    //   console.log('addCustomerImage', billFile);
+    //   formData.append('file2', billFile);
+    // } else {
+    //   console.log('No image selected, proceeding without image');
+    // }
     try {
       const response = await raiseComplaint(formData);
-      console.log('raiseComplaintAPI', response);
       openSnackbar({
         open: true,
         message: 'Complaint raised successfully.',
@@ -631,42 +644,43 @@ export default function AddNewProduct() {
                     </Grid>
                   </Grid>
                 </Grid>
-                <Grid item xs={12}>
-                  <InputLabel sx={{ mb: 1 }}>Image of Bill</InputLabel>
-                  <Typography color="error.main">
-                    *{' '}
-                    <Typography component="span" color="text.secondary">
-                      Recommended resolution is 640*640 with file size
+                {warranty == 'in warranty' && (
+                  <Grid item xs={12}>
+                    <InputLabel sx={{ mb: 1 }}>Image of Bill</InputLabel>
+                    <Typography color="error.main">
+                      *{' '}
+                      <Typography component="span" color="text.secondary">
+                        Recommended resolution is 640*640 with file size
+                      </Typography>
                     </Typography>
-                  </Typography>
-                  <Grid container>
-                    <Grid item xs={12} sm={6}>
-                      {' '}
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        startIcon={<DocumentUpload />}
-                        sx={{ mt: 1, textTransform: 'none' }}
-                        onClick={handleButtonClickBill} // Trigger file input click
-                      >
-                        Click to Upload
-                      </Button>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      {/* Image display section */}
-                      <Stack direction="row" justifyContent="center" sx={{ mt: 3 }}>
-                        <FormLabel
-                          htmlFor="change-avtar"
-                          sx={{
-                            position: 'relative',
-                            // borderRadius: '20%',
-                            overflow: 'hidden',
-                            '&:hover .MuiBox-root': { opacity: 1 },
-                            cursor: 'pointer'
-                          }}
+                    <Grid container>
+                      <Grid item xs={12} sm={6}>
+                        {' '}
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          startIcon={<DocumentUpload />}
+                          sx={{ mt: 1, textTransform: 'none' }}
+                          onClick={handleButtonClickBill} // Trigger file input click
                         >
-                          {billImageUrl && <img alt="Avatar" src={billImageUrl} style={{ width: 72, height: 72 }} />}
-                          {/* <Box
+                          Click to Upload
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        {/* Image display section */}
+                        <Stack direction="row" justifyContent="center" sx={{ mt: 3 }}>
+                          <FormLabel
+                            htmlFor="change-avtar"
+                            sx={{
+                              position: 'relative',
+                              // borderRadius: '20%',
+                              overflow: 'hidden',
+                              '&:hover .MuiBox-root': { opacity: 1 },
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {billImageUrl && <img alt="Avatar" src={billImageUrl} style={{ width: 72, height: 72 }} />}
+                            {/* <Box
                         sx={{
                           position: 'absolute',
                           top: 0,
@@ -680,25 +694,26 @@ export default function AddNewProduct() {
                           justifyContent: 'center'
                         }}
                       > */}
-                          <Stack spacing={0.5} alignItems="center">
-                            <Camera style={{ color: 'white', fontSize: '2rem' }} />
-                            <Typography sx={{ color: 'secondary.lighter' }}>Upload</Typography>
-                          </Stack>
-                          {/* </Box> */}
-                        </FormLabel>
+                            <Stack spacing={0.5} alignItems="center">
+                              <Camera style={{ color: 'white', fontSize: '2rem' }} />
+                              <Typography sx={{ color: 'secondary.lighter' }}>Upload</Typography>
+                            </Stack>
+                            {/* </Box> */}
+                          </FormLabel>
 
-                        {/* Hidden file input */}
-                        <TextField
-                          type="file"
-                          id="change-avtar"
-                          inputRef={fileInputRefBill} // Reference to the file input
-                          sx={{ display: 'none' }}
-                          onChange={handleBillImageChange} // Handle file selection
-                        />
-                      </Stack>
+                          {/* Hidden file input */}
+                          <TextField
+                            type="file"
+                            id="change-avtar"
+                            inputRef={fileInputRefBill} // Reference to the file input
+                            sx={{ display: 'none' }}
+                            onChange={handleBillImageChange} // Handle file selection
+                          />
+                        </Stack>
+                      </Grid>
                     </Grid>
                   </Grid>
-                </Grid>
+                )}
                 <Grid item xs={12}>
                   <Stack direction="row" spacing={2} justifyContent="right" alignItems="center" sx={{ mt: 6 }}>
                     <Button variant="outlined" color="secondary" onClick={handleCancel}>

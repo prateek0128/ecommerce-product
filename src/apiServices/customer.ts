@@ -31,7 +31,6 @@ export const addCustomer = async <T>(data: any, config?: AxiosRequestConfig): Pr
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)
-    console.log('Error', error);
     throw error;
   }
 };
@@ -49,7 +48,6 @@ export const updateCustomer = async <T>(data: any, config?: AxiosRequestConfig):
 export const getAllCustomers = async <T>(config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
     const response = await apiClient.get<T>('customer/allCustomer', config);
-    console.log('allCustomerResponse', response);
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)
