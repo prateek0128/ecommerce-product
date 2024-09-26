@@ -63,35 +63,23 @@ import { LabelKeyObject } from 'react-csv/lib/core';
 import { Add, Edit, Eye, Trash } from 'iconsax-react';
 
 import { getAllProducts, deleteProduct } from 'apiServices/products';
+import { addCategory, getAllCategories, getAllSubcategories } from 'apiServices/category';
 import AlertProductDelete from 'sections/apps/e-commerce/product-list/AlertProductDelete';
-import { productsData } from './productsData';
+import CategoryModal from 'sections/apps/category/CategoryModal';
+import SubcategoryModal from 'sections/apps/subcategory/SubcategoryModal';
 import CircularProgress from '@mui/material/CircularProgress';
-
-// export const fuzzyFilter: FilterFn<Products> = (row, columnId, value, addMeta) => {
-//   // rank the item
-//   const itemRank = rankItem(row.getValue(columnId), value);
-
-//   // store the ranking info
-//   addMeta(itemRank);
-
-//   // return if the item should be filtered in/out
-//   return itemRank.passed;
-// };
-
-// interface Props {
-//   columns: ColumnDef<Products>[];
-//   data: Products[];
-// }
-
+interface CategoryData {
+  data: any;
+  message: any;
+}
 // ==============================|| REACT TABLE - LIST ||============================== //
 
-function ReactTable({ data, columns, loading }: any) {
+function ReactTable({ data, columns, modalToggler, loading }: any) {
   const theme = useTheme();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
   const table = useReactTable({
     data,
     columns,
@@ -113,19 +101,7 @@ function ReactTable({ data, columns, loading }: any) {
     getPaginationRowModel: getPaginationRowModel(),
     debugTable: true
   });
-
   const backColor = alpha(theme.palette.primary.lighter, 0.1);
-  // let headers: LabelKeyObject[] = [];
-  // columns.map(
-  //   (columns: { accessorKey: any; header: string }) =>
-  //     // @ts-ignore
-  //     columns.accessorKey &&
-  //     headers.push({
-  //       label: typeof columns.header === 'string' ? columns.header : '#',
-  //       // @ts-ignore
-  //       key: columns.accessorKey
-  //     })
-  // );
   let headers: LabelKeyObject[] = [];
   columns.forEach((column: ColumnDef<any>) => {
     if ('accessorKey' in column) {
@@ -140,64 +116,45 @@ function ReactTable({ data, columns, loading }: any) {
       });
     }
   });
-  const history = useNavigate();
-
-  const handleAddProduct = () => {
-    history(`/apps/e-commerce/add-new-product`);
-  };
-
   return (
     <MainCard content={false}>
-      <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ p: 3 }}>
-        <DebouncedInput
-          value={globalFilter ?? ''}
-          onFilterChange={(value) => setGlobalFilter(String(value))}
-          placeholder={`Search ${data.length} records...`}
-        />
-        <Stack direction="row" spacing={1} alignItems="center">
-          <SelectColumnSorting {...{ getState: table.getState, getAllColumns: table.getAllColumns, setSorting }} />
-          <Button variant="contained" startIcon={<Add />} onClick={handleAddProduct} size="large">
-            Add Product
-          </Button>
-        </Stack>
-      </Stack>
       <ScrollX>
         <Stack>
           <RowSelection selected={Object.keys(rowSelection).length} />
           {loading == false ? (
             <TableContainer>
               <Table>
-                <TableHead>
-                  {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                        if (header.column.columnDef.meta !== undefined && header.column.getCanSort()) {
-                          Object.assign(header.column.columnDef.meta, {
-                            className: header.column.columnDef.meta.className + ' cursor-pointer prevent-select'
-                          });
-                        }
-                        return (
-                          <TableCell
-                            key={header.id}
-                            {...header.column.columnDef.meta}
-                            onClick={header.column.getToggleSortingHandler()}
-                            {...(header.column.getCanSort() &&
-                              header.column.columnDef.meta === undefined && {
-                                className: 'cursor-pointer prevent-select'
-                              })}
-                          >
-                            {header.isPlaceholder ? null : (
-                              <Stack direction="row" spacing={1} alignItems="center">
-                                <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>
-                                {header.column.getCanSort() && <HeaderSort column={header.column} />}
-                              </Stack>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
-                </TableHead>
+                {/* <TableHead>
+                {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      if (header.column.columnDef.meta !== undefined && header.column.getCanSort()) {
+                        Object.assign(header.column.columnDef.meta, {
+                          className: header.column.columnDef.meta.className + ' cursor-pointer prevent-select'
+                        });
+                      }
+                      return (
+                        <TableCell
+                          key={header.id}
+                          {...header.column.columnDef.meta}
+                          onClick={header.column.getToggleSortingHandler()}
+                          {...(header.column.getCanSort() &&
+                            header.column.columnDef.meta === undefined && {
+                              className: 'cursor-pointer prevent-select'
+                            })}
+                        >
+                          {header.isPlaceholder ? null : (
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>
+                              {header.column.getCanSort() && <HeaderSort column={header.column} />}
+                            </Stack>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHead> */}
                 <TableBody>
                   {table.getRowModel().rows.map((row) => (
                     <Fragment key={row.id}>
@@ -208,13 +165,13 @@ function ReactTable({ data, columns, loading }: any) {
                           </TableCell>
                         ))}
                       </TableRow>
-                      {row.getIsExpanded() && (
-                        <TableRow sx={{ '&:hover': { bgcolor: `${backColor} !important` } }}>
-                          <TableCell colSpan={row.getVisibleCells().length}>
-                            <ProductView data={row.original} />
-                          </TableCell>
-                        </TableRow>
-                      )}
+                      {/* {row.getIsExpanded() && (
+                      <TableRow sx={{ '&:hover': { bgcolor: `${backColor} !important` } }}>
+                        <TableCell colSpan={row.getVisibleCells().length}>
+                          <CategoryView data={row.original} />
+                        </TableCell>
+                      </TableRow>
+                    )} */}
                     </Fragment>
                   ))}
                 </TableBody>
@@ -238,7 +195,7 @@ function ReactTable({ data, columns, loading }: any) {
             </>
           )}
           <>
-            <Divider />
+            {/* <Divider />
             <Box sx={{ p: 2 }}>
               <TablePagination
                 {...{
@@ -249,7 +206,7 @@ function ReactTable({ data, columns, loading }: any) {
                   initialPageSize: 10
                 }}
               />
-            </Box>
+            </Box> */}
           </>
         </Stack>
       </ScrollX>
@@ -259,44 +216,49 @@ function ReactTable({ data, columns, loading }: any) {
 
 // ==============================|| PRODUCT LIST ||============================== //
 
-export default function ProductList() {
+export default function CategoryView({ data }: any) {
   //const products = useLoaderData() as Products[];
+  console.log('categoryData', data);
   const navigate = useNavigate();
   const history = useNavigate();
   //const [selectedCustomer, setSelectedCustomer] = useState<Products | null>(null);
   const [deleteModal, setDeleteModal] = useState<boolean>(false);
   const [productDeleteId, setProductDeleteId] = useState<any>('');
-  const [allProductsData, setAllProductsData] = useState<any>([]);
+  const [allSubcategoriesData, setAllSubcategoriesData] = useState<any>([]);
+  const [openCategoryModal, setOpenCategoryModal] = useState(false);
+  const [openSubcategoryModal, setOpenSubcategoryModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const allProducts = allProductsData.map((product: any, index: any) => {
-    return {
-      id: product.Id,
-      name: product.Product_Name,
-      description: product.Product_Description,
-      category: product.Category,
-      item: product.Item,
-      price: product.Price,
-      quantity: product.Quantity,
-      stock: product.Stock,
-      productImage: product.Picture
-    };
-  });
+  const handleCategoryModal = () => {
+    setOpenCategoryModal((prev) => !prev);
+  };
+  const handleSubcategoryModal = () => {
+    setOpenSubcategoryModal((prev) => !prev);
+  };
+  const allSubcategories =
+    allSubcategoriesData &&
+    allSubcategoriesData.map((subcategory: any, index: any) => {
+      return {
+        id: subcategory.Sub_Category_Id,
+        subcategoryName: subcategory.Sub_Category_Name,
+        isActive: subcategory.IsEnabled
+      };
+    });
   const handleClose = () => {
     setDeleteModal(!deleteModal);
   };
-  const getAllProductsAPI = () => {
+  const getAllSubcategoriesAPI = () => {
     setLoading(true);
-    getAllProducts()
+    getAllSubcategories(data.id)
       .then((response) => {
         setLoading(false);
-        setAllProductsData(response.data || []);
+        setAllSubcategoriesData(response.data || []);
       })
       .catch((error) => {
         console.error(error);
       });
   };
   useEffect(() => {
-    getAllProductsAPI();
+    getAllSubcategoriesAPI();
   }, []);
   const columns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -330,69 +292,37 @@ export default function ProductList() {
         }
       },
       {
-        header: 'Product Detail',
-        accessorKey: 'name',
+        header: 'Category Name',
+        accessorKey: 'subcategoryName',
         cell: ({ row, getValue }) => (
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <Avatar
+            {/* <Avatar
               variant="rounded"
               alt={getValue() as string}
               color="secondary"
               size="sm"
               src={getImageUrl(`thumbs/${!row.original.image ? 'prod-11.png' : row.original.image}`, ImagePath.ECOMMERCE)}
-            />
+            /> */}
             <Stack spacing={0}>
-              <Typography variant="subtitle1">
-                {row.original.name.charAt(0).toUpperCase() + row.original.name.slice(1).toLowerCase()}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="subtitle1">{row.original.subcategoryName}</Typography>
+              {/* <Typography variant="caption" color="text.secondary">
                 {row.original.description.charAt(0).toUpperCase() + row.original.description.slice(1).toLowerCase()}
-              </Typography>
+              </Typography> */}
             </Stack>
           </Stack>
         )
       },
       {
-        header: 'Categories',
-        accessorKey: 'category',
-        cell: ({ row }) => {
-          return row.original.category ? (
-            <Stack direction="row" spacing={0.25}>
-              <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
-                {capitalize(row.original.category)} {'-'} {row.original.item}
-              </Typography>
-            </Stack>
-          ) : (
-            <Typography variant="h6">-</Typography>
-          );
-        }
-      },
-      {
-        header: 'Price',
-        accessorKey: 'price',
-        cell: ({ getValue }) => <NumericFormat value={getValue() as number} displayType="text" thousandSeparator prefix="$" />,
-        meta: {
-          className: 'cell-right'
-        }
-      },
-      {
-        header: 'Qty',
-        accessorKey: 'quantity',
-        meta: {
-          className: 'cell-right'
-        }
-      },
-      {
         header: 'Status',
-        accessorKey: 'stock',
-        cell: ({ getValue }) => (
-          <Chip
-            color={getValue() == 'In Stock' || 'instock' || 'in stock' ? 'success' : 'error'}
-            label={getValue() == 'In Stock' || 'instock' || 'in stock' ? 'In Stock' : 'Out of Stock'}
-            size="small"
-            variant="light"
-          />
-        )
+        accessorKey: 'isActive',
+        cell: (cell) => {
+          switch (cell.getValue()) {
+            case 1:
+              return <Chip color="success" label="Active" size="small" variant="light" />;
+            case 0:
+              return <Chip color="error" label="Inactive" size="small" variant="light" />;
+          }
+        }
       },
       {
         header: 'Actions',
@@ -404,17 +334,17 @@ export default function ProductList() {
 
           return (
             <Stack direction="row" alignItems="center" justifyContent="center" spacing={0}>
-              <Tooltip title="View">
+              {/* <Tooltip title="View">
                 <IconButton color={row.getIsExpanded() ? 'error' : 'secondary'} onClick={row.getToggleExpandedHandler()}>
                   {collapseIcon}
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
               <Tooltip title="Edit">
                 <IconButton
                   color="primary"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
-                    navigate('/apps/e-commerce/edit-product', { state: { productData: row.original } }); // Pass the data array in state
+                    //navigate('/apps/e-commerce/edit-product', { state: { productData: row.original } }); // Pass the data array in state
                   }}
                 >
                   <Edit />
@@ -442,9 +372,18 @@ export default function ProductList() {
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Product List' }];
   return (
     <>
-      <Breadcrumbs custom heading="Product List" links={breadcrumbLinks} />
-      <ReactTable data={allProducts} columns={columns} loading={loading} />
-      <AlertProductDelete id={Number(productDeleteId)} title={productDeleteId} open={deleteModal} handleClose={handleClose} />
+      {/* <Breadcrumbs custom heading="Product List" links={breadcrumbLinks} /> */}
+      <ReactTable
+        data={allSubcategories}
+        columns={columns}
+        modalToggler={() => {
+          setOpenCategoryModal(true);
+        }}
+        loading={loading}
+      />
+      {/* <AlertProductDelete id={Number(productDeleteId)} title={productDeleteId} open={deleteModal} handleClose={handleClose} /> */}
+      <CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} />
+      {/* <SubcategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} /> */}
     </>
   );
 }

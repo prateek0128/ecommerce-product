@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useRef, useMemo } from 'react';
+import { useState, ChangeEvent, useRef, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // material-ui
@@ -24,6 +24,7 @@ import { openSnackbar } from 'api/snackbar';
 import { SnackbarProps } from 'types/snackbar';
 import { APP_DEFAULT_PATH } from 'config';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
+import { getAllCustomers, deleteCustomer } from 'apiServices/customer';
 // constant
 const warrantyStatus = [
   {
@@ -421,7 +422,7 @@ interface ErrorData {
 export default function AddNewProduct() {
   const history = useNavigate();
   const theme = useTheme();
-  const [customerName, setCustomerName] = useState('');
+  const [customerName, setCustomerName] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [warranty, setWarranty] = useState('in warranty');
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
@@ -432,7 +433,11 @@ export default function AddNewProduct() {
   const [billImageUrl, setBillImageUrl] = useState<string | undefined>(undefined);
   const [billFile, setBillFile] = useState<File | undefined>(undefined);
   const fileInputRefBill = useRef<HTMLInputElement | null>(null);
-
+  const [allCustomersData, setAllCustomersData] = useState<any>([]);
+  const allCustomers = allCustomersData.map((customer: any, index: any) => {
+    const fullName = customer.First_Name + ' ' + customer.Last_Name;
+    return customer.First_Name + ' ' + customer.Last_Name;
+  });
   const handleCancel = () => {
     history('/apps/complaint/complaints-list');
   };
@@ -472,6 +477,18 @@ export default function AddNewProduct() {
       setBillFile(file);
     }
   };
+  const getAllCustomersAPI = () => {
+    getAllCustomers()
+      .then((response) => {
+        setAllCustomersData(response.data || []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  useEffect(() => {
+    getAllCustomersAPI();
+  }, []);
   const raiseComplaintAPI = async (event: { preventDefault: () => void }) => {
     event?.preventDefault();
     const raiseComplaintData = {
@@ -487,8 +504,16 @@ export default function AddNewProduct() {
 
     // Create a FormData object
     const formData = new FormData();
-    formData.append('file1', itemFile);
-    formData.append('file2', billFile);
+    // formData.append('files[]', itemFile, {
+    //   filename: 'product.jpg', // Provide the filename to be used on the server
+    //   contentType: 'image/jpg' // Set the content type explicitly for PDF files
+    // });
+    // formData.append('files[]', billFile, {
+    //   filename: 'bill.jpg', // Provide the filename to be used on the server
+    //   contentType: 'image/jpg' // Set the content type explicitly for PDF files
+    // });
+    formData.append('files[]', itemFile);
+    formData.append('files[]', billFile);
     formData.append('data', JSON.stringify(raiseComplaintData));
     // Only append the file1 if it's selected
     // if (itemFile) {
@@ -528,10 +553,10 @@ export default function AddNewProduct() {
       } as SnackbarProps);
     }
   };
-  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Add Complaint' }];
+  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Raise Complaint' }];
   return (
     <>
-      <Breadcrumbs custom heading="Add Complaint" links={breadcrumbLinks} />
+      <Breadcrumbs custom heading="Raise Complaint" links={breadcrumbLinks} />
       <MainCard>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
@@ -539,7 +564,17 @@ export default function AddNewProduct() {
               <Grid container spacing={1} direction="column">
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Customer Name</InputLabel>
-                  <TextField placeholder="Enter customer name" value={customerName} fullWidth onChange={handleCustomerNameChange} />
+                  {/* <TextField placeholder="Enter customer name" value={customerName} fullWidth onChange={handleCustomerNameChange} /> */}
+                  <Autocomplete
+                    fullWidth
+                    id="techinicians"
+                    options={allCustomers}
+                    value={customerName}
+                    onChange={(event: React.SyntheticEvent, newValue: string | null) => {
+                      setCustomerName(newValue); // This should work now
+                    }}
+                    renderInput={(params) => <TextField {...params} placeholder="Select technician name" />}
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}> Description</InputLabel>

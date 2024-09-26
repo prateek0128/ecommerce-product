@@ -33,6 +33,7 @@ const AppCustomerCard = Loadable(lazy(() => import('pages/apps/customer/card')))
 const AppTechnicianList = Loadable(lazy(() => import('pages/apps/technician/technician-list')));
 const AppTechnicianCard = Loadable(lazy(() => import('pages/apps/technician/card')));
 
+const AppCategoryList = Loadable(lazy(() => import('pages/apps/category/category-list')));
 const AppAssignCategory = Loadable(lazy(() => import('pages/apps/category/assign-category')));
 
 const AppComplaintList = Loadable(lazy(() => import('pages/apps/complaint/complaints-list')));
@@ -243,6 +244,10 @@ const MainRoutes = {
                 {
                   path: 'assign-category',
                   element: <AppAssignCategory />
+                },
+                {
+                  path: 'category-list',
+                  element: <AppCategoryList />
                 }
               ]
             },

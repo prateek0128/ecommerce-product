@@ -65,6 +65,7 @@ import { Add, Edit, Eye, Trash } from 'iconsax-react';
 //api imoorts
 import { getAllCustomers, deleteCustomer } from 'apiServices/customer';
 import { customersData } from './customersData';
+import CircularProgress from '@mui/material/CircularProgress';
 interface Props {
   // columns: ColumnDef<CustomerList>[];
   // data: CustomerList[];
@@ -73,7 +74,7 @@ interface Props {
 
 // ==============================|| REACT TABLE - LIST ||============================== //
 
-function ReactTable({ data, columns, modalToggler }: any) {
+function ReactTable({ data, columns, modalToggler, loading }: any) {
   const theme = useTheme();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -122,7 +123,6 @@ function ReactTable({ data, columns, modalToggler }: any) {
           onFilterChange={(value) => setGlobalFilter(String(value))}
           placeholder={`Search ${data.length} records...`}
         />
-
         <Stack direction="row" alignItems="center" spacing={2}>
           <SelectColumnSorting {...{ getState: table.getState, getAllColumns: table.getAllColumns, setSorting }} />
           <Button variant="contained" startIcon={<Add />} onClick={modalToggler} size="large">
@@ -136,62 +136,79 @@ function ReactTable({ data, columns, modalToggler }: any) {
       <ScrollX>
         <Stack>
           <RowSelection selected={Object.keys(rowSelection).length} />
-          <TableContainer>
-            <Table>
-              <TableHead>
-                {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      if (header.column.columnDef.meta !== undefined && header.column.getCanSort()) {
-                        Object.assign(header.column.columnDef.meta, {
-                          className: header.column.columnDef.meta.className + ' cursor-pointer prevent-select'
-                        });
-                      }
-
-                      return (
-                        <TableCell
-                          key={header.id}
-                          {...header.column.columnDef.meta}
-                          onClick={header.column.getToggleSortingHandler()}
-                          {...(header.column.getCanSort() &&
-                            header.column.columnDef.meta === undefined && {
-                              className: 'cursor-pointer prevent-select'
-                            })}
-                        >
-                          {header.isPlaceholder ? null : (
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>
-                              {header.column.getCanSort() && <HeaderSort column={header.column} />}
-                            </Stack>
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <Fragment key={row.id}>
-                    <TableRow>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} {...cell.column.columnDef.meta}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
+          {loading == false ? (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        if (header.column.columnDef.meta !== undefined && header.column.getCanSort()) {
+                          Object.assign(header.column.columnDef.meta, {
+                            className: header.column.columnDef.meta.className + ' cursor-pointer prevent-select'
+                          });
+                        }
+                        return (
+                          <TableCell
+                            key={header.id}
+                            {...header.column.columnDef.meta}
+                            onClick={header.column.getToggleSortingHandler()}
+                            {...(header.column.getCanSort() &&
+                              header.column.columnDef.meta === undefined && {
+                                className: 'cursor-pointer prevent-select'
+                              })}
+                          >
+                            {header.isPlaceholder ? null : (
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>
+                                {header.column.getCanSort() && <HeaderSort column={header.column} />}
+                              </Stack>
+                            )}
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
-                    {row.getIsExpanded() && (
-                      <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
-                        <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
-                          <CustomerView data={row.original} />
-                        </TableCell>
+                  ))}
+                </TableHead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <Fragment key={row.id}>
+                      <TableRow>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} {...cell.column.columnDef.meta}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
                       </TableRow>
-                    )}
-                  </Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      {row.getIsExpanded() && (
+                        <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
+                          <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
+                            <CustomerView data={row.original} />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <>
+              <Divider />
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%', // Take full viewport height
+                  p: 2
+                }}
+              >
+                <CircularProgress size={40} />
+              </Box>
+            </>
+          )}
           <>
             <Divider />
             <Box sx={{ p: 2 }}>
@@ -221,7 +238,7 @@ export default function CustomerListPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerList | null>(null);
   const [customerDeleteId, setCustomerDeleteId] = useState<any>('');
   const [allCustomersData, setAllCustomersData] = useState<any>([]);
-
+  const [loading, setLoading] = useState(false);
   const allCustomers = allCustomersData.map((customer: any, index: any) => {
     const fullName = customer.First_Name + ' ' + customer.Last_Name;
     return {
@@ -241,8 +258,10 @@ export default function CustomerListPage() {
     setOpen(!open);
   };
   const getAllCustomersAPI = () => {
+    setLoading(true);
     getAllCustomers()
       .then((response) => {
+        setLoading(false);
         setAllCustomersData(response.data || []);
       })
       .catch((error) => {
@@ -291,7 +310,11 @@ export default function CustomerListPage() {
             <Avatar
               alt="Avatar"
               size="sm"
-              src={getImageUrl(`avatar-${!row.original.profilePicture ? 1 : row.original.profilePicture}.png`, ImagePath.USERS)}
+              src={
+                row.original.profilePicture
+                  ? row.original.profilePicture
+                  : getImageUrl(`avatar-${!row.original.profilePicture ? 1 : row.original.profilePicture}.png`, ImagePath.USERS)
+              }
             />
             <Stack spacing={0}>
               <Typography variant="subtitle1">{getValue() as string}</Typography>
@@ -388,14 +411,13 @@ export default function CustomerListPage() {
   return (
     <>
       <ReactTable
-        {...{
-          data: allCustomers,
-          columns,
-          modalToggler: () => {
-            setCustomerModal(true);
-            setSelectedCustomer(null);
-          }
+        data={allCustomers}
+        columns={columns}
+        modalToggler={() => {
+          setCustomerModal(true);
+          setSelectedCustomer(null);
         }}
+        loading={loading}
       />
       <AlertCustomerDelete id={Number(customerDeleteId)} title={customerDeleteId} open={open} handleClose={handleClose} />
       <CustomerModal open={customerModal} modalToggler={setCustomerModal} customer={selectedCustomer} />

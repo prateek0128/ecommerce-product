@@ -65,6 +65,7 @@ import { LabelKeyObject } from 'react-csv/lib/core';
 import { getAllComplaints } from 'apiServices/complaint';
 import { APP_DEFAULT_PATH } from 'config';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
+import CircularProgress from '@mui/material/CircularProgress';
 // interface Props {
 //   columns: ColumnDef<CustomerList>[];
 //   data: CustomerList[];
@@ -72,7 +73,7 @@ import Breadcrumbs from 'components/@extended/Breadcrumbs';
 // }
 // ==============================|| REACT TABLE - LIST ||============================== //
 
-function ReactTable({ data, columns }: any) {
+function ReactTable({ data, columns, loading }: any) {
   const theme = useTheme();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -152,63 +153,81 @@ function ReactTable({ data, columns }: any) {
       <ScrollX>
         <Stack>
           <RowSelection selected={Object.keys(rowSelection).length} />
-          <TableContainer>
-            <Table>
-              <TableHead>
-                {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      if (header.column.columnDef.meta !== undefined && header.column.getCanSort()) {
-                        Object.assign(header.column.columnDef.meta, {
-                          className: header.column.columnDef.meta.className + ' cursor-pointer prevent-select'
-                        });
-                      }
+          {loading == false ? (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  {table.getHeaderGroups().map((headerGroup: HeaderGroup<any>) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        if (header.column.columnDef.meta !== undefined && header.column.getCanSort()) {
+                          Object.assign(header.column.columnDef.meta, {
+                            className: header.column.columnDef.meta.className + ' cursor-pointer prevent-select'
+                          });
+                        }
 
-                      return (
-                        <TableCell
-                          key={header.id}
-                          {...header.column.columnDef.meta}
-                          onClick={header.column.getToggleSortingHandler()}
-                          {...(header.column.getCanSort() &&
-                            header.column.columnDef.meta === undefined && {
-                              className: 'cursor-pointer prevent-select'
-                            })}
-                          style={{ whiteSpace: 'nowrap' }}
-                        >
-                          {header.isPlaceholder ? null : (
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>
-                              {header.column.getCanSort() && <HeaderSort column={header.column} />}
-                            </Stack>
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHead>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <Fragment key={row.id}>
-                    <TableRow>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} {...cell.column.columnDef.meta}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
+                        return (
+                          <TableCell
+                            key={header.id}
+                            {...header.column.columnDef.meta}
+                            onClick={header.column.getToggleSortingHandler()}
+                            {...(header.column.getCanSort() &&
+                              header.column.columnDef.meta === undefined && {
+                                className: 'cursor-pointer prevent-select'
+                              })}
+                            style={{ whiteSpace: 'nowrap' }}
+                          >
+                            {header.isPlaceholder ? null : (
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Box>{flexRender(header.column.columnDef.header, header.getContext())}</Box>
+                                {header.column.getCanSort() && <HeaderSort column={header.column} />}
+                              </Stack>
+                            )}
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
-                    {row.getIsExpanded() && (
-                      <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
-                        <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
-                          <ComplaintView data={row.original} />
-                        </TableCell>
+                  ))}
+                </TableHead>
+                <TableBody>
+                  {table.getRowModel().rows.map((row) => (
+                    <Fragment key={row.id}>
+                      <TableRow>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} {...cell.column.columnDef.meta}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
                       </TableRow>
-                    )}
-                  </Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      {row.getIsExpanded() && (
+                        <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
+                          <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
+                            <ComplaintView data={row.original} />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <>
+              <Divider />
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%', // Take full viewport height
+                  p: 2
+                }}
+              >
+                <CircularProgress size={40} />
+              </Box>
+            </>
+          )}
           <>
             <Divider />
             <Box sx={{ p: 2 }}>
@@ -239,6 +258,7 @@ export default function ComplaintListPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<ComplaintList | null>(null);
   const [complaintDeleteId, setComplaintDeleteId] = useState<any>('');
   const [allComplaintsData, setAllComplaintsData] = useState<any>([]);
+  const [loading, setLoading] = useState(false);
   const allComplaints = allComplaintsData.map((complaint: any, index: any) => {
     return {
       id: complaint.Complaint_Id,
@@ -256,8 +276,10 @@ export default function ComplaintListPage() {
     setComplaintModal(!complaintModal);
   };
   const getAllComplaintsAPI = () => {
+    setLoading(true);
     getAllComplaints()
       .then((response) => {
+        setLoading(false);
         setAllComplaintsData(response.data || []);
       })
       .catch((error) => {
@@ -409,12 +431,7 @@ export default function ComplaintListPage() {
   return (
     <>
       <Breadcrumbs custom heading="Complaint List" links={breadcrumbLinks} />
-      <ReactTable
-        {...{
-          data: allComplaints || [],
-          columns
-        }}
-      />
+      <ReactTable data={allComplaints || []} columns={columns} loading={loading} />
       <AlertComplaintDelete id={Number(complaintDeleteId)} title={complaintDeleteId} open={complaintModal} handleClose={handleClose} />
     </>
   );

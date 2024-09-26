@@ -21,6 +21,39 @@ const formApiClient: AxiosInstance = axios.create({
 });
 export type ApiResponse<T> = AxiosResponse<T>;
 
+// Add New Category
+export const addCategory = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.post<T>('category/addCategory', data, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};
+
+//Get All Customers
+export const getAllCategories = async <T>(config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get<T>('category/fetchCategory', config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};
+
+//Get All Subcategories
+export const getAllSubcategories = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get<T>(`category/fetchSubCategory?id=${id}`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};
+
 //Assign Category
 export const assignCategory = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {

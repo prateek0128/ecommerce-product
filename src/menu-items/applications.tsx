@@ -191,7 +191,7 @@ const applications: NavItemType = {
           id: 'category',
           title: <FormattedMessage id="Category" />,
           type: 'item',
-          url: '/apps/e-commerce/products'
+          url: '/apps/category/category-list'
         },
         {
           id: 'category-details',

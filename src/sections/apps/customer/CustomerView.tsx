@@ -44,21 +44,27 @@ export default function CustomerView({ data }: any) {
 
     fetchCustomerDetails();
   }, []);
+  console.log('Profile_Picture', data);
+  console.log('Profile_Picture', data.profileImage);
   return (
     <Transitions type="slide" direction="down" in={true}>
       <Grid container spacing={2.5} sx={{ pl: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
-        {/* <Grid item xs={12} sm={5} md={4} lg={4} xl={3}>
+        <Grid item xs={12} sm={5} md={4} lg={4} xl={3}>
           <MainCard>
-            <Chip
+            {/* <Chip
               label={data.status}
               size="small"
               color="primary"
               sx={{ position: 'absolute', right: 10, top: 10, fontSize: '0.675rem' }}
-            />
+            /> */}
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Stack spacing={2.5} alignItems="center">
-                  <Avatar alt="Avatar 1" size="xl" src={getImageUrl(`avatar-${data.avatar}.png`, ImagePath.USERS)} />
+                  <Avatar
+                    alt="Avatar 1"
+                    size="xl"
+                    src={data.profileImage ? data.profileImage : getImageUrl(`avatar-${data.avatar}.png`, ImagePath.USERS)}
+                  />
                   <Stack spacing={0.5} alignItems="center">
                     <Typography variant="h5">{data.fatherName}</Typography>
                     <Typography color="secondary">{data.role}</Typography>
@@ -131,8 +137,8 @@ export default function CustomerView({ data }: any) {
               </Grid>
             </Grid>
           </MainCard>
-        </Grid> */}
-        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+        </Grid>
+        <Grid item xs={12} sm={7} md={8} lg={8} xl={9}>
           <Stack spacing={2.5}>
             <MainCard title="Personal Details">
               <List sx={{ py: 0 }}>

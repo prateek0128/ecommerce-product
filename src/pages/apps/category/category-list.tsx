@@ -1,23 +1,25 @@
 import { useMemo, useState, Fragment, MouseEvent, useEffect } from 'react';
+import { useLoaderData, useNavigate } from 'react-router-dom';
 
 // material-ui
 import { alpha, useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
-import Button from '@mui/material/Button';
-import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import TableContainer from '@mui/material/TableContainer';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
+import capitalize from '@mui/utils/capitalize';
 
 // third-party
-import { PatternFormat } from 'react-number-format';
+import { NumericFormat } from 'react-number-format';
 import {
   ColumnDef,
   HeaderGroup,
@@ -26,25 +28,22 @@ import {
   getSortedRowModel,
   getPaginationRowModel,
   getFilteredRowModel,
+  getExpandedRowModel,
   useReactTable,
   SortingState,
+  FilterFn,
   ColumnFiltersState
 } from '@tanstack/react-table';
-import { LabelKeyObject } from 'react-csv/lib/core';
+import { rankItem } from '@tanstack/match-sorter-utils';
 
 // project-import
-import MainCard from 'components/MainCard';
 import ScrollX from 'components/ScrollX';
+import MainCard from 'components/MainCard';
 import Avatar from 'components/@extended/Avatar';
 import IconButton from 'components/@extended/IconButton';
-
-import TechicianModal from 'sections/apps/technician/TechicianModal';
-import AlertTechicianDelete from 'sections/apps/technician/AlertTechicianDelete';
-import TechicianView from 'sections/apps/technician/TechnicianView';
-import EmptyReactTable from 'pages/tables/react-table/empty';
-
+import Breadcrumbs from 'components/@extended/Breadcrumbs';
+import ProductView from 'sections/apps/e-commerce/product-list/ProductView';
 import {
-  CSVExport,
   DebouncedInput,
   HeaderSort,
   IndeterminateCheckbox,
@@ -53,32 +52,35 @@ import {
   TablePagination
 } from 'components/third-party/react-table';
 
-import { useGetCustomer } from 'api/technician';
+import { APP_DEFAULT_PATH } from 'config';
 import { ImagePath, getImageUrl } from 'utils/getImageUrl';
 
 // types
-import { CustomerList } from 'types/customer';
-import { TechnicianList } from 'types/technician';
+import { Products } from 'types/e-commerce';
+import { LabelKeyObject } from 'react-csv/lib/core';
 
 // assets
 import { Add, Edit, Eye, Trash } from 'iconsax-react';
-import { getAllTechnicians } from 'apiServices/technician';
-import { techniciansData } from './techniciansData';
-import CircularProgress from '@mui/material/CircularProgress';
-interface Props {
-  // columns: ColumnDef<TechnicianList>[];
-  // data: TechnicianList[];
-  //modalToggler: (event: React.MouseEvent<HTMLButtonElement>) => void;
-}
 
+import { getAllProducts, deleteProduct } from 'apiServices/products';
+import { addCategory, getAllCategories } from 'apiServices/category';
+import AlertProductDelete from 'sections/apps/e-commerce/product-list/AlertProductDelete';
+import CategoryModal from 'sections/apps/category/CategoryModal';
+import SubcategoryModal from 'sections/apps/subcategory/SubcategoryModal';
+import CategoryView from 'sections/apps/category/CategoryView';
+import CircularProgress from '@mui/material/CircularProgress';
+interface CategoryData {
+  data: any;
+  message: any;
+}
 // ==============================|| REACT TABLE - LIST ||============================== //
 
 function ReactTable({ data, columns, modalToggler, loading }: any) {
   const theme = useTheme();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState('');
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
     data,
@@ -101,35 +103,41 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
     getPaginationRowModel: getPaginationRowModel(),
     debugTable: true
   });
+
   const backColor = alpha(theme.palette.primary.lighter, 0.1);
   let headers: LabelKeyObject[] = [];
-  columns.map(
-    (columns: { accessorKey: any; header: string }) =>
-      // @ts-ignore
-      columns.accessorKey &&
+  columns.forEach((column: ColumnDef<any>) => {
+    if ('accessorKey' in column) {
       headers.push({
-        label: typeof columns.header === 'string' ? columns.header : '#',
-        // @ts-ignore
-        key: columns.accessorKey
-      })
-  );
+        label: typeof column.header === 'string' ? column.header : '#',
+        key: column.accessorKey as string
+      });
+    } else if ('accessorFn' in column) {
+      headers.push({
+        label: typeof column.header === 'string' ? column.header : '#',
+        key: column.id as string
+      });
+    }
+  });
+  const history = useNavigate();
+
+  const handleAddProduct = () => {
+    history(`/apps/e-commerce/add-new-product`);
+  };
 
   return (
     <MainCard content={false}>
-      <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ padding: 3 }}>
+      <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ p: 3 }}>
         <DebouncedInput
           value={globalFilter ?? ''}
           onFilterChange={(value) => setGlobalFilter(String(value))}
           placeholder={`Search ${data.length} records...`}
         />
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction="row" spacing={1} alignItems="center">
           <SelectColumnSorting {...{ getState: table.getState, getAllColumns: table.getAllColumns, setSorting }} />
           <Button variant="contained" startIcon={<Add />} onClick={modalToggler} size="large">
-            Add Technician
+            Add Category
           </Button>
-          <CSVExport
-            {...{ data: table.getSelectedRowModel().flatRows.map((row) => row.original), headers, filename: 'customer-list.csv' }}
-          />
         </Stack>
       </Stack>
       <ScrollX>
@@ -147,7 +155,6 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                             className: header.column.columnDef.meta.className + ' cursor-pointer prevent-select'
                           });
                         }
-
                         return (
                           <TableCell
                             key={header.id}
@@ -181,9 +188,9 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                         ))}
                       </TableRow>
                       {row.getIsExpanded() && (
-                        <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
-                          <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
-                            <TechicianView data={row.original} />
+                        <TableRow sx={{ '&:hover': { bgcolor: `${backColor} !important` } }}>
+                          <TableCell colSpan={row.getVisibleCells().length}>
+                            <CategoryView data={row.original} />
                           </TableCell>
                         </TableRow>
                       )}
@@ -217,7 +224,8 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                   setPageSize: table.setPageSize,
                   setPageIndex: table.setPageIndex,
                   getState: table.getState,
-                  getPageCount: table.getPageCount
+                  getPageCount: table.getPageCount,
+                  initialPageSize: 10
                 }}
               />
             </Box>
@@ -227,52 +235,54 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
     </MainCard>
   );
 }
-// ==============================|| CUSTOMER LIST ||============================== //
 
-export default function CustomerListPage() {
-  const theme = useTheme();
+// ==============================|| PRODUCT LIST ||============================== //
 
-  //const { customersLoading: loading, customers: lists } = useGetCustomer();
-  const [open, setOpen] = useState<boolean>(false);
-  const [customerModal, setCustomerModal] = useState<boolean>(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<TechnicianList | null>(null);
-  const [customerDeleteId, setCustomerDeleteId] = useState<any>('');
-  const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
+export default function CategoryList() {
+  //const products = useLoaderData() as Products[];
+  const navigate = useNavigate();
+  const history = useNavigate();
+  //const [selectedCustomer, setSelectedCustomer] = useState<Products | null>(null);
+  const [deleteModal, setDeleteModal] = useState<boolean>(false);
+  const [productDeleteId, setProductDeleteId] = useState<any>('');
+  const [allCategoriesData, setAllCategoriesData] = useState<any>([]);
+  const [openCategoryModal, setOpenCategoryModal] = useState(false);
+  const [openSubcategoryModal, setOpenSubcategoryModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
-    const fullName = technician.First_Name + ' ' + technician.Last_Name;
-    return {
-      id: technician.Id,
-      name: fullName,
-      email: technician.Email,
-      contact: technician.Contact,
-      age: technician.Age,
-      location: technician.Location,
-      techRole: technician.Tech_Role,
-      gender: technician.Gender,
-      firstName: technician.First_Name,
-      lastName: technician.Last_Name,
-      profileImage: technician.Profile_Picture
-    };
-  });
+  const handleCategoryModal = () => {
+    setOpenCategoryModal((prev) => !prev);
+  };
+  const handleSubcategoryModal = () => {
+    setOpenSubcategoryModal((prev) => !prev);
+  };
+  const allCategories =
+    allCategoriesData &&
+    allCategoriesData.map((category: any, index: any) => {
+      return {
+        id: category.Category_Id,
+        categoryName: category.Category_Name,
+        isActive: category.IsEnabled
+      };
+    });
   const handleClose = () => {
-    setOpen(!open);
+    setDeleteModal(!deleteModal);
+  };
+  const getAllCategoriesAPI = () => {
+    setLoading(true);
+    getAllCategories()
+      .then((response) => {
+        setLoading(false);
+        const categoryData = response.data as CategoryData;
+        setAllCategoriesData(categoryData.data.categories || []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
   useEffect(() => {
-    const fetchTechnicians = async () => {
-      setLoading(true);
-      try {
-        const response = await getAllTechnicians();
-        setLoading(false);
-        setAllTechniciansData(response.data || []);
-      } catch (error) {
-        console.error('Error fetching technicians:', error);
-      }
-    };
-
-    fetchTechnicians();
+    getAllCategoriesAPI();
   }, []);
-  const columns = useMemo<ColumnDef<TechnicianList>[]>(
+  const columns = useMemo<ColumnDef<any>[]>(
     () => [
       {
         id: 'Row Selection',
@@ -304,74 +314,92 @@ export default function CustomerListPage() {
         }
       },
       {
-        header: 'Technician Name',
-        accessorKey: 'name',
+        header: 'Category Name',
+        accessorKey: 'categoryName',
         cell: ({ row, getValue }) => (
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <Avatar
-              alt="Avatar"
+            {/* <Avatar
+              variant="rounded"
+              alt={getValue() as string}
+              color="secondary"
               size="sm"
-              src={getImageUrl(`avatar-${!row.original.profilePicture ? 1 : row.original.profilePicture}.png`, ImagePath.USERS)}
-            />
+              src={getImageUrl(`thumbs/${!row.original.image ? 'prod-11.png' : row.original.image}`, ImagePath.ECOMMERCE)}
+            /> */}
             <Stack spacing={0}>
-              <Typography variant="subtitle1">{getValue() as string}</Typography>
-              <Typography color="text.secondary">{row.original.email as string}</Typography>
+              <Typography variant="subtitle1">{row.original.categoryName}</Typography>
+              {/* <Typography variant="caption" color="text.secondary">
+                {row.original.description.charAt(0).toUpperCase() + row.original.description.slice(1).toLowerCase()}
+              </Typography> */}
             </Stack>
           </Stack>
         )
       },
       {
-        header: 'Contact',
-        accessorKey: 'contact',
-        cell: ({ getValue }) => <PatternFormat displayType="text" format="+91##########" mask="" defaultValue={getValue() as number} />
-      },
-      {
-        header: 'Age',
-        accessorKey: 'age',
-        meta: {
-          className: 'cell-right'
+        header: 'Status',
+        accessorKey: 'isActive',
+        cell: (cell) => {
+          switch (cell.getValue()) {
+            case 1:
+              return <Chip color="success" label="Active" size="small" variant="light" />;
+            case 0:
+              return <Chip color="error" label="Inactive" size="small" variant="light" />;
+          }
         }
       },
-      {
-        header: 'Location',
-        accessorKey: 'location'
-      },
-      {
-        header: 'Technician Role',
-        accessorKey: 'techRole'
-      },
+      // {
+      //   header: 'Categories',
+      //   accessorKey: 'category',
+      //   cell: ({ row }) => {
+      //     return row.original.category ? (
+      //       <Stack direction="row" spacing={0.25}>
+      //         <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
+      //           {capitalize(row.original.category)} {'-'} {row.original.item}
+      //         </Typography>
+      //       </Stack>
+      //     ) : (
+      //       <Typography variant="h6">-</Typography>
+      //     );
+      //   }
+      // },
+      // {
+      //   header: 'Price',
+      //   accessorKey: 'price',
+      //   cell: ({ getValue }) => <NumericFormat value={getValue() as number} displayType="text" thousandSeparator prefix="$" />,
+      //   meta: {
+      //     className: 'cell-right'
+      //   }
+      // },
+      // {
+      //   header: 'Qty',
+      //   accessorKey: 'quantity',
+      //   meta: {
+      //     className: 'cell-right'
+      //   }
+      // },
       // {
       //   header: 'Status',
-      //   accessorKey: 'status',
-      //   cell: (cell) => {
-      //     switch (cell.getValue()) {
-      //       case 3:
-      //         return <Chip color="error" label="Rejected" size="small" variant="light" />;
-      //       case 1:
-      //         return <Chip color="success" label="Verified" size="small" variant="light" />;
-      //       case 2:
-      //       default:
-      //         return <Chip color="info" label="Pending" size="small" variant="light" />;
-      //     }
-      //   }
+      //   accessorKey: 'stock',
+      //   cell: ({ getValue }) => (
+      //     <Chip
+      //       color={getValue() == 'In Stock' || 'instock' || 'in stock' ? 'success' : 'error'}
+      //       label={getValue() == 'In Stock' || 'instock' || 'in stock' ? 'In Stock' : 'Out of Stock'}
+      //       size="small"
+      //       variant="light"
+      //     />
+      //   )
       // },
       {
         header: 'Actions',
         meta: {
           className: 'cell-center'
         },
-        disableSortBy: true,
         cell: ({ row }) => {
-          const collapseIcon =
-            row.getCanExpand() && row.getIsExpanded() ? (
-              <Add style={{ color: theme.palette.error.main, transform: 'rotate(45deg)' }} />
-            ) : (
-              <Eye />
-            );
+          const collapseIcon = row.getCanExpand() && row.getIsExpanded() ? <Add style={{ transform: 'rotate(45deg)' }} /> : <Eye />;
+
           return (
             <Stack direction="row" alignItems="center" justifyContent="center" spacing={0}>
-              <Tooltip title="View">
-                <IconButton color="secondary" onClick={row.getToggleExpandedHandler()}>
+              <Tooltip title="View Subcategories">
+                <IconButton color={row.getIsExpanded() ? 'error' : 'secondary'} onClick={row.getToggleExpandedHandler()}>
                   {collapseIcon}
                 </IconButton>
               </Tooltip>
@@ -380,8 +408,7 @@ export default function CustomerListPage() {
                   color="primary"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
-                    setSelectedCustomer(row.original);
-                    setCustomerModal(true);
+                    //navigate('/apps/e-commerce/edit-product', { state: { productData: row.original } }); // Pass the data array in state
                   }}
                 >
                   <Edit />
@@ -393,7 +420,7 @@ export default function CustomerListPage() {
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
                     handleClose();
-                    setCustomerDeleteId(Number(row.original.id));
+                    setProductDeleteId(Number(row.original.id));
                   }}
                 >
                   <Trash />
@@ -404,25 +431,23 @@ export default function CustomerListPage() {
         }
       }
     ],
-    // eslint-disable-next-line
-    [theme]
+    []
   );
-
-  //if (loading) return <EmptyReactTable />;
-
+  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Product List' }];
   return (
     <>
+      {/* <Breadcrumbs custom heading="Product List" links={breadcrumbLinks} /> */}
       <ReactTable
-        data={allTechnicians}
+        data={allCategories}
         columns={columns}
         modalToggler={() => {
-          setCustomerModal(true);
-          setSelectedCustomer(null);
+          setOpenCategoryModal(true);
         }}
         loading={loading}
       />
-      <AlertTechicianDelete id={Number(customerDeleteId)} title={customerDeleteId} open={open} handleClose={handleClose} />
-      <TechicianModal open={customerModal} modalToggler={setCustomerModal} technician={selectedCustomer} />
+      {/* <AlertProductDelete id={Number(productDeleteId)} title={productDeleteId} open={deleteModal} handleClose={handleClose} /> */}
+      <CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} />
+      {/* <SubcategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} /> */}
     </>
   );
 }

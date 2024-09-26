@@ -406,7 +406,7 @@ export default function AssignCategory() {
   const assignCategoryAPI = () => {
     const assignCategoryData = {
       technicianName: technicianName,
-      technicianRole: roles,
+      //technicianRole: roles,
       category: selectedCategory,
       subCategory: selectedSubcategory,
       repairParts: selectedRepairParts
@@ -459,7 +459,7 @@ export default function AssignCategory() {
                     renderInput={(params) => <TextField {...params} placeholder="Select technician name" />}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                {/* <Grid item xs={12}>
                   <InputLabel htmlFor="techinician-role" sx={{ mb: 1 }}>
                     Technician Role
                   </InputLabel>
@@ -473,7 +473,7 @@ export default function AssignCategory() {
                     }}
                     renderInput={(params) => <TextField {...params} placeholder="Select technician name" />}
                   />
-                </Grid>
+                </Grid> */}
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Category</InputLabel>
                   <FormControl fullWidth>

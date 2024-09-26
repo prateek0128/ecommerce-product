@@ -134,21 +134,21 @@ export default function ProductsPage() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <ProductFilterDrawer
+      {/* <ProductFilterDrawer
         filter={filter}
         setFilter={setFilter}
         openFilterDrawer={openFilterDrawer}
         handleDrawerOpen={handleDrawerOpen}
         setLoading={setLoading}
         initialState={initialState}
-      />
+      /> */}
       <Main theme={theme} open={openFilterDrawer} container={container}>
         <Grid container spacing={2.5}>
-          <Grid item xs={12}>
+          {/* <Grid item xs={12}>
             <ProductsHeader filter={filter} handleDrawerOpen={handleDrawerOpen} setFilter={setFilter} />
-          </Grid>
+          </Grid> */}
           <Grid item xs={12}>
-            <Grid container spacing={3}>
+            {/* <Grid container spacing={3}>
               {isLoading
                 ? [1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
                     <Grid key={item} item xs={12} sm={6} md={4} lg={4}>
@@ -156,7 +156,7 @@ export default function ProductsPage() {
                     </Grid>
                   ))
                 : productResult}
-            </Grid>
+            </Grid> */}
           </Grid>
         </Grid>
       </Main>

@@ -26,6 +26,8 @@ import { Description } from '@mui/icons-material';
 import { categories } from './productCategories';
 import { APP_DEFAULT_PATH } from 'config';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
+import CategoryModal from '../../../sections/apps/category/CategoryModal';
+import SubcategoryModal from  '../../../sections/apps/subcategory/SubcategoryModal';
 // constant
 const prices = [
   {
@@ -88,6 +90,14 @@ export default function AddNewProduct() {
   const [productImage, setProductImage] = useState<string | undefined>(undefined);
   const [productFile, setProductFile] = useState<File | undefined>(undefined);
   const fileInputRefProduct = useRef<HTMLInputElement | null>(null);
+  const [openCategoryModal, setOpenCategoryModal] = useState(false);
+  const [openSubcategoryModal, setOpenSubcategoryModal] = useState(false);
+  const handleCategoryModal = () => {
+    setOpenCategoryModal((prev) => !prev);
+  };
+  const handleSubcategoryModal = () => {
+    setOpenSubcategoryModal((prev) => !prev);
+  };
   const handleProductName = (event: ChangeEvent<HTMLInputElement>) => {
     setProductName(event.target.value);
   };
@@ -119,7 +129,6 @@ export default function AddNewProduct() {
     // Trigger the file input when the button is clicked
     fileInputRefProduct.current?.click();
   };
-
   const handleProductChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -213,6 +222,9 @@ export default function AddNewProduct() {
                         {category.name}
                       </MenuItem>
                     ))}
+                    <MenuItem value="" onClick={handleCategoryModal}>
+                      Add Category
+                    </MenuItem>
                   </TextField>
                 </Grid>
                 <Grid item xs={12}>
@@ -224,7 +236,7 @@ export default function AddNewProduct() {
                     onChange={handleSubcategoryChange}
                     disabled={!selectedCategory} // Disable if no category is selected
                   >
-                    <MenuItem value="Select Item" disabled>
+                    <MenuItem value="Select Item" defaultValue={'Select Item'} disabled>
                       {!selectedSubcategory ? 'Select Item' : 'Select Item'}
                     </MenuItem>
                     {/* Placeholder */}
@@ -237,9 +249,11 @@ export default function AddNewProduct() {
                             </MenuItem>
                           ))
                       : null}
+                    <MenuItem value="" onClick={handleSubcategoryModal}>
+                      Add Subcategory
+                    </MenuItem>
                   </TextField>
                 </Grid>
-
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Price (in Rupees)</InputLabel>
                   <TextField placeholder="Enter Price" fullWidth type="number" value={price} onChange={handlePrice} />
@@ -352,6 +366,8 @@ export default function AddNewProduct() {
           </Grid>
         </Grid>
       </MainCard>
+      <CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} />
+      <SubcategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} />
     </>
   );
 }
