@@ -83,7 +83,15 @@ interface ErrorData {
 }
 // ==============================|| CUSTOMER ADD / EDIT - FORM ||============================== //
 
-export default function FormCategoryAdd({ category, closeModal }: { category: CategoryList | null; closeModal: () => void }) {
+export default function FormCategoryAdd({
+  category,
+  closeModal,
+  selectedCategory
+}: {
+  category: CategoryList | null;
+  closeModal: () => void;
+  selectedCategory: any;
+}) {
   const theme = useTheme();
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
@@ -91,7 +99,7 @@ export default function FormCategoryAdd({ category, closeModal }: { category: Ca
   // const [avatar, setAvatar] = useState<string | undefined>(
   //   getImageUrl(`avatar-${category && category !== null && category?.profilePicture ? category.profilePicture : 1}.png`, ImagePath.USERS)
   // );
-
+  console.log('selectedCategoryLog2', selectedCategory);
   useEffect(() => {
     if (selectedImage) {
       // setAvatar(URL.createObjectURL(selectedImage));
@@ -173,13 +181,10 @@ export default function FormCategoryAdd({ category, closeModal }: { category: Ca
 
   const addCategoryAPI = async () => {
     const { values } = formik;
-    console.log('subcategory2', values.categoryName);
-    console.log('subcategory3', values.subcategoryName);
     const newCategoryData = {
       categoryName: values.categoryName,
       subcategories: values.subcategoryName
     };
-    console.log('newCategoryData', newCategoryData);
     // Create a FormData object
     // const formData = new FormData();
     // formData.append('data', JSON.stringify(newCategoryData));
@@ -256,16 +261,6 @@ export default function FormCategoryAdd({ category, closeModal }: { category: Ca
   };
   const { values, errors, touched, handleSubmit, isSubmitting, getFieldProps, setFieldValue } = formik;
   const newCategory = values.categoryName;
-  console.log('subcategory', values.subcategoryName);
-  // if (loading)
-  //   return (
-  //     <Box sx={{ p: 5 }}>
-  //       <Stack direction="row" justifyContent="center">
-  //         <CircularWithPath />
-  //       </Stack>
-  //     </Box>
-  //   );
-
   return (
     <>
       <FormikProvider value={formik}>

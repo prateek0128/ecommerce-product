@@ -71,7 +71,10 @@ interface Props {
   // data: CustomerList[];
   // modalToggler: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
-
+interface CustomersData {
+  message: string;
+  Customers: any;
+}
 // ==============================|| REACT TABLE - LIST ||============================== //
 
 function ReactTable({ data, columns, modalToggler, loading }: any) {
@@ -114,7 +117,7 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
         key: columns.accessorKey
       })
   );
-
+  console.log('TableData', data);
   return (
     <MainCard content={false}>
       <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ padding: 3 }}>
@@ -171,24 +174,30 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                   ))}
                 </TableHead>
                 <TableBody>
-                  {table.getRowModel().rows.map((row) => (
-                    <Fragment key={row.id}>
-                      <TableRow>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} {...cell.column.columnDef.meta}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                      {row.getIsExpanded() && (
-                        <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
-                          <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
-                            <CustomerView data={row.original} />
-                          </TableCell>
+                  {data.length != 0 ? (
+                    table.getRowModel().rows.map((row) => (
+                      <Fragment key={row.id}>
+                        <TableRow>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id} {...cell.column.columnDef.meta}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
                         </TableRow>
-                      )}
-                    </Fragment>
-                  ))}
+                        {row.getIsExpanded() && (
+                          <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
+                            <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
+                              <CustomerView data={row.original} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell>{'Data not found'}</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -239,21 +248,23 @@ export default function CustomerListPage() {
   const [customerDeleteId, setCustomerDeleteId] = useState<any>('');
   const [allCustomersData, setAllCustomersData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
-  const allCustomers = allCustomersData.map((customer: any, index: any) => {
-    const fullName = customer.First_Name + ' ' + customer.Last_Name;
-    return {
-      id: customer.Id,
-      name: fullName,
-      email: customer.Email,
-      contact: customer.Contact,
-      age: customer.age,
-      location: customer.Location,
-      gender: customer.Gender,
-      firstName: customer.First_Name,
-      lastName: customer.Last_Name,
-      profileImage: customer.Profile_Picture
-    };
-  });
+  const allCustomers =
+    allCustomersData &&
+    allCustomersData.map((customer: any, index: any) => {
+      const fullName = customer.First_Name + ' ' + customer.Last_Name;
+      return {
+        id: customer.Id,
+        name: fullName,
+        email: customer.Email,
+        contact: customer.Contact,
+        age: customer.age,
+        location: customer.Location,
+        gender: customer.Gender,
+        firstName: customer.First_Name,
+        lastName: customer.Last_Name,
+        profileImage: customer.Profile_Picture
+      };
+    });
   const handleClose = () => {
     setOpen(!open);
   };
@@ -262,7 +273,9 @@ export default function CustomerListPage() {
     getAllCustomers()
       .then((response) => {
         setLoading(false);
-        setAllCustomersData(response.data || []);
+
+        const customersData = response.data as CustomersData;
+        setAllCustomersData(customersData.Customers || []);
       })
       .catch((error) => {
         console.error(error);
@@ -411,7 +424,7 @@ export default function CustomerListPage() {
   return (
     <>
       <ReactTable
-        data={allCustomers}
+        data={allCustomers || []}
         columns={columns}
         modalToggler={() => {
           setCustomerModal(true);

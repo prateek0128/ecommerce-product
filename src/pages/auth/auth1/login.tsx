@@ -17,7 +17,6 @@ import AuthLogin from 'sections/auth/auth-forms/AuthLogin';
 import imgFacebook from 'assets/images/auth/facebook.svg';
 import imgTwitter from 'assets/images/auth/twitter.svg';
 import imgGoogle from 'assets/images/auth/google.svg';
-
 // ================================|| LOGIN ||================================ //
 
 export default function Login() {

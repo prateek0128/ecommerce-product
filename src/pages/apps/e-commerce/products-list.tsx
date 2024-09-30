@@ -83,6 +83,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 //   data: Products[];
 // }
 
+interface ProductsData {
+  message: string;
+  Products: any;
+}
 // ==============================|| REACT TABLE - LIST ||============================== //
 
 function ReactTable({ data, columns, loading }: any) {
@@ -115,17 +119,6 @@ function ReactTable({ data, columns, loading }: any) {
   });
 
   const backColor = alpha(theme.palette.primary.lighter, 0.1);
-  // let headers: LabelKeyObject[] = [];
-  // columns.map(
-  //   (columns: { accessorKey: any; header: string }) =>
-  //     // @ts-ignore
-  //     columns.accessorKey &&
-  //     headers.push({
-  //       label: typeof columns.header === 'string' ? columns.header : '#',
-  //       // @ts-ignore
-  //       key: columns.accessorKey
-  //     })
-  // );
   let headers: LabelKeyObject[] = [];
   columns.forEach((column: ColumnDef<any>) => {
     if ('accessorKey' in column) {
@@ -199,24 +192,30 @@ function ReactTable({ data, columns, loading }: any) {
                   ))}
                 </TableHead>
                 <TableBody>
-                  {table.getRowModel().rows.map((row) => (
-                    <Fragment key={row.id}>
-                      <TableRow>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} {...cell.column.columnDef.meta}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                      {row.getIsExpanded() && (
-                        <TableRow sx={{ '&:hover': { bgcolor: `${backColor} !important` } }}>
-                          <TableCell colSpan={row.getVisibleCells().length}>
-                            <ProductView data={row.original} />
-                          </TableCell>
+                  {data.length != 0 ? (
+                    table.getRowModel().rows.map((row) => (
+                      <Fragment key={row.id}>
+                        <TableRow>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id} {...cell.column.columnDef.meta}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
                         </TableRow>
-                      )}
-                    </Fragment>
-                  ))}
+                        {row.getIsExpanded() && (
+                          <TableRow sx={{ '&:hover': { bgcolor: `${backColor} !important` } }}>
+                            <TableCell colSpan={row.getVisibleCells().length}>
+                              <ProductView data={row.original} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell>{'Data not found'}</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -268,19 +267,21 @@ export default function ProductList() {
   const [productDeleteId, setProductDeleteId] = useState<any>('');
   const [allProductsData, setAllProductsData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
-  const allProducts = allProductsData.map((product: any, index: any) => {
-    return {
-      id: product.Id,
-      name: product.Product_Name,
-      description: product.Product_Description,
-      category: product.Category,
-      item: product.Item,
-      price: product.Price,
-      quantity: product.Quantity,
-      stock: product.Stock,
-      productImage: product.Picture
-    };
-  });
+  const allProducts =
+    allProductsData &&
+    allProductsData.map((product: any, index: any) => {
+      return {
+        id: product.Id,
+        name: product.Product_Name,
+        description: product.Product_Description,
+        category: product.Category,
+        item: product.Item,
+        price: product.Price,
+        quantity: product.Quantity,
+        stock: product.Stock,
+        productImage: product.Picture
+      };
+    });
   const handleClose = () => {
     setDeleteModal(!deleteModal);
   };
@@ -289,7 +290,8 @@ export default function ProductList() {
     getAllProducts()
       .then((response) => {
         setLoading(false);
-        setAllProductsData(response.data || []);
+        const productsData = response.data as ProductsData;
+        setAllProductsData(productsData.Products || []);
       })
       .catch((error) => {
         console.error(error);
@@ -443,7 +445,7 @@ export default function ProductList() {
   return (
     <>
       <Breadcrumbs custom heading="Product List" links={breadcrumbLinks} />
-      <ReactTable data={allProducts} columns={columns} loading={loading} />
+      <ReactTable data={allProducts || []} columns={columns} loading={loading} />
       <AlertProductDelete id={Number(productDeleteId)} title={productDeleteId} open={deleteModal} handleClose={handleClose} />
     </>
   );

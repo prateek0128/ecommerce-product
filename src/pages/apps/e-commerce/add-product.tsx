@@ -27,7 +27,7 @@ import { categories } from './productCategories';
 import { APP_DEFAULT_PATH } from 'config';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
 import CategoryModal from '../../../sections/apps/category/CategoryModal';
-import SubcategoryModal from  '../../../sections/apps/subcategory/SubcategoryModal';
+import SubcategoryModal from '../../../sections/apps/subcategory/SubcategoryModal';
 // constant
 const prices = [
   {
@@ -223,7 +223,7 @@ export default function AddNewProduct() {
                       </MenuItem>
                     ))}
                     <MenuItem value="" onClick={handleCategoryModal}>
-                      Add Category
+                      Add New Category
                     </MenuItem>
                   </TextField>
                 </Grid>
@@ -249,8 +249,8 @@ export default function AddNewProduct() {
                             </MenuItem>
                           ))
                       : null}
-                    <MenuItem value="" onClick={handleSubcategoryModal}>
-                      Add Subcategory
+                    <MenuItem value="" onClick={handleCategoryModal}>
+                      Add New Subcategory
                     </MenuItem>
                   </TextField>
                 </Grid>
@@ -366,8 +366,8 @@ export default function AddNewProduct() {
           </Grid>
         </Grid>
       </MainCard>
-      <CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} />
-      <SubcategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} />
+      <CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} selectedCategory={selectedCategory} />
+      {/* <SubcategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} /> */}
     </>
   );
 }

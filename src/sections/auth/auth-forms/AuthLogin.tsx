@@ -26,7 +26,8 @@ import IconButton from 'components/@extended/IconButton';
 import AnimateButton from 'components/@extended/AnimateButton';
 import { fetcher } from 'utils/axios';
 import { loginUser } from 'apiServices/authentication';
-
+import { openSnackbar } from 'api/snackbar';
+import { SnackbarProps } from 'types/snackbar';
 // assets
 import { Eye, EyeSlash } from 'iconsax-react';
 
@@ -77,16 +78,32 @@ export default function AuthLogin({ forgot }: { forgot?: string }) {
               // const responseToken = responseData.token;
               // localStorage.setItem('authToken', responseToken);
               setStatus({ success: true });
+              openSnackbar({
+                open: true,
+                message: 'Login Successfully',
+                variant: 'alert',
+                alert: {
+                  color: 'success'
+                }
+              } as SnackbarProps);
               setSubmitting(false);
               preload('/widget/statistics', fetcher); // load menu on login success
               navigate('/widget/statistics');
             }
           } catch (err: any) {
             console.error('LoginResponse', err.response.data.message);
-            setErrors({ submit: err.response.data.message });
+            //setErrors({ submit: err.response.data.message });
             if (scriptedRef.current) {
               setStatus({ success: false });
-              setErrors({ submit: err.response.data.message });
+              //setErrors({ submit: err.response.data.message });
+              openSnackbar({
+                open: true,
+                message: err.response.data.message,
+                variant: 'alert',
+                alert: {
+                  color: 'error'
+                }
+              } as SnackbarProps);
               setSubmitting(false);
             }
           }

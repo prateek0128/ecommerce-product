@@ -71,6 +71,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 //   data: CustomerList[];
 //   // modalToggler: () => void;
 // }
+interface ComplaintsData {
+  message: string;
+  Complaints: any;
+}
 // ==============================|| REACT TABLE - LIST ||============================== //
 
 function ReactTable({ data, columns, loading }: any) {
@@ -190,24 +194,30 @@ function ReactTable({ data, columns, loading }: any) {
                   ))}
                 </TableHead>
                 <TableBody>
-                  {table.getRowModel().rows.map((row) => (
-                    <Fragment key={row.id}>
-                      <TableRow>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} {...cell.column.columnDef.meta}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                      {row.getIsExpanded() && (
-                        <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
-                          <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
-                            <ComplaintView data={row.original} />
-                          </TableCell>
+                  {data.length != 0 ? (
+                    table.getRowModel().rows.map((row) => (
+                      <Fragment key={row.id}>
+                        <TableRow>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id} {...cell.column.columnDef.meta}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
                         </TableRow>
-                      )}
-                    </Fragment>
-                  ))}
+                        {row.getIsExpanded() && (
+                          <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
+                            <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
+                              <ComplaintView data={row.original} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell>{'Data not found'}</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -259,19 +269,21 @@ export default function ComplaintListPage() {
   const [complaintDeleteId, setComplaintDeleteId] = useState<any>('');
   const [allComplaintsData, setAllComplaintsData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
-  const allComplaints = allComplaintsData.map((complaint: any, index: any) => {
-    return {
-      id: complaint.Complaint_Id,
-      name: complaint.Customer_Name,
-      description: complaint.Description,
-      warranty: complaint.Warranty,
-      item: complaint.Item,
-      status: complaint.Status,
-      itemImage: complaint.Item_Image,
-      billImage: complaint.Bill_Image,
-      customerId: complaint.customer_id
-    };
-  });
+  const allComplaints =
+    allComplaintsData &&
+    allComplaintsData.map((complaint: any, index: any) => {
+      return {
+        id: complaint.Complaint_Id,
+        name: complaint.Customer_Name,
+        description: complaint.Description,
+        warranty: complaint.Warranty,
+        item: complaint.Item,
+        status: complaint.Status,
+        itemImage: complaint.Item_Image,
+        billImage: complaint.Bill_Image,
+        customerId: complaint.customer_id
+      };
+    });
   const handleClose = () => {
     setComplaintModal(!complaintModal);
   };
@@ -280,7 +292,8 @@ export default function ComplaintListPage() {
     getAllComplaints()
       .then((response) => {
         setLoading(false);
-        setAllComplaintsData(response.data || []);
+        const complaintsData = response.data as ComplaintsData;
+        setAllComplaintsData(complaintsData.Complaints || []);
       })
       .catch((error) => {
         console.error(error);

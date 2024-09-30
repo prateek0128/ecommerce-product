@@ -70,7 +70,10 @@ interface Props {
   // data: TechnicianList[];
   //modalToggler: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
-
+interface TechniciansData {
+  message: string;
+  data: any;
+}
 // ==============================|| REACT TABLE - LIST ||============================== //
 
 function ReactTable({ data, columns, modalToggler, loading }: any) {
@@ -171,24 +174,30 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                   ))}
                 </TableHead>
                 <TableBody>
-                  {table.getRowModel().rows.map((row) => (
-                    <Fragment key={row.id}>
-                      <TableRow>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id} {...cell.column.columnDef.meta}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                      {row.getIsExpanded() && (
-                        <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
-                          <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
-                            <TechicianView data={row.original} />
-                          </TableCell>
+                  {data.length != 0 ? (
+                    table.getRowModel().rows.map((row) => (
+                      <Fragment key={row.id}>
+                        <TableRow>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id} {...cell.column.columnDef.meta}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
                         </TableRow>
-                      )}
-                    </Fragment>
-                  ))}
+                        {row.getIsExpanded() && (
+                          <TableRow sx={{ bgcolor: backColor, '&:hover': { bgcolor: `${backColor} !important` }, overflow: 'hidden' }}>
+                            <TableCell colSpan={row.getVisibleCells().length} sx={{ p: 2.5, overflow: 'hidden' }}>
+                              <TechicianView data={row.original} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell>{'Data not found'}</TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -239,22 +248,24 @@ export default function CustomerListPage() {
   const [customerDeleteId, setCustomerDeleteId] = useState<any>('');
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
-  const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
-    const fullName = technician.First_Name + ' ' + technician.Last_Name;
-    return {
-      id: technician.Id,
-      name: fullName,
-      email: technician.Email,
-      contact: technician.Contact,
-      age: technician.Age,
-      location: technician.Location,
-      techRole: technician.Tech_Role,
-      gender: technician.Gender,
-      firstName: technician.First_Name,
-      lastName: technician.Last_Name,
-      profileImage: technician.Profile_Picture
-    };
-  });
+  const allTechnicians =
+    allTechniciansData &&
+    allTechniciansData.map((technician: any, index: any) => {
+      const fullName = technician.First_Name + ' ' + technician.Last_Name;
+      return {
+        id: technician.Id,
+        name: fullName,
+        email: technician.Email,
+        contact: technician.Contact,
+        age: technician.Age,
+        location: technician.Location,
+        techRole: technician.Tech_Role,
+        gender: technician.Gender,
+        firstName: technician.First_Name,
+        lastName: technician.Last_Name,
+        profileImage: technician.Profile_Picture
+      };
+    });
   const handleClose = () => {
     setOpen(!open);
   };
@@ -264,7 +275,8 @@ export default function CustomerListPage() {
       try {
         const response = await getAllTechnicians();
         setLoading(false);
-        setAllTechniciansData(response.data || []);
+        const techniciansData = response.data as TechniciansData;
+        setAllTechniciansData(techniciansData.data.Technicians || []);
       } catch (error) {
         console.error('Error fetching technicians:', error);
       }
@@ -413,7 +425,7 @@ export default function CustomerListPage() {
   return (
     <>
       <ReactTable
-        data={allTechnicians}
+        data={allTechnicians || []}
         columns={columns}
         modalToggler={() => {
           setCustomerModal(true);

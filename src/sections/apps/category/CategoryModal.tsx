@@ -19,17 +19,18 @@ interface Props {
   open: boolean;
   modalToggler: (state: boolean) => void;
   category?: CategoryList | null;
+  selectedCategory?: any;
 }
 
 // ==============================|| CUSTOMER ADD / EDIT ||============================== //
 
-export default function CategoryModal({ open, modalToggler, category }: Props) {
+export default function CategoryModal({ open, modalToggler, category, selectedCategory }: Props) {
   //const { customersLoading: loading } = useGetCustomer();
 
   const closeModal = () => modalToggler(false);
-
+  console.log('selectedCategoryLog', selectedCategory);
   const categoryForm = useMemo(
-    () => <FormCategoryAdd category={category || null} closeModal={closeModal} />,
+    () => <FormCategoryAdd category={category || null} closeModal={closeModal} selectedCategory={selectedCategory} />,
     // eslint-disable-next-line
     [category]
   );

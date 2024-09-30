@@ -10,7 +10,9 @@ import { Add, Link1, KyberNetwork, Messages2, Calendar1, Kanban, Profile2User, B
 
 // type
 import { NavItemType } from 'types/menu';
-
+import InventoryIcon from '@mui/icons-material/Inventory';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 // icons
 const icons = {
   applications: KyberNetwork,
@@ -37,7 +39,8 @@ const applications: NavItemType = {
     {
       id: 'profile',
       title: <FormattedMessage id="profile" />,
-      type: 'collapse',
+      // type: 'collapse',
+      type: 'item',
       icon: icons.profile,
       url: '/apps/profiles/account/personal'
       // children: [
@@ -71,7 +74,8 @@ const applications: NavItemType = {
     {
       id: 'customer',
       title: <FormattedMessage id="Customers" />,
-      type: 'collapse',
+      // type: 'collapse',
+      type: 'item',
       icon: icons.customer,
       url: '/apps/customer/customer-list',
       breadcrumbs: true
@@ -141,8 +145,10 @@ const applications: NavItemType = {
     {
       id: 'e-commerce',
       title: <FormattedMessage id="Products" />,
-      type: 'collapse',
-      icon: icons.ecommerce,
+      // type: 'collapse',
+      type: 'item',
+      // icon: icons.ecommerce,
+      icon: InventoryIcon,
       url: '/apps/e-commerce/product-list',
       breadcrumbs: false
       // children: [
@@ -214,8 +220,10 @@ const applications: NavItemType = {
     {
       id: 'technician',
       title: <FormattedMessage id="Technicians" />,
-      type: 'collapse',
-      icon: icons.customer,
+      // type: 'collapse',
+      type: 'item',
+      // icon: icons.customer,
+      icon: SupportAgentIcon,
       url: '/apps/technician/technician-list',
       breadcrumbs: true
       // children: [
@@ -244,8 +252,10 @@ const applications: NavItemType = {
     {
       id: 'complaints',
       title: <FormattedMessage id="Complaints" />,
-      type: 'collapse',
-      icon: icons.customer,
+      // type: 'collapse',
+      type: 'item',
+      //icon: icons.customer,
+      icon: BugReportIcon,
       url: '/apps/complaint/complaints-list',
       breadcrumbs: false
       // children: [
