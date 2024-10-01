@@ -315,6 +315,10 @@ type RepairParts = {
 interface ErrorData {
   response: any;
 }
+interface TechniciansData {
+  message: string;
+  data: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AssignCategory() {
@@ -333,14 +337,17 @@ export default function AssignCategory() {
   const handleCancel = () => {
     history(`/apps/e-commerce/product-list`);
   };
-  const allTechnicians = allTechniciansData.map((technician: any, index: any) => {
-    return technician.First_Name + ' ' + technician.Last_Name;
-  });
+  const allTechnicians =
+    allTechniciansData &&
+    allTechniciansData.map((technician: any, index: any) => {
+      return technician.First_Name + ' ' + technician.Last_Name;
+    });
   useEffect(() => {
     const fetchTechnicians = async () => {
       try {
         const response = await getAllTechnicians();
-        setAllTechniciansData(response.data || []);
+        const techniciansData = response.data as TechniciansData;
+        setAllTechniciansData(techniciansData.data.Technicians || []);
       } catch (error) {
         console.error('Error fetching technicians:', error);
       }

@@ -31,9 +31,9 @@ import {
   Facebook,
   Gps,
   ShoppingCart,
-  Youtube
+  Youtube,
+  Profile2User
 } from 'iconsax-react';
-
 // ===========================|| WIDGET - STATISTICS ||=========================== //
 
 export default function WidgetStatistics() {

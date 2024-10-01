@@ -417,12 +417,17 @@ const categories = [
 interface ErrorData {
   response: any;
 }
+interface CustomersData {
+  message: string;
+  Customers: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AddNewProduct() {
   const history = useNavigate();
   const theme = useTheme();
   const [customerName, setCustomerName] = useState<string | null>(null);
+  const [customerId, setCustomerId] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [warranty, setWarranty] = useState('in warranty');
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
@@ -434,14 +439,26 @@ export default function AddNewProduct() {
   const [billFile, setBillFile] = useState<File | undefined>(undefined);
   const fileInputRefBill = useRef<HTMLInputElement | null>(null);
   const [allCustomersData, setAllCustomersData] = useState<any>([]);
-  const allCustomers = allCustomersData.map((customer: any, index: any) => {
-    const fullName = customer.First_Name + ' ' + customer.Last_Name;
-    return customer.First_Name + ' ' + customer.Last_Name;
-  });
+  const allCustomers =
+    allCustomersData &&
+    allCustomersData.map((customer: any, index: any) => ({
+      customerName: customer.First_Name + ' ' + customer.Last_Name,
+      customerId: customer.Id
+    }));
   const handleCancel = () => {
     history('/apps/complaint/complaints-list');
   };
-  const handleCustomerNameChange = (event: ChangeEvent<HTMLInputElement>) => setCustomerName(event.target.value);
+  const handleCustomerNameChange = (event: React.SyntheticEvent, newValue: { customerName: string; customerId: number } | null) => {
+    if (newValue) {
+      // If newValue is not null, handle it
+      setCustomerName(newValue.customerName); // Set customer name
+      setCustomerId(newValue.customerId); // Set customer ID
+    } else {
+      // Handle case when newValue is null (e.g., when clearing the selection)
+      setCustomerName(''); // Clear customer name
+      setCustomerId(null); // Clear customer ID
+    }
+  };
   const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => setDescription(event.target.value);
   const handleSubcategoryChange = (newValue: string | null) => {
     if (newValue !== null) {
@@ -480,7 +497,8 @@ export default function AddNewProduct() {
   const getAllCustomersAPI = () => {
     getAllCustomers()
       .then((response) => {
-        setAllCustomersData(response.data || []);
+        const customersData = response.data as CustomersData;
+        setAllCustomersData(customersData.Customers || []);
       })
       .catch((error) => {
         console.error(error);
@@ -489,16 +507,18 @@ export default function AddNewProduct() {
   useEffect(() => {
     getAllCustomersAPI();
   }, []);
+
   const raiseComplaintAPI = async (event: { preventDefault: () => void }) => {
     event?.preventDefault();
     const raiseComplaintData = {
+      customerId: customerId,
       customerName: customerName,
       description: description,
       item: selectedSubcategory,
       warranty: warranty
     };
     if (!itemFile || !billFile) {
-      alert('Please select both images.');
+      console.log('Please select both images.');
       return;
     }
 
@@ -512,23 +532,9 @@ export default function AddNewProduct() {
     //   filename: 'bill.jpg', // Provide the filename to be used on the server
     //   contentType: 'image/jpg' // Set the content type explicitly for PDF files
     // });
-    formData.append('files[]', itemFile);
-    formData.append('files[]', billFile);
+    formData.append('itemImage', itemFile);
+    formData.append('billImage', billFile);
     formData.append('data', JSON.stringify(raiseComplaintData));
-    // Only append the file1 if it's selected
-    // if (itemFile) {
-    //   console.log('addCustomerImage', itemFile);
-    //   formData.append('file1', itemFile);
-    // } else {
-    //   console.log('No image selected, proceeding without image');
-    // }
-    // Only append the file2 if it's selected
-    // if (billFile) {
-    //   console.log('addCustomerImage', billFile);
-    //   formData.append('file2', billFile);
-    // } else {
-    //   console.log('No image selected, proceeding without image');
-    // }
     try {
       const response = await raiseComplaint(formData);
       openSnackbar({
@@ -567,11 +573,17 @@ export default function AddNewProduct() {
                   {/* <TextField placeholder="Enter customer name" value={customerName} fullWidth onChange={handleCustomerNameChange} /> */}
                   <Autocomplete
                     fullWidth
-                    id="techinicians"
+                    id="customers"
                     options={allCustomers}
-                    value={customerName}
-                    onChange={(event: React.SyntheticEvent, newValue: string | null) => {
-                      setCustomerName(newValue); // This should work now
+                    getOptionLabel={(option) => option.customerName} // Display customer name
+                    value={
+                      customerName
+                        ? allCustomers.find((customer: { customerName: string }) => customer.customerName === customerName)
+                        : null
+                    } // Ensure value is an object
+                    isOptionEqualToValue={(option, value) => option.customerId === value?.customerId} // Ensure proper matching
+                    onChange={(event: React.SyntheticEvent, newValue: { customerName: string; customerId: number } | null) => {
+                      handleCustomerNameChange(event, newValue); // Handle change
                     }}
                     renderInput={(params) => <TextField {...params} placeholder="Select technician name" />}
                   />

@@ -218,7 +218,6 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
 
 export default function CategoryView({ data }: any) {
   //const products = useLoaderData() as Products[];
-  console.log('categoryData', data);
   const navigate = useNavigate();
   const history = useNavigate();
   //const [selectedCustomer, setSelectedCustomer] = useState<Products | null>(null);

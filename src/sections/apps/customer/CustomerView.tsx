@@ -35,7 +35,6 @@ export default function CustomerView({ data }: any) {
     const fetchCustomerDetails = async () => {
       try {
         const response = await getCustomerDetails(data.id);
-        console.log('getAllTechniciansAPI', response.data);
         //setAllTechniciansData(response.data || []);
       } catch (error) {
         console.error('Error fetching technicians:', error);
@@ -44,8 +43,6 @@ export default function CustomerView({ data }: any) {
 
     fetchCustomerDetails();
   }, []);
-  console.log('Profile_Picture', data);
-  console.log('Profile_Picture', data.profileImage);
   return (
     <Transitions type="slide" direction="down" in={true}>
       <Grid container spacing={2.5} sx={{ pl: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>

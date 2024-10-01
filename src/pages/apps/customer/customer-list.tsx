@@ -117,7 +117,6 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
         key: columns.accessorKey
       })
   );
-  console.log('TableData', data);
   return (
     <MainCard content={false}>
       <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ padding: 3 }}>

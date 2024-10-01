@@ -13,6 +13,8 @@ import { NavItemType } from 'types/menu';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 // icons
 const icons = {
   applications: KyberNetwork,
@@ -223,7 +225,7 @@ const applications: NavItemType = {
       // type: 'collapse',
       type: 'item',
       // icon: icons.customer,
-      icon: SupportAgentIcon,
+      icon: EngineeringIcon,
       url: '/apps/technician/technician-list',
       breadcrumbs: true
       // children: [
@@ -255,7 +257,7 @@ const applications: NavItemType = {
       // type: 'collapse',
       type: 'item',
       //icon: icons.customer,
-      icon: BugReportIcon,
+      icon: ReportProblemIcon,
       url: '/apps/complaint/complaints-list',
       breadcrumbs: false
       // children: [

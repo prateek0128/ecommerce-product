@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useRef } from 'react';
+import { useState, ChangeEvent, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 // material-ui
@@ -15,7 +15,7 @@ import MainCard from 'components/MainCard';
 
 // assets
 import { Camera, DocumentUpload } from 'iconsax-react';
-import { FormLabel } from '@mui/material';
+import { Autocomplete, FormLabel } from '@mui/material';
 
 //api imoorts
 import { addProduct, updateProduct } from 'apiServices/products';
@@ -28,6 +28,8 @@ import { APP_DEFAULT_PATH } from 'config';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
 import CategoryModal from '../../../sections/apps/category/CategoryModal';
 import SubcategoryModal from '../../../sections/apps/subcategory/SubcategoryModal';
+import { addCategory, getAllCategories, getAllSubcategories } from 'apiServices/category';
+import { number } from 'yup';
 // constant
 const prices = [
   {
@@ -74,6 +76,10 @@ const statuss = [
 interface ErrorData {
   response: any;
 }
+interface CategoryData {
+  data: any;
+  message: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AddNewProduct() {
@@ -86,12 +92,16 @@ export default function AddNewProduct() {
   const [price, setPrice] = useState('100');
   const [stockStatus, setStockStatus] = useState('in stock');
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
+  const [categoryId, setCategoryId] = useState(0);
   const [selectedSubcategory, setSelectedSubcategory] = useState('Select Item');
+  const [categoryForm, setCategoryForm] = useState('');
   const [productImage, setProductImage] = useState<string | undefined>(undefined);
   const [productFile, setProductFile] = useState<File | undefined>(undefined);
   const fileInputRefProduct = useRef<HTMLInputElement | null>(null);
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openSubcategoryModal, setOpenSubcategoryModal] = useState(false);
+  const [allCategoriesData, setAllCategoriesData] = useState<any>([]);
+  const [allSubcategoriesData, setAllSubcategoriesData] = useState<any>([]);
   const handleCategoryModal = () => {
     setOpenCategoryModal((prev) => !prev);
   };
@@ -116,14 +126,19 @@ export default function AddNewProduct() {
   const handleCancel = () => {
     history(`/apps/e-commerce/product-list`);
   };
-  const handleCategoryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const categoryName = event.target.value;
-    setSelectedCategory(categoryName);
+  const handleCategoryChange = (newValue: { categoryName: string; categoryId: number } | null) => {
+    if (newValue) {
+      setSelectedCategory(newValue.categoryName);
+      setCategoryForm(newValue.categoryName);
+      setCategoryId(newValue.categoryId);
+    }
     // Reset selected subcategory when category changes
     setSelectedSubcategory('');
   };
-  const handleSubcategoryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSelectedSubcategory(event.target.value);
+  const handleSubcategoryChange = (subcategoryName: string | null) => {
+    if (subcategoryName) {
+      setSelectedSubcategory(subcategoryName);
+    }
   };
   const handleButtonClickProduct = () => {
     // Trigger the file input when the button is clicked
@@ -137,6 +152,39 @@ export default function AddNewProduct() {
       setProductFile(file);
     }
   };
+  const allCategories =
+    allCategoriesData &&
+    allCategoriesData.map((category: any, index: any) => ({ categoryName: category.Category_Name, categoryId: category.Category_Id }));
+  console.log('allCategories', allCategories);
+  const allSubcategories = allSubcategoriesData
+    ? allSubcategoriesData
+    : [].map((subcategory: any, index: any) => {
+        return subcategory.Sub_Category_Name;
+      });
+  console.log('allCategories', allCategories);
+  const getAllCategoriesAPI = () => {
+    getAllCategories()
+      .then((response) => {
+        const categoryData = response.data as CategoryData;
+        setAllCategoriesData(categoryData.data.categories || []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  const getAllSubcategoriesAPI = (categoryId: number) => {
+    getAllSubcategories(categoryId)
+      .then((response) => {
+        setAllSubcategoriesData(response.data || []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  useEffect(() => {
+    getAllCategoriesAPI();
+    getAllSubcategoriesAPI(categoryId);
+  }, [categoryId]);
   const addProductAPI = async (event: { preventDefault: () => void }) => {
     event?.preventDefault();
 
@@ -212,24 +260,53 @@ export default function AddNewProduct() {
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Category</InputLabel>
-                  <TextField placeholder="Category" fullWidth select value={selectedCategory || ''} onChange={handleCategoryChange}>
+                  {/* <TextField placeholder="Category" fullWidth select value={selectedCategory || ''} onChange={handleCategoryChange}>
                     <MenuItem value="Select Category" disabled>
                       Select Category
                     </MenuItem>
-                    {/* Placeholder */}
-                    {categories.map((category) => (
-                      <MenuItem key={category.id} value={category.name}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
+                    {allCategories &&
+                      allCategories.sort().map((category: any) => (
+                        <MenuItem key={category} value={category}>
+                          {category}
+                        </MenuItem>
+                      ))}
                     <MenuItem value="" onClick={handleCategoryModal}>
                       Add New Category
                     </MenuItem>
-                  </TextField>
+                  </TextField> */}
+                  <Autocomplete
+                    options={[
+                      'Add New Category',
+                      ...(allCategories ? allCategories.sort((a: any, b: any) => a.categoryName.localeCompare(b.categoryName)) : [])
+                    ]}
+                    getOptionLabel={(option) => (typeof option === 'string' ? option : option.categoryName)} // Fix typo and handle string type
+                    isOptionEqualToValue={(option, value) => option.categoryId === value?.categoryId} // Ensure proper matching
+                    value={
+                      selectedCategory
+                        ? allCategories.find((category: { categoryName: string }) => category.categoryName === selectedCategory)
+                        : null
+                    } // Ensure value is an object
+                    onChange={(event: React.SyntheticEvent, newValue: { categoryName: string; categoryId: number } | string | null) => {
+                      if (newValue) {
+                        if (typeof newValue === 'string' && newValue === 'Add New Category') {
+                          handleCategoryModal();
+                        } else if (typeof newValue !== 'string') {
+                          handleCategoryChange(newValue);
+                        }
+                      }
+                    }}
+                    renderInput={(params) => <TextField {...params} placeholder="Select Category" fullWidth />}
+                    freeSolo
+                    renderOption={(props, option) => (
+                      <MenuItem {...props} key={option.categoryId} value={option.categoryId}>
+                        {option.categoryName}
+                      </MenuItem>
+                    )}
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Item</InputLabel>
-                  <TextField
+                  {/* <TextField
                     select
                     fullWidth
                     value={selectedSubcategory || ''}
@@ -239,7 +316,6 @@ export default function AddNewProduct() {
                     <MenuItem value="Select Item" defaultValue={'Select Item'} disabled>
                       {!selectedSubcategory ? 'Select Item' : 'Select Item'}
                     </MenuItem>
-                    {/* Placeholder */}
                     {selectedCategory
                       ? categories
                           .find((cat) => cat.name === selectedCategory) // Convert selectedCategory to number
@@ -249,10 +325,32 @@ export default function AddNewProduct() {
                             </MenuItem>
                           ))
                       : null}
-                    <MenuItem value="" onClick={handleCategoryModal}>
+                    <MenuItem value="" onClick={handleSubcategoryModal}>
                       Add New Subcategory
                     </MenuItem>
-                  </TextField>
+                  </TextField> */}
+                  <Autocomplete
+                    value={selectedSubcategory || ''}
+                    onChange={(event, newValue) => {
+                      if (newValue === 'Add New Subcategory') {
+                        handleSubcategoryModal();
+                      } else {
+                        handleSubcategoryChange(newValue);
+                      }
+                    }}
+                    options={
+                      selectedCategory
+                        ? ['Add New Subcategory', ...(categories.find((cat) => cat.name === selectedCategory)?.subcategories || [])]
+                        : []
+                    } // Ensure "Add New Subcategory" is always an option
+                    renderInput={(params) => <TextField {...params} placeholder="Select Item" fullWidth disabled={!selectedCategory} />}
+                    freeSolo
+                    renderOption={(props, option) => (
+                      <MenuItem {...props} key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    )}
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Price (in Rupees)</InputLabel>
@@ -366,8 +464,9 @@ export default function AddNewProduct() {
           </Grid>
         </Grid>
       </MainCard>
-      <CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} selectedCategory={selectedCategory} />
-      {/* <SubcategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} /> */}
+      {console.log('categoryForm', categoryForm)}
+      {<CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} />}
+      {categoryForm && <CategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} selectedCategory={categoryForm} />}
     </>
   );
 }

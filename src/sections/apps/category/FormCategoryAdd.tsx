@@ -55,8 +55,8 @@ import { SnackbarProps } from 'types/snackbar';
 import { CustomerList } from 'types/customer';
 import { CategoryList } from 'types/category';
 //api imoorts
-import { addCategory } from 'apiServices/category';
 import { updateCustomer } from 'apiServices/customer';
+import { addCategory, getAllCategories } from 'apiServices/category';
 // CONSTANT
 const getInitialValues = (category: CategoryList | null) => {
   const newCategory = {
@@ -81,6 +81,7 @@ interface UsersData {
 interface ErrorData {
   response: any;
 }
+
 // ==============================|| CUSTOMER ADD / EDIT - FORM ||============================== //
 
 export default function FormCategoryAdd({
@@ -92,36 +93,33 @@ export default function FormCategoryAdd({
   closeModal: () => void;
   selectedCategory: any;
 }) {
-  const theme = useTheme();
-  const [loading, setLoading] = useState<boolean>(true);
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+  console.log('categoryForm2', selectedCategory);
   // const [avatar, setAvatar] = useState<string | undefined>(
   //   getImageUrl(`avatar-${category && category !== null && category?.profilePicture ? category.profilePicture : 1}.png`, ImagePath.USERS)
   // );
-  console.log('selectedCategoryLog2', selectedCategory);
   useEffect(() => {
     if (selectedImage) {
       // setAvatar(URL.createObjectURL(selectedImage));
       setSelectedFile(selectedImage);
     }
   }, [selectedImage]);
-
-  // useEffect(() => {
-  //   setLoading(false);
-  // }, []);
-
+  // UseEffect to autofill the categoryName when selectedCategory is updated
+  useEffect(() => {
+    console.log('categoryName3', selectedCategory);
+    if (selectedCategory) {
+      formik.setFieldValue('categoryName4', selectedCategory);
+    }
+  }, [selectedCategory]);
   const CustomerSchema = Yup.object().shape({
     categoryName: Yup.string().max(255).required('Category Name is required')
   });
-
   const [openAlert, setOpenAlert] = useState(false);
-
   const handleAlertClose = () => {
     setOpenAlert(!openAlert);
     closeModal();
   };
-
   const formik = useFormik({
     initialValues: getInitialValues(category!),
     validationSchema: CustomerSchema,
@@ -148,17 +146,6 @@ export default function FormCategoryAdd({
           const newCustomerData = {
             categoryName: values.categoryName
           };
-          if (!selectedFile) {
-            console.log('Please select image.');
-            return;
-          } else {
-            console.log('addCustomerImage', selectedFile);
-          }
-
-          // Create a FormData object
-          // const formData = new FormData();
-          // formData.append('file', selectedFile);
-          // formData.append('data', JSON.stringify(newCustomerData));
           // await insertCustomer(newCustomer).then(() => {
           await addCategory(newCategory).then(() => {
             openSnackbar({
@@ -178,68 +165,17 @@ export default function FormCategoryAdd({
       }
     }
   });
-
   const addCategoryAPI = async () => {
     const { values } = formik;
     const newCategoryData = {
       categoryName: values.categoryName,
       subcategories: values.subcategoryName
     };
-    // Create a FormData object
-    // const formData = new FormData();
-    // formData.append('data', JSON.stringify(newCategoryData));
-    // // Only append the file if it's selected
-    // if (selectedFile) {
-    //   console.log('addCustomerImage', selectedFile);
-    //   formData.append('file', selectedFile);
-    // } else {
-    //   console.log('No image selected, proceeding without image');
-    // }
     try {
       const response = await addCategory(newCategoryData);
       openSnackbar({
         open: true,
-        message: 'Category added successfully.',
-        variant: 'alert',
-        alert: {
-          color: 'success'
-        }
-      } as SnackbarProps);
-      closeModal();
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      const errorData = error as ErrorData;
-      openSnackbar({
-        open: true,
-        message: errorData.response.data.message,
-        variant: 'alert',
-        alert: {
-          color: 'error'
-        }
-      } as SnackbarProps);
-    }
-  };
-  const updateCustomerAPI = async () => {
-    const { values } = formik;
-    const updateCategoryData = {
-      id: values.id,
-      categoryName: values.categoryName
-    };
-    // Create a FormData object
-    // const formData = new FormData();
-    // formData.append('data', JSON.stringify(updateCustomerData));
-    // // Only append the file if it's selected
-    // if (selectedFile) {
-    //   console.log('addCustomerImage', selectedFile);
-    //   formData.append('file', selectedFile);
-    // } else {
-    //   console.log('No image selected, proceeding without image');
-    // }
-    try {
-      const response = await updateCustomer(updateCategoryData);
-      openSnackbar({
-        open: true,
-        message: 'Category updated successfully.',
+        message: selectedCategory ? 'Category added successfully.' : 'Subcategory added successfully.',
         variant: 'alert',
         alert: {
           color: 'success'
@@ -266,7 +202,7 @@ export default function FormCategoryAdd({
       <FormikProvider value={formik}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Form
-            autoComplete="off"
+            autoComplete="on"
             noValidate
             // onSubmit={(e) => {
             //   e.preventDefault();
@@ -331,15 +267,6 @@ export default function FormCategoryAdd({
                         />
                       </Stack>
                     </Grid>
-                    {/* <Grid item xs={12} sm={12}>
-                      <Stack spacing={1}>
-                        <InputLabel htmlFor="customer-isActive">Is Active</InputLabel>
-                        <RadioGroup row aria-label="payment-card" {...getFieldProps('isActive')}>
-                          <FormControlLabel control={<Radio value={1} />} label={'Active'} />
-                          <FormControlLabel control={<Radio value={0} />} label={'Inactive'} />
-                        </RadioGroup>
-                      </Stack>
-                    </Grid> */}
                   </Grid>
                 </Grid>
               </Grid>
@@ -366,7 +293,7 @@ export default function FormCategoryAdd({
                       variant="contained"
                       //disabled={isSubmitting}
                       onClick={(e) => {
-                        category ? updateCustomerAPI() : addCategoryAPI();
+                        addCategoryAPI();
                       }}
                     >
                       {category ? 'Edit' : 'Add'}

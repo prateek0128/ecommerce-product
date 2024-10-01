@@ -37,7 +37,6 @@ export default function TechnicianView({ data }: any) {
     const fetchTechnicianDetails = async () => {
       try {
         const response = await getTechnicianDetails(data.id);
-        console.log('getAllTechniciansAPI', response.data);
         //setAllTechniciansData(response.data || []);
       } catch (error) {
         console.error('Error fetching technicians:', error);
