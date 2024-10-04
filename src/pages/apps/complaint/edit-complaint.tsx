@@ -28,11 +28,11 @@ import { categories } from './categories';
 // constant
 const warrantyStatus = [
   {
-    value: 'in warranty',
+    value: 1,
     label: 'In Warranty'
   },
   {
-    value: 'out of warranty',
+    value: 0,
     label: 'Out of Warranty'
   }
 ];
@@ -48,7 +48,7 @@ export default function AddNewProduct() {
   const theme = useTheme();
   const [customerName, setCustomerName] = useState(complaintData.name);
   const [description, setDescription] = useState(complaintData.description);
-  const [warranty, setWarranty] = useState(complaintData.warranty == 'Yes' || 'yes' ? 'in warranty' : 'out of warranty');
+  const [warranty, setWarranty] = useState(complaintData.warranty == 1 ? 1 : 0);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
   const [selectedSubcategory, setSelectedSubcategory] = useState(complaintData.item || 'Select Item');
   const [itemImage, setItemImage] = useState<string | undefined>(undefined);
@@ -58,7 +58,7 @@ export default function AddNewProduct() {
   const [billFile, setBillFile] = useState<File | undefined>(undefined);
   const fileInputRefBill = useRef<HTMLInputElement | null>(null);
   const handleWarranty = (event: ChangeEvent<HTMLInputElement>) => {
-    setWarranty(event.target.value);
+    setWarranty(Number(event.target.value));
   };
   const handleCancel = () => {
     history('/apps/complaint/complaints-list');
@@ -103,13 +103,23 @@ export default function AddNewProduct() {
       customerName: customerName,
       description: description,
       item: selectedSubcategory,
-      warranty: warranty,
-      itemImage: itemImage,
-      billImage: billImage,
-      status: ''
+      warranty: warranty
     };
+    if (!itemFile || (warranty === 1 && !billFile)) {
+      console.log('Please select both images.');
+      return;
+    }
+
+    // Create a FormData object
+    const formData = new FormData();
+    formData.append('itemImage', itemFile);
+    // Append bill image only if warranty is 1
+    if (warranty === 1 && billFile) {
+      formData.append('billImage', billFile);
+    }
+    formData.append('data', JSON.stringify(editComplaintData));
     try {
-      const response = await updateComplaint(editComplaintData);
+      const response = await updateComplaint(formData);
       openSnackbar({
         open: true,
         message: 'Complaint updated successfully.',
@@ -249,7 +259,7 @@ export default function AddNewProduct() {
                     </Grid>
                   </Grid>
                 </Grid>
-                {warranty == 'in warranty' && (
+                {warranty == 1 && (
                   <Grid item xs={12}>
                     <InputLabel sx={{ mb: 1 }}>Image of Bill</InputLabel>
                     <Typography color="error.main">

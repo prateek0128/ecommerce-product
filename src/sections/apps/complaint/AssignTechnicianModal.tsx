@@ -48,6 +48,10 @@ const sampleData = [
 interface ErrorData {
   response: any;
 }
+interface TechniciansData {
+  message: string;
+  data: any;
+}
 // HeaderSort component for sorting indicators
 const HeaderSort = ({ column }: { column: any }) => {
   const sortDirection = column.getIsSorted();
@@ -57,6 +61,7 @@ const HeaderSort = ({ column }: { column: any }) => {
 export default function AssignTechnicianModal({ open, modalToggler, complaintId, customerId }: Props) {
   // const { customersLoading: loading } = useGetCustomer();
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
+  const [loading, setLoading] = useState(false);
   // Memoize the derived allTechnicians to avoid recalculation on each render
   const allTechnicians = useMemo(
     () =>
@@ -72,9 +77,12 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
   );
   useEffect(() => {
     const fetchTechnicians = async () => {
+      setLoading(true);
       try {
         const response = await getAllTechnicians();
-        setAllTechniciansData(response.data || []);
+        setLoading(false);
+        const techniciansData = response.data as TechniciansData;
+        setAllTechniciansData(techniciansData.data.Technicians || []);
       } catch (error) {
         console.error('Error fetching technicians:', error);
       }

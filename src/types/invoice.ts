@@ -3,7 +3,7 @@
 export interface InfoType {
   name: string;
   address: string;
-  phone: string;
+  contact: string;
   email: string;
 }
 
@@ -33,7 +33,7 @@ export interface InvoiceProps {
 
 export interface InvoiceList {
   id: number;
-  invoice_id: number;
+  invoice_id: string;
   customer_name: string;
   email: string;
   avatar: number;

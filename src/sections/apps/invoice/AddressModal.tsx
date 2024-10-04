@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -14,16 +14,20 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import InputAdornment from '@mui/material/InputAdornment';
-
+import { getAllCustomers, deleteCustomer } from 'apiServices/customer';
 // third-party
 import { Add, SearchNormal1 } from 'iconsax-react';
+import CircularProgress from '@mui/material/CircularProgress';
 
 type AddressModalType = {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   handlerAddress: (a: any) => void;
 };
-
+interface CustomersData {
+  message: string;
+  Customers: any;
+}
 // ==============================|| INVOICE - SELECT ADDRESS ||============================== //
 
 export default function AddressModal({ open, setOpen, handlerAddress }: AddressModalType) {
@@ -86,7 +90,37 @@ type AddressProps = {
 
 function Address({ handlerAddress }: AddressProps) {
   const theme = useTheme();
-
+  const [allCustomersData, setAllCustomersData] = useState<any>([]);
+  const [loading, setLoading] = useState(false);
+  const allCustomers =
+    allCustomersData &&
+    allCustomersData.map((customer: any, index: any) => {
+      const fullName = customer.First_Name + ' ' + customer.Last_Name;
+      return {
+        id: customer.Id,
+        name: fullName,
+        address: customer.Location,
+        contact: customer.Contact,
+        email: customer.Email,
+        firstName: customer.First_Name,
+        lastName: customer.Last_Name
+      };
+    });
+  const getAllCustomersAPI = () => {
+    setLoading(true);
+    getAllCustomers()
+      .then((response) => {
+        setLoading(false);
+        const customersData = response.data as CustomersData;
+        setAllCustomersData(customersData.Customers || []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  useEffect(() => {
+    getAllCustomersAPI();
+  }, []);
   const addressData = [
     {
       name: 'Ian Carpenter',
@@ -108,33 +142,51 @@ function Address({ handlerAddress }: AddressProps) {
 
   return (
     <>
-      {addressData.map((address: any) => (
-        <Box
-          onClick={() => handlerAddress(address)}
-          key={address.email}
-          sx={{
-            width: '100%',
-            border: '1px solid',
-            borderColor: 'secondary.200',
-            borderRadius: 1,
-            p: 1.25,
-            '&:hover': { bgcolor: theme.palette.primary.lighter, borderColor: theme.palette.primary.lighter }
-          }}
-        >
-          <Typography variant="subtitle1">{address.name}</Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <Typography variant="body2" color="secondary">
-              {address.address}
-            </Typography>
-            <Typography variant="body2" color="secondary">
-              {address.phone}
-            </Typography>
-            <Typography variant="body2" color="secondary">
-              {address.email}
-            </Typography>
-          </Stack>
-        </Box>
-      ))}
+      {loading == false ? (
+        allCustomers.map((customer: any) => (
+          <Box
+            onClick={() => handlerAddress(customer)}
+            key={customer.Email}
+            sx={{
+              width: '100%',
+              border: '1px solid',
+              borderColor: 'secondary.200',
+              borderRadius: 1,
+              p: 1.25,
+              '&:hover': { bgcolor: theme.palette.primary.lighter, borderColor: theme.palette.primary.lighter }
+            }}
+          >
+            <Typography variant="subtitle1">{customer.name}</Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Typography variant="body2" color="secondary">
+                {customer.address}
+              </Typography>
+              <Typography variant="body2" color="secondary">
+                {customer.contact}
+              </Typography>
+              <Typography variant="body2" color="secondary">
+                {customer.email}
+              </Typography>
+            </Stack>
+          </Box>
+        ))
+      ) : (
+        <>
+          {/* <Divider /> */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%', // Take full viewport height
+              p: 2
+            }}
+          >
+            <CircularProgress size={40} />
+          </Box>
+        </>
+      )}
     </>
   );
 }

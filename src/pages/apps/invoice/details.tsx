@@ -169,7 +169,7 @@ export default function Details() {
                       <FormControl sx={{ width: '100%' }}>
                         <Typography color="secondary">{list.cashierInfo.name}</Typography>
                         <Typography color="secondary">{list.cashierInfo.address}</Typography>
-                        <Typography color="secondary">{list.cashierInfo.phone}</Typography>
+                        <Typography color="secondary">{list.cashierInfo.contact}</Typography>
                         <Typography color="secondary">{list.cashierInfo.email}</Typography>
                       </FormControl>
                     )}
@@ -190,7 +190,7 @@ export default function Details() {
                       <FormControl sx={{ width: '100%' }}>
                         <Typography color="secondary">{list.customerInfo.name}</Typography>
                         <Typography color="secondary">{list.customerInfo.address}</Typography>
-                        <Typography color="secondary">{list.customerInfo.phone}</Typography>
+                        <Typography color="secondary">{list.customerInfo.contact}</Typography>
                         <Typography color="secondary">{list.customerInfo.email}</Typography>
                       </FormControl>
                     )}

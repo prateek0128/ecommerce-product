@@ -86,7 +86,7 @@ const validationSchema = yup.object({
 const invoiceSingleList: InvoiceList['cashierInfo'] = {
   name: '',
   address: '',
-  phone: '',
+  contact: '',
   email: ''
 };
 
@@ -106,7 +106,7 @@ function EditForm({ list, invoiceMaster }: FormProps) {
   const handlerEdit = (values: any) => {
     const newList: InvoiceList = {
       id: Number(list?.id),
-      invoice_id: Number(values.invoice_id),
+      invoice_id: values.invoice_id,
       customer_name: values.cashierInfo?.name,
       email: values.cashierInfo?.email,
       avatar: Number(list?.avatar),
@@ -254,7 +254,7 @@ function EditForm({ list, invoiceMaster }: FormProps) {
                         <Stack sx={{ width: '100%' }}>
                           <Typography variant="subtitle1">{values?.cashierInfo?.name}</Typography>
                           <Typography color="secondary">{values?.cashierInfo?.address}</Typography>
-                          <Typography color="secondary">{values?.cashierInfo?.phone}</Typography>
+                          <Typography color="secondary">{values?.cashierInfo?.contact}</Typography>
                           <Typography color="secondary">{values?.cashierInfo?.email}</Typography>
                         </Stack>
                       </Stack>
@@ -289,7 +289,7 @@ function EditForm({ list, invoiceMaster }: FormProps) {
                         <Stack sx={{ width: '100%' }}>
                           <Typography variant="subtitle1">{values?.customerInfo?.name}</Typography>
                           <Typography color="secondary">{values?.customerInfo?.address}</Typography>
-                          <Typography color="secondary">{values?.customerInfo?.phone}</Typography>
+                          <Typography color="secondary">{values?.customerInfo?.contact}</Typography>
                           <Typography color="secondary">{values?.customerInfo?.email}</Typography>
                         </Stack>
                       </Stack>

@@ -28,11 +28,11 @@ import { getAllCustomers, deleteCustomer } from 'apiServices/customer';
 // constant
 const warrantyStatus = [
   {
-    value: 'in warranty',
+    value: 1,
     label: 'In Warranty'
   },
   {
-    value: 'out of warranty',
+    value: 0,
     label: 'Out of Warranty'
   }
 ];
@@ -429,7 +429,7 @@ export default function AddNewProduct() {
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [description, setDescription] = useState('');
-  const [warranty, setWarranty] = useState('in warranty');
+  const [warranty, setWarranty] = useState<number | null>(1);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
   const [selectedSubcategory, setSelectedSubcategory] = useState('Select Item');
   const [itemImageUrl, setItemImageUrl] = useState<string | undefined>(undefined);
@@ -468,7 +468,7 @@ export default function AddNewProduct() {
     }
   };
   const handleWarranty = (event: ChangeEvent<HTMLInputElement>) => {
-    setWarranty(event.target.value);
+    setWarranty(Number(event.target.value));
   };
   const handleButtonClickItem = () => {
     // Trigger the file input when the button is clicked
@@ -517,23 +517,18 @@ export default function AddNewProduct() {
       item: selectedSubcategory,
       warranty: warranty
     };
-    if (!itemFile || !billFile) {
+    if (!itemFile || (warranty === 1 && !billFile)) {
       console.log('Please select both images.');
       return;
     }
 
     // Create a FormData object
     const formData = new FormData();
-    // formData.append('files[]', itemFile, {
-    //   filename: 'product.jpg', // Provide the filename to be used on the server
-    //   contentType: 'image/jpg' // Set the content type explicitly for PDF files
-    // });
-    // formData.append('files[]', billFile, {
-    //   filename: 'bill.jpg', // Provide the filename to be used on the server
-    //   contentType: 'image/jpg' // Set the content type explicitly for PDF files
-    // });
     formData.append('itemImage', itemFile);
-    formData.append('billImage', billFile);
+    // Append bill image only if warranty is 1
+    if (warranty === 1 && billFile) {
+      formData.append('billImage', billFile);
+    }
     formData.append('data', JSON.stringify(raiseComplaintData));
     try {
       const response = await raiseComplaint(formData);
@@ -691,7 +686,7 @@ export default function AddNewProduct() {
                     </Grid>
                   </Grid>
                 </Grid>
-                {warranty == 'in warranty' && (
+                {warranty == 1 && (
                   <Grid item xs={12}>
                     <InputLabel sx={{ mb: 1 }}>Image of Bill</InputLabel>
                     <Typography color="error.main">

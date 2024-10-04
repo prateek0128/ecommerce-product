@@ -96,9 +96,6 @@ export default function FormCategoryAdd({
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   console.log('categoryForm2', selectedCategory);
-  // const [avatar, setAvatar] = useState<string | undefined>(
-  //   getImageUrl(`avatar-${category && category !== null && category?.profilePicture ? category.profilePicture : 1}.png`, ImagePath.USERS)
-  // );
   useEffect(() => {
     if (selectedImage) {
       // setAvatar(URL.createObjectURL(selectedImage));

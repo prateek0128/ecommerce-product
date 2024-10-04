@@ -41,7 +41,6 @@ import IconButton from 'components/@extended/IconButton';
 import CustomerModal from 'sections/apps/customer/CustomerModal';
 import AlertCustomerDelete from 'sections/apps/customer/AlertCustomerDelete';
 import CustomerView from 'sections/apps/customer/CustomerView';
-import EmptyReactTable from 'pages/tables/react-table/empty';
 
 import {
   CSVExport,
@@ -272,7 +271,6 @@ export default function CustomerListPage() {
     getAllCustomers()
       .then((response) => {
         setLoading(false);
-
         const customersData = response.data as CustomersData;
         setAllCustomersData(customersData.Customers || []);
       })

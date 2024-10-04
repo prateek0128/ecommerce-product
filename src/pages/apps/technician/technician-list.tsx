@@ -41,7 +41,6 @@ import IconButton from 'components/@extended/IconButton';
 import TechicianModal from 'sections/apps/technician/TechicianModal';
 import AlertTechicianDelete from 'sections/apps/technician/AlertTechicianDelete';
 import TechicianView from 'sections/apps/technician/TechnicianView';
-import EmptyReactTable from 'pages/tables/react-table/empty';
 
 import {
   CSVExport,

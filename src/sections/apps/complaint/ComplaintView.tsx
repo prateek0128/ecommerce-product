@@ -40,14 +40,9 @@ interface Props {
   modalToggler: () => void;
 }
 
-interface ComplaintDetails {
-  Customer_Details: any;
-  Complaint_Id: number;
-  Customer_Name: string;
-  Item: string;
-  Description: string;
-  Status: string;
-  Warranty: string;
+interface ComplaintData {
+  message: string;
+  ComplaintDetails: any;
   // Add other properties that exist in the response data
 }
 interface CustomerDetails {
@@ -94,18 +89,18 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
   const [customerConatct, setCustomerContact] = useState<string>('');
   const [customerAddress, setCustomerAddress] = useState<string>('');
   const [complaintDescription, setComplaintDescription] = useState<string>('');
+  const [billImage, setBillImage] = useState('');
+  const [itemImage, setItemImage] = useState('');
   const [item, setItem] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [warranty, setWarranty] = useState<string>('');
   const handleModalToggler = () => {
     setAssignTechnicianModal((prev) => !prev);
   };
-
   const openPreview = (imageSrc: string) => {
     setPreviewImage(imageSrc);
     setPreviewOpen(true);
   };
-
   const closePreview = () => {
     setPreviewOpen(false);
   };
@@ -113,16 +108,19 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
     const fetchComplaintDetails = async () => {
       try {
         const response = await getComplaintDetails(data.id);
-        const complaintDetails = response.data as ComplaintDetails[]; // Cast to expected type
-        const customerDetails = complaintDetails[0].Customer_Details;
-        setCustomerName(complaintDetails[0].Customer_Name || '');
-        setCustomerContact(customerDetails[0].Contact);
-        setCustomerEmail(customerDetails[0].Email);
-        setCustomerAddress(customerDetails[0].Location);
-        setComplaintDescription(complaintDetails[0].Description || '');
-        setItem(complaintDetails[0].Item || '');
-        setStatus(complaintDetails[0].Status || '');
-        setWarranty(complaintDetails[0].Warranty || '');
+        const complaintData = response.data as ComplaintData; // Cast to expected type
+        const complaintDetails = complaintData.ComplaintDetails[0];
+        const customerDetails = complaintData.ComplaintDetails[0].Customer_Details[0];
+        setCustomerName(customerDetails.First_Name + ' ' + customerDetails.Last_Name);
+        setCustomerContact(customerDetails.Contact);
+        setCustomerEmail(customerDetails.Email);
+        setCustomerAddress(customerDetails.Location);
+        setComplaintDescription(complaintDetails.Description || '');
+        setItem(complaintDetails.Item || '');
+        setStatus(complaintDetails.Status || '');
+        setWarranty(complaintDetails.Warranty || '');
+        setBillImage(complaintDetails.Bill_Image || '');
+        setItemImage(complaintDetails.Item_Image || '');
       } catch (error) {
         console.error('Error fetching technicians:', error);
       }
@@ -182,8 +180,8 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
           <Grid container xs={6} sm={3} md={3} lg={4} xl={4} justifyContent="flex-end" sx={{ display: 'flex' }}>
             <Stack spacing={2.5} sx={{ width: '100%', alignItems: 'flex-end' }}>
               <Grid item xs={6} sm={4} md={4} lg={6}>
-                <Box sx={{}} onClick={() => openPreview(laptop)}>
-                  <img src={laptop} alt="product" style={{ background: theme.palette.secondary[200], width: '100%' }} />
+                <Box sx={{}} onClick={() => openPreview(itemImage)}>
+                  <img src={itemImage} alt="product" style={{ background: theme.palette.secondary[200], width: '100%' }} />
                 </Box>
               </Grid>
               <Grid item xs={6} sm={4} md={4} lg={5}>
@@ -192,9 +190,9 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
                     border: '2px solid',
                     borderColor: theme.palette.divider
                   }}
-                  onClick={() => openPreview(invoice)}
+                  onClick={() => openPreview(billImage)}
                 >
-                  <img src={invoice} alt="product" style={{ background: theme.palette.secondary[200], width: '100%' }} />
+                  <img src={billImage} alt="product" style={{ background: theme.palette.secondary[200], width: '100%' }} />
                 </Box>
               </Grid>
             </Stack>

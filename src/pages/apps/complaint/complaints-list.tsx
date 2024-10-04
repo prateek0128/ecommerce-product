@@ -41,7 +41,6 @@ import IconButton from 'components/@extended/IconButton';
 //import ComplaintModal from 'sections/apps/complaint/ComplaintModal';
 import AlertComplaintDelete from 'sections/apps/complaint/AlertComplaintDelete';
 import ComplaintView from 'sections/apps/complaint/ComplaintView';
-import EmptyReactTable from 'pages/tables/react-table/empty';
 
 import {
   CSVExport,

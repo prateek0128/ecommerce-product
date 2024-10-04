@@ -27,6 +27,7 @@ import { getAllTechnicians } from 'apiServices/technician';
 import { categories, technicianRoles, technicians } from './assignCategoryData';
 import { SnackbarProps } from 'types/snackbar';
 import { openSnackbar } from 'api/snackbar';
+import { getAllComplaints } from 'apiServices/complaint';
 // Define categories and subcategories explicitly
 type Category =
   | 'Electronics'
@@ -319,6 +320,10 @@ interface TechniciansData {
   message: string;
   data: any;
 }
+interface ComplaintsData {
+  message: string;
+  Complaints: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AssignCategory() {
@@ -326,6 +331,7 @@ export default function AssignCategory() {
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Assign Category' }];
   const [roles, setRoles] = useState<string | null>(null);
   const [technicianName, setTechnicianName] = useState<string | null>(null);
+  const [complaintId, setComplaintId] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<string | false>(false);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | ''>('');
   const [selectedRepairParts, setSelectedRepairParts] = useState<string[]>([]);
@@ -333,15 +339,38 @@ export default function AssignCategory() {
   const [tabs, setTabs] = useState<{ category: string; subcategory: string; parts: string[] }[]>([]);
   const [activeTab, setActiveTab] = useState<number>(0);
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
-
+  const [loading, setLoading] = useState(false);
+  const [allComplaintsData, setAllComplaintsData] = useState<any>([]);
   const handleCancel = () => {
     history(`/apps/e-commerce/product-list`);
   };
+  const allComplaints =
+    allComplaintsData &&
+    allComplaintsData
+      .filter((complaint: any) => complaint.Status === 'pending') // Filter only the pending complaints
+      .map((complaint: any) => complaint.Complaint_Id);
+  console.log('allComplaints', allComplaints);
   const allTechnicians =
     allTechniciansData &&
     allTechniciansData.map((technician: any, index: any) => {
       return technician.First_Name + ' ' + technician.Last_Name;
     });
+
+  const getAllComplaintsAPI = () => {
+    setLoading(true);
+    getAllComplaints()
+      .then((response) => {
+        setLoading(false);
+        const complaintsData = response.data as ComplaintsData;
+        setAllComplaintsData(complaintsData.Complaints || []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  useEffect(() => {
+    getAllComplaintsAPI();
+  }, []);
   useEffect(() => {
     const fetchTechnicians = async () => {
       try {
@@ -409,9 +438,9 @@ export default function AssignCategory() {
     setSelectedSubcategory(selectedTab.subcategory);
     setSelectedRepairParts(selectedTab.parts);
   };
-  const categoryNames = categories.map((category) => category.name);
   const assignCategoryAPI = () => {
     const assignCategoryData = {
+      complaintId: complaintId,
       technicianName: technicianName,
       //technicianRole: roles,
       category: selectedCategory,
@@ -451,6 +480,21 @@ export default function AssignCategory() {
           <Grid item xs={12} sm={6}>
             <MainCard>
               <Grid container spacing={1} direction="column">
+                <Grid item xs={12}>
+                  <InputLabel htmlFor="techinicians" sx={{ mb: 1 }}>
+                    Complaint Id
+                  </InputLabel>
+                  <Autocomplete
+                    fullWidth
+                    id="techinicians"
+                    options={allComplaints}
+                    value={complaintId}
+                    onChange={(event: React.SyntheticEvent, newValue: number | null) => {
+                      setComplaintId(newValue); // This should work now
+                    }}
+                    renderInput={(params) => <TextField {...params} placeholder="Select complaint id" />}
+                  />
+                </Grid>
                 <Grid item xs={12}>
                   <InputLabel htmlFor="techinicians" sx={{ mb: 1 }}>
                     Technician Name

@@ -57,6 +57,7 @@ import { Add, Edit } from 'iconsax-react';
 // types
 import { SnackbarProps } from 'types/snackbar';
 import { CountryType, InvoiceList, InvoiceProps } from 'types/invoice';
+import { useEffect, useState } from 'react';
 
 const validationSchema = yup.object({
   date: yup.date().required('Invoice date is required'),
@@ -93,11 +94,12 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
   const theme = useTheme();
   const navigation = useNavigate();
   const notesLimit: number = 500;
-
+  const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+  const [invoiceId, setInvoiceId] = useState('');
   const handlerCreate = (values: any) => {
     const newList: InvoiceList = {
       id: Number(incrementer(lists.length)),
-      invoice_id: Number(values.invoice_id),
+      invoice_id: values.invoice_id,
       customer_name: values.cashierInfo?.name,
       email: values.cashierInfo?.email,
       avatar: Number(Math.round(Math.random() * 10)),
@@ -129,12 +131,37 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
     } as SnackbarProps);
     navigation('/apps/invoice/list');
   };
+  // Function to generate a random sequential number
+  const generateRandomNumber = () => {
+    // Generate a random number between 1 and 9999, padded to 4 digits
+    const randomNumber = Math.floor(1000 + Math.random() * 9000); // Generates a number from 1000 to 9999
+    return randomNumber.toString();
+  };
 
+  // Function to generate sequential invoice ID
+  const generateInvoiceId = () => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Ensure 2 digits for the month
+    const datePart = `${year}${month}`; // YYYYMM format
+
+    // Generate a new random sequential number
+    const sequentialNumber = generateRandomNumber();
+
+    // Construct the invoice ID
+    return `INV-${datePart}-${sequentialNumber}`;
+  };
+  // Generate the invoice ID when the component mounts
+  useEffect(() => {
+    const newInvoiceId = generateInvoiceId();
+    setInvoiceId(newInvoiceId);
+  }, []);
+  console.log('Date.now()', invoiceId);
   return (
     <Formik
       initialValues={{
         id: 120,
-        invoice_id: Date.now(),
+        invoice_id: invoiceId,
         status: '',
         date: new Date(),
         due_date: null,
@@ -148,7 +175,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
           address: '',
           email: '',
           name: '',
-          phone: ''
+          contact: ''
         },
         invoice_detail: [
           {
@@ -159,6 +186,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
             price: '1.00'
           }
         ],
+        serviceCharge: 0,
         discount: 0,
         tax: 0,
         notes: ''
@@ -175,7 +203,14 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
         }, 0);
         const taxRate = (values.tax * subtotal) / 100;
         const discountRate = (values.discount * subtotal) / 100;
-        const total = subtotal - discountRate + taxRate;
+        const total = subtotal - discountRate + taxRate + values.serviceCharge;
+        console.log('totalType', total, typeof total);
+        // Set invoice_id in Formik after invoiceId is generated
+        useEffect(() => {
+          if (invoiceId) {
+            setFieldValue('invoice_id', invoiceId);
+          }
+        }, [invoiceId, setFieldValue]); // Trigger only when invoiceId is set
         return (
           <Form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
@@ -186,7 +221,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                     <TextField
                       required
                       disabled
-                      type="number"
+                      type="text"
                       name="invoice_id"
                       id="invoice_id"
                       value={values.invoice_id}
@@ -224,7 +259,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                 </Stack>
                 {touched.status && errors.status && <FormHelperText error={true}>{errors.status}</FormHelperText>}
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={3} sx={{ ml: 'auto' }}>
                 <Stack spacing={1}>
                   <InputLabel>Date</InputLabel>
                   <FormControl sx={{ width: '100%' }} error={Boolean(touched.date && errors.date)}>
@@ -235,7 +270,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                 </Stack>
                 {touched.date && errors.date && <FormHelperText error={true}>{errors.date as string}</FormHelperText>}
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              {/* <Grid item xs={12} sm={6} md={3}>
                 <Stack spacing={1}>
                   <InputLabel>Due Date</InputLabel>
                   <FormControl sx={{ width: '100%' }} error={Boolean(touched.due_date && errors.due_date)}>
@@ -249,8 +284,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                   </FormControl>
                 </Stack>
                 {touched.due_date && errors.due_date && <FormHelperText error={true}>{errors.due_date as string}</FormHelperText>}
-              </Grid>
-
+              </Grid> */}
               <Grid item xs={12} sm={6}>
                 <MainCard sx={{ minHeight: 168 }}>
                   <Grid container spacing={2}>
@@ -295,7 +329,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                         <Stack sx={{ width: '100%' }}>
                           <Typography variant="subtitle1">{values?.customerInfo?.name}</Typography>
                           <Typography color="secondary">{values?.customerInfo?.address}</Typography>
-                          <Typography color="secondary">{values?.customerInfo?.phone}</Typography>
+                          <Typography color="secondary">{values?.customerInfo?.contact}</Typography>
                           <Typography color="secondary">{values?.customerInfo?.email}</Typography>
                         </Stack>
                       </Stack>
@@ -307,13 +341,14 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                           startIcon={<Add />}
                           color="secondary"
                           variant="outlined"
-                          onClick={() => handlerCustomerTo(true)}
+                          // onClick={() => handlerCustomerTo(true)}
+                          onClick={() => setShowAddressModal(true)}
                         >
                           Add
                         </Button>
                         <AddressModal
-                          open={invoiceMaster.isCustomerOpen}
-                          setOpen={(value) => handlerCustomerTo(value as boolean)}
+                          open={showAddressModal}
+                          setOpen={(value) => setShowAddressModal(value as boolean)}
                           handlerAddress={(value) => setFieldValue('customerInfo', value)}
                         />
                       </Box>
@@ -324,7 +359,6 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                   <FormHelperText error={true}>{errors?.customerInfo?.name as string}</FormHelperText>
                 )}
               </Grid>
-
               <Grid item xs={12}>
                 <Typography variant="h5">Detail</Typography>
               </Grid>
@@ -377,7 +411,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                           </Stack>
                         )}
                         <Grid container justifyContent="space-between">
-                          <Grid item xs={12} md={8}>
+                          <Grid item xs={12} md={6}>
                             <Box sx={{ pt: 2.5, pr: 2.5, pb: 2.5, pl: 0 }}>
                               <Button
                                 color="primary"
@@ -398,9 +432,26 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                               </Button>
                             </Box>
                           </Grid>
-                          <Grid item xs={12} md={4}>
-                            <Grid container justifyContent="space-between" spacing={2} sx={{ pt: 2.5, pb: 2.5 }}>
-                              <Grid item xs={6}>
+                          <Grid item xs={12} md={6}>
+                            <Grid container spacing={2} sx={{ pt: 2.5, pb: 2.5 }}>
+                              <Grid item xs={4}>
+                                <Stack spacing={1}>
+                                  <InputLabel>Service Charge(₹)</InputLabel>
+                                  <TextField
+                                    type="number"
+                                    fullWidth
+                                    name="serviceCharge"
+                                    id="serviceCharge"
+                                    placeholder="0.0"
+                                    value={values.serviceCharge}
+                                    onChange={handleChange}
+                                    inputProps={{
+                                      min: 0
+                                    }}
+                                  />
+                                </Stack>
+                              </Grid>
+                              <Grid item xs={4}>
                                 <Stack spacing={1}>
                                   <InputLabel>Discount(%)</InputLabel>
                                   <TextField
@@ -417,9 +468,9 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                                   />
                                 </Stack>
                               </Grid>
-                              <Grid item xs={6}>
+                              <Grid item xs={4}>
                                 <Stack spacing={1}>
-                                  <InputLabel>Tax(%)</InputLabel>
+                                  <InputLabel>GST(%)</InputLabel>
                                   <TextField
                                     type="number"
                                     fullWidth
@@ -435,33 +486,50 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                                 </Stack>
                               </Grid>
                             </Grid>
-                            <Grid item xs={12}>
-                              <Stack spacing={2}>
-                                <Stack direction="row" justifyContent="space-between">
-                                  <Typography color={theme.palette.secondary.main}>Sub Total:</Typography>
-                                  <Typography>{invoiceMaster.country?.prefix + '' + subtotal.toFixed(2)}</Typography>
-                                </Stack>
-                                <Stack direction="row" justifyContent="space-between">
-                                  <Typography color={theme.palette.secondary.main}>Discount:</Typography>
-                                  <Typography variant="h6" color="success.main">
-                                    {invoiceMaster.country?.prefix + '' + discountRate.toFixed(2)}
-                                  </Typography>
-                                </Stack>
-                                <Stack direction="row" justifyContent="space-between">
-                                  <Typography color={theme.palette.secondary.main}>Tax:</Typography>
-                                  <Typography>{invoiceMaster.country?.prefix + '' + taxRate.toFixed(2)}</Typography>
-                                </Stack>
-                                <Stack direction="row" justifyContent="space-between">
-                                  <Typography variant="subtitle1">Grand Total:</Typography>
-                                  <Typography variant="subtitle1">
-                                    {' '}
-                                    {total % 1 === 0
-                                      ? invoiceMaster.country?.prefix + '' + total
-                                      : invoiceMaster.country?.prefix + '' + total.toFixed(2)}
-                                  </Typography>
-                                </Stack>
+                          </Grid>
+                          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'right' }}>
+                            <Stack spacing={2}>
+                              <Stack direction="row" justifyContent="space-between" spacing={20}>
+                                <Typography color={theme.palette.secondary.main}>Sub Total:</Typography>
+                                {/* <Typography>{invoiceMaster.country?.prefix + '' + subtotal.toFixed(2)}</Typography> */}
+                                <Typography>₹{subtotal.toFixed(2)}</Typography>
                               </Stack>
-                            </Grid>
+                              <Stack direction="row" justifyContent="space-between">
+                                <Typography color={theme.palette.secondary.main}>Discount:</Typography>
+                                {/* <Typography variant="h6" color="success.main">
+                                  {invoiceMaster.country?.prefix + '' + discountRate.toFixed(2)}
+                                </Typography> */}
+                                <Typography variant="h6" color="success.main">
+                                  ₹{discountRate.toFixed(2)}
+                                </Typography>
+                              </Stack>
+                              <Stack direction="row" justifyContent="space-between">
+                                <Typography color={theme.palette.secondary.main}>Service Charge:</Typography>
+                                <Typography variant="h6" color="success.main">
+                                  ₹{values.serviceCharge}
+                                </Typography>
+                              </Stack>
+                              <Stack direction="row" justifyContent="space-between">
+                                <Typography color={theme.palette.secondary.main}>GST:</Typography>
+                                {/* <Typography>{invoiceMaster.country?.prefix + '' + taxRate.toFixed(2)}</Typography> */}
+                                <Typography>₹{taxRate.toFixed(2)}</Typography>
+                              </Stack>
+                              <Stack direction="row" justifyContent="space-between">
+                                <Typography variant="subtitle1">Grand Total:</Typography>
+                                {/* <Typography variant="subtitle1">
+                                  {' '}
+                                  {total % 1 === 0
+                                    ? invoiceMaster.country?.prefix + '' + total
+                                    : invoiceMaster.country?.prefix + '' + total.toFixed(2)}
+                                </Typography> */}
+                                <Typography variant="subtitle1">
+                                  ₹
+                                  {total % 1 === 0
+                                    ? total
+                                    : total.toLocaleString('en-UN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography>
+                              </Stack>
+                            </Stack>
                           </Grid>
                         </Grid>
                       </>
@@ -494,7 +562,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                   />
                 </Stack>
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <>
+                {/* <Grid item xs={12} sm={6}>
                 <Stack spacing={1}>
                   <InputLabel>Set Currency*</InputLabel>
                   <FormControl sx={{ width: { xs: '100%', sm: 250 } }}>
@@ -555,8 +624,9 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                     />
                   </FormControl>
                 </Stack>
-              </Grid>
-              <Grid item xs={12} sm={6}>
+              </Grid> */}
+              </>
+              <Grid item xs={12} sm={6} sx={{ ml: 'auto' }}>
                 <Stack direction="row" justifyContent="flex-end" alignItems="flex-end" spacing={2} sx={{ height: '100%' }}>
                   <Button
                     variant="outlined"

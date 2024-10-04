@@ -4,7 +4,6 @@ import { createBrowserRouter } from 'react-router-dom';
 // project-imports
 import MainRoutes from './MainRoutes';
 import LoginRoutes from './LoginRoutes';
-import ComponentsRoutes from './ComponentsRoutes';
 import AuthLayout from 'layout/Auth';
 
 import { SimpleLayoutType } from 'config';
@@ -15,7 +14,6 @@ import Register from 'pages/auth/auth1/register';
 import ForgotPassword from 'pages/auth/auth1/forgot-password';
 
 // render - landing page
-const PagesLanding = Loadable(lazy(() => import('pages/landing')));
 //const LoginRoutes = Loadable(lazy(() => import('pages/auth/auth1/login')));
 const Statistics = Loadable(lazy(() => import('pages/widget/statistics')));
 
@@ -74,7 +72,6 @@ const router = createBrowserRouter(
       ]
     },
     //LoginRoutes,
-    ComponentsRoutes,
     MainRoutes
   ],
   { basename: import.meta.env.VITE_APP_BASE_NAME }

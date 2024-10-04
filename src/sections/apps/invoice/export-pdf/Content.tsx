@@ -117,14 +117,14 @@ export default function Content({ list }: Props) {
           <Text style={[styles.title, { marginBottom: 8 }]}>From:</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.name}</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.address}</Text>
-          <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.phone}</Text>
+          <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.contact}</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.email}</Text>
         </View>
         <View style={styles.card}>
           <Text style={[styles.title, { marginBottom: 8 }]}>To:</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.customerInfo?.name}</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.customerInfo?.address}</Text>
-          <Text style={[styles.caption, styles.pb5]}>{list?.customerInfo?.phone}</Text>
+          <Text style={[styles.caption, styles.pb5]}>{list?.customerInfo?.contact}</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.customerInfo?.email}</Text>
         </View>
       </View>
