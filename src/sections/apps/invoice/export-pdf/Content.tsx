@@ -116,7 +116,6 @@ interface Props {
 // ==============================|| INVOICE EXPORT - CONTENT  ||============================== //
 
 export default function Content({ list }: Props) {
-  console.log('listPDF', list);
   const theme = useTheme();
   const subtotal = list?.invoice_detail?.reduce((prev: any, curr: any) => {
     if (curr.name.trim().length > 0) return prev + Number(curr.price * Math.floor(curr.qty));

@@ -95,7 +95,6 @@ export default function FormCategoryAdd({
 }) {
   const [selectedImage, setSelectedImage] = useState<File | undefined>(undefined);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
-  console.log('categoryForm2', selectedCategory);
   useEffect(() => {
     if (selectedImage) {
       // setAvatar(URL.createObjectURL(selectedImage));
@@ -104,7 +103,6 @@ export default function FormCategoryAdd({
   }, [selectedImage]);
   // UseEffect to autofill the categoryName when selectedCategory is updated
   useEffect(() => {
-    console.log('categoryName3', selectedCategory);
     if (selectedCategory) {
       formik.setFieldValue('categoryName4', selectedCategory);
     }

@@ -334,7 +334,6 @@ export default function AssignCategory() {
   const history = useNavigate();
   const location = useLocation();
   const { complaintIdView } = location.state || 0;
-  console.log('complaintIdView', complaintIdView);
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Assign Category' }];
   const [technicianId, setTechnicianId] = useState<number | null>(null);
   const [technicianName, setTechnicianName] = useState<string>('');
@@ -488,15 +487,11 @@ export default function AssignCategory() {
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
     const selectedTab = tabs[newValue];
-    console.log('selectedTab', selectedTab);
     setSelectedCategory(selectedTab.category);
     setSelectedSubcategory(selectedTab.subcategory);
-    console.log('selectedRepairParts3', selectedTab.parts);
     setSelectedRepairParts(selectedTab.parts);
   };
-  console.log('selectedRepairParts1', selectedRepairParts);
   const assignCategoryAPI = () => {
-    console.log('selectedRepairParts2', selectedRepairParts);
     const assignCategoryData = {
       complaintId: complaintId,
       technicianId: technicianId,

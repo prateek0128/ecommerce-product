@@ -117,7 +117,6 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
         const complaintData = response.data as ComplaintData; // Cast to expected type
         const complaintDetails = complaintData.ComplaintDetails[0];
         const customerDetails = complaintData.ComplaintDetails[0].Customer_Details[0];
-        console.log('customerDetails.Customer_Id', customerDetails);
         setComplaintId(complaintDetails.Complaint_Id);
         setCustomerName(customerDetails.First_Name + ' ' + customerDetails.Last_Name);
         setCustomerId(customerDetails.Id);
@@ -136,7 +135,6 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
     };
     fetchComplaintDetails();
   }, []);
-  console.log('customerDetails.Customer_Id2', customerId);
   return (
     <Transitions type="slide" direction="down" in={true}>
       <MainCard sx={{ ml: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>

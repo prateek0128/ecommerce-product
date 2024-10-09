@@ -140,7 +140,6 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
             variant="contained"
             onClick={(event) => {
               event.stopPropagation();
-              console.log('assingTechnicianButton', row.original.id);
               assignTechnicianAPI(row.original.id);
             }}
           >
@@ -218,13 +217,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
                         <TableBody>
                           {table.getRowModel().rows.map((row) => (
                             <Fragment key={row.id}>
-                              <TableRow
-                                hover
-                                onClick={() => {
-                                  console.log('Row clicked', row.original.id);
-                                  // Handle row click logic if any
-                                }}
-                              >
+                              <TableRow hover>
                                 {row.getVisibleCells().map((cell) => (
                                   <TableCell key={cell.id}>
                                     {cell.column.id === 'availability' ? (
@@ -236,7 +229,6 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
                                           onClick={(event) => {
                                             event.preventDefault();
                                             event.stopPropagation(); // Prevent row click
-                                            console.log('Assign Technician Button clicked', row.original.id);
                                             assignTechnicianAPI(row.original.id);
                                           }}
                                         >

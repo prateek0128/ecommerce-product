@@ -68,7 +68,6 @@ export default function AddNewProduct() {
   const history = useNavigate();
   const location = useLocation();
   const { complaintData } = location.state || {}; // Extract the passed data
-  console.log('complaintData', complaintData);
   const [customerName, setCustomerName] = useState('');
   const [customerIdData, setCustomerId] = useState<number | null>(complaintData.id);
   const [complaintAddress, setComplaintAddress] = useState('');
@@ -168,9 +167,7 @@ export default function AddNewProduct() {
     }
   }, [customerIdData]);
   useEffect(() => {
-    console.log('complaintData:', complaintData); // Check if complaintData is present
     if (complaintData && complaintData.name) {
-      console.log('complaintDataUE:', complaintData.name);
       setCustomerName(complaintData.name); // Update customerName when complaintData is available
     }
   }, [complaintData]);
@@ -221,7 +218,6 @@ export default function AddNewProduct() {
     }
   };
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Edit Complaint' }];
-  console.log('complaintData2', complaintData.name);
   return (
     <>
       <Breadcrumbs custom heading="Edit Complaint" links={breadcrumbLinks} />

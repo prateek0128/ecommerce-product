@@ -252,12 +252,9 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
         const [repairParts, setRepairParts] = useState<RepairPart[]>([]);
         const [priceNew, setPrice] = useState(0);
         const { isLoggedIn, login } = useAuth();
-        console.log('isLoggedIn', isLoggedIn);
         const query = new URLSearchParams(useLocation().search);
         const myToken = query.get('token');
         const location = useLocation();
-        console.log('location', location);
-        console.log('token', myToken);
         // Set invoice_id in Formik after invoiceId is generated
         useEffect(() => {
           if (invoiceId) {
@@ -301,10 +298,6 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
           // Generate the PDF blob
           const doc = <ExportPDFView list={values} />;
           const pdfBlob = await pdf(doc).toBlob(); // Convert document to blob
-
-          // Example: Use the blob (e.g., sending it to a server, previewing, etc.)
-          console.log('pdfBlob', pdfBlob);
-
           // If you want to trigger download manually
           const link = document.createElement('a');
           link.href = URL.createObjectURL(pdfBlob);
@@ -373,7 +366,6 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                 qty: part.quantity,
                 price: part.price || '0.00'
               }));
-              console.log('complaintResponseInvoice', updatedInvoiceDetail);
               setFieldValue('invoice_detail', updatedInvoiceDetail); // Update invoice_detail in Formik
               setComplaintId(complaintId);
               setRepairParts(repairParts);
@@ -405,7 +397,6 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
           }
         };
         const handleCreateInvoice = () => {
-          console.log('values?.date', values?.date);
           const date = new Date(values?.date);
           const formattedDate = date.toISOString().split('T')[0];
           const invoiceDetails = {

@@ -170,13 +170,11 @@ export default function AddNewProduct() {
   const allCategories =
     allCategoriesData &&
     allCategoriesData.map((category: any, index: any) => ({ categoryName: category.Category_Name, categoryId: category.Category_Id }));
-  console.log('allCategories', allCategories);
   const allSubcategories = allSubcategoriesData
     ? allSubcategoriesData
     : [].map((subcategory: any, index: any) => {
         return subcategory.Sub_Category_Name;
       });
-  console.log('allCategories', allCategories);
   const getAllCategoriesAPI = () => {
     getAllCategories()
       .then((response) => {
@@ -433,7 +431,6 @@ export default function AddNewProduct() {
           </Grid>
         </Grid>
       </MainCard>
-      {console.log('categoryForm', categoryForm)}
       {<CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} />}
       {categoryForm && <CategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} selectedCategory={categoryForm} />}
     </>

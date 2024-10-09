@@ -59,7 +59,6 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
   const taxRate = (invoiceInfo.gst * subtotal) / 100;
   const discountRate = (invoiceInfo.discount * subtotal) / 100;
   const total = subtotal - discountRate + taxRate;
-  console.log('invoiceInfoStatus', invoiceInfo);
   return (
     <Dialog
       open={isOpen}

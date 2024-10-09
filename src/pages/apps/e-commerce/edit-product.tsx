@@ -93,7 +93,6 @@ export default function AddNewProduct() {
   const history = useNavigate();
   const location = useLocation();
   const { productData } = location.state || {}; // Extract the passed data
-  console.log('productData', productData);
   const [productName, setProductName] = useState(productData.name);
   const [productDescription, setProductDescription] = useState(productData.description);
   const [quantity, setQuantity] = useState(productData?.quantity?.toString() || '');
