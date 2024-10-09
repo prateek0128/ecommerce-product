@@ -12,6 +12,7 @@ import Loadable from 'components/Loadable';
 import Login from 'pages/auth/auth1/login';
 import Register from 'pages/auth/auth1/register';
 import ForgotPassword from 'pages/auth/auth1/forgot-password';
+import CreateForm from 'pages/apps/invoice/create';
 
 // render - landing page
 //const LoginRoutes = Loadable(lazy(() => import('pages/auth/auth1/login')));
@@ -68,6 +69,16 @@ const router = createBrowserRouter(
         {
           index: true,
           element: <ForgotPassword />
+        }
+      ]
+    },
+    {
+      path: '/create-invoice',
+      element: <CreateForm />,
+      children: [
+        {
+          index: true,
+          element: <CreateForm />
         }
       ]
     },

@@ -5,6 +5,7 @@ export interface InfoType {
   address: string;
   contact: string;
   email: string;
+  gstIn: string;
 }
 
 export interface CountryType {
@@ -44,7 +45,8 @@ export interface InvoiceList {
   invoice_detail: Items[];
   cashierInfo: InfoType;
   discount: number | null;
-  tax: number | null;
+  serviceCharge: number;
+  gst: number | null;
   customerInfo: InfoType;
   notes: string;
 }

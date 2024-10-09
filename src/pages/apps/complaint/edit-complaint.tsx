@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useRef, useMemo } from 'react';
+import { useState, ChangeEvent, useRef, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // material-ui
@@ -24,20 +24,43 @@ import { updateComplaint } from 'apiServices/complaint';
 import { openSnackbar } from 'api/snackbar';
 import { SnackbarProps } from 'types/snackbar';
 import { categories } from './categories';
-
+import { getAllCustomers, deleteCustomer, getCustomerDetails } from 'apiServices/customer';
 // constant
 const warrantyStatus = [
   {
     value: 1,
-    label: 'In Warranty'
+    label: 'Yes'
   },
   {
     value: 0,
-    label: 'Out of Warranty'
+    label: 'No'
   }
+];
+const itemList = [
+  'CCTV Camera HD',
+  'CCTV Camera IP',
+  'EPABX/INTERCOM',
+  'Biometric Attendance Machine',
+  'GPS',
+  'Electric Fencing',
+  'Desktop Computer',
+  'Printers',
+  'Servers',
+  'Vedio Door Phone',
+  'Electronic Locks',
+  'Wifi/Networking',
+  'LED Monitors'
 ];
 interface ErrorData {
   response: any;
+}
+interface CustomersData {
+  message: string;
+  Customers: any;
+}
+interface CustomerData {
+  message: string;
+  Details: any;
 }
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
@@ -45,8 +68,11 @@ export default function AddNewProduct() {
   const history = useNavigate();
   const location = useLocation();
   const { complaintData } = location.state || {}; // Extract the passed data
-  const theme = useTheme();
-  const [customerName, setCustomerName] = useState(complaintData.name);
+  console.log('complaintData', complaintData);
+  const [customerName, setCustomerName] = useState('');
+  const [customerIdData, setCustomerId] = useState<number | null>(complaintData.id);
+  const [complaintAddress, setComplaintAddress] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState(complaintData.description);
   const [warranty, setWarranty] = useState(complaintData.warranty == 1 ? 1 : 0);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
@@ -57,13 +83,31 @@ export default function AddNewProduct() {
   const [billImage, setBillImage] = useState<string | undefined>(undefined);
   const [billFile, setBillFile] = useState<File | undefined>(undefined);
   const fileInputRefBill = useRef<HTMLInputElement | null>(null);
+  const [allCustomersData, setAllCustomersData] = useState<any>([]);
+  const allCustomers =
+    allCustomersData &&
+    allCustomersData.map((customer: any, index: any) => ({
+      customerName: customer.First_Name + ' ' + customer.Last_Name,
+      customerId: customer.Id
+    }));
   const handleWarranty = (event: ChangeEvent<HTMLInputElement>) => {
     setWarranty(Number(event.target.value));
   };
   const handleCancel = () => {
     history('/apps/complaint/complaints-list');
   };
-  const handleCustomerNameChange = (event: ChangeEvent<HTMLInputElement>) => setCustomerName(event.target.value);
+  const handleCustomerNameChange = (event: React.SyntheticEvent, newValue: { customerName: string; customerId: number } | null) => {
+    if (newValue) {
+      // If newValue is not null, handle it
+      setCustomerName(newValue.customerName); // Set customer name
+      setCustomerId(newValue.customerId); // Set customer ID
+      fetchCustomerDetails(customerIdData || newValue.customerId);
+    } else {
+      // Handle case when newValue is null (e.g., when clearing the selection)
+      setCustomerName(''); // Clear customer name
+      setCustomerId(null); // Clear customer ID
+    }
+  };
   const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => setDescription(event.target.value);
   const handleSubcategoryChange = (newValue: string | null) => {
     if (newValue !== null) {
@@ -96,6 +140,40 @@ export default function AddNewProduct() {
       setBillFile(file);
     }
   };
+  const getAllCustomersAPI = () => {
+    getAllCustomers()
+      .then((response) => {
+        const customersData = response.data as CustomersData;
+        setAllCustomersData(customersData.Customers || []);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  const fetchCustomerDetails = async (customerId: number) => {
+    try {
+      const response = await getCustomerDetails(customerId);
+      const customerData = response.data as CustomerData;
+      const customerDetails = customerData.Details[0];
+      setComplaintAddress(customerDetails.Location);
+      setContactNumber(customerDetails.Contact);
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+    }
+  };
+  useEffect(() => {
+    getAllCustomersAPI();
+    if (customerIdData) {
+      fetchCustomerDetails(customerIdData);
+    }
+  }, [customerIdData]);
+  useEffect(() => {
+    console.log('complaintData:', complaintData); // Check if complaintData is present
+    if (complaintData && complaintData.name) {
+      console.log('complaintDataUE:', complaintData.name);
+      setCustomerName(complaintData.name); // Update customerName when complaintData is available
+    }
+  }, [complaintData]);
   const editComplaintAPI = async (event: { preventDefault: () => void }) => {
     event?.preventDefault();
     const editComplaintData = {
@@ -143,7 +221,7 @@ export default function AddNewProduct() {
     }
   };
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Edit Complaint' }];
-  const allSubcategories = categories.flatMap((category) => category.subcategories);
+  console.log('complaintData2', complaintData.name);
   return (
     <>
       <Breadcrumbs custom heading="Edit Complaint" links={breadcrumbLinks} />
@@ -154,7 +232,51 @@ export default function AddNewProduct() {
               <Grid container spacing={1} direction="column">
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Customer Name</InputLabel>
-                  <TextField placeholder="Enter customer name" value={customerName} fullWidth onChange={handleCustomerNameChange} />
+                  {/* <TextField placeholder="Enter customer name" value={customerName} fullWidth onChange={handleCustomerNameChange} /> */}
+                  <Autocomplete
+                    fullWidth
+                    id="customers"
+                    options={allCustomers}
+                    getOptionLabel={(option) => option.customerName} // Display customer name
+                    value={
+                      customerName
+                        ? allCustomers.find((customer: { customerName: string }) => customer.customerName === customerName)
+                        : null
+                    } // Ensure value is an object
+                    isOptionEqualToValue={(option, value) => option.customerId === value?.customerId} // Ensure proper matching
+                    onChange={(event: React.SyntheticEvent, newValue: { customerName: string; customerId: number } | null) => {
+                      handleCustomerNameChange(event, newValue); // Handle change
+                    }}
+                    renderInput={(params) => <TextField {...params} placeholder="Select customer name" />}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <InputLabel htmlFor="complaintAddress" sx={{ mb: 1 }}>
+                    Complaint Address{' '}
+                  </InputLabel>
+                  <TextField
+                    fullWidth
+                    id="complaintAddress"
+                    value={complaintAddress}
+                    placeholder={'Enter address'}
+                    InputProps={{
+                      readOnly: true // Set to read-only
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <InputLabel htmlFor="contactNumber" sx={{ mb: 1 }}>
+                    Registered Contact Number
+                  </InputLabel>
+                  <TextField
+                    fullWidth
+                    id="contactNumber"
+                    value={contactNumber}
+                    placeholder={'Enter contact number'}
+                    InputProps={{
+                      readOnly: true // Set to read-only
+                    }}
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}> Description</InputLabel>
@@ -192,7 +314,7 @@ export default function AddNewProduct() {
             <MainCard>
               <Grid container direction="column" spacing={2}>
                 <Grid item xs={12}>
-                  <InputLabel sx={{ mb: 1 }}>Image of Item</InputLabel>
+                  <InputLabel sx={{ mb: 1 }}>Faulty Image of Item</InputLabel>
                   <Typography color="error.main">
                     *{' '}
                     <Typography component="span" color="text.secondary">

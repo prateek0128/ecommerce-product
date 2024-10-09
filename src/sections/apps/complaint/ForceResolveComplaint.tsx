@@ -16,7 +16,7 @@ import { Trash } from 'iconsax-react';
 
 // types
 import { SnackbarProps } from 'types/snackbar';
-import { deleteComplaint } from 'apiServices/complaint';
+import { forceResolveComplaint } from 'apiServices/complaint';
 interface Props {
   id: number;
   title: string;
@@ -28,13 +28,13 @@ interface ErrorData {
 }
 // ==============================|| CUSTOMER - DELETE ||============================== //
 
-export default function AlertComplaintDelete({ id, title, open, handleClose }: Props) {
+export default function ForceResolveComplaint({ id, title, open, handleClose }: Props) {
   const deletehandler = async () => {
-    await deleteComplaint(id)
+    await forceResolveComplaint(id)
       .then(() => {
         openSnackbar({
           open: true,
-          message: 'Compaint deleted successfully',
+          message: 'Compaint resolved successfully',
           anchorOrigin: { vertical: 'top', horizontal: 'right' },
           variant: 'alert',
           alert: {
@@ -44,7 +44,7 @@ export default function AlertComplaintDelete({ id, title, open, handleClose }: P
         handleClose();
       })
       .catch((error) => {
-        console.error('Error fetching complaints:', error);
+        console.error('Error resolving complaints:', error);
         const errorData = error as ErrorData;
         openSnackbar({
           open: true,
@@ -74,15 +74,15 @@ export default function AlertComplaintDelete({ id, title, open, handleClose }: P
           </Avatar>
           <Stack spacing={2}>
             <Typography variant="h4" align="center">
-              Are you sure you want to delete?
+              Are you sure you want to resolve this complaint forcefully?
             </Typography>
             <Typography align="center">
-              By deleting
+              By resolving
               <Typography variant="subtitle1" component="span">
                 {' '}
                 &quot;{title}&quot;{' '}
               </Typography>
-              user, all task assigned to that user will also be deleted.
+              complaint, this complaint will be completed.
             </Typography>
           </Stack>
 
@@ -91,7 +91,7 @@ export default function AlertComplaintDelete({ id, title, open, handleClose }: P
               Cancel
             </Button>
             <Button fullWidth color="error" variant="contained" onClick={deletehandler} autoFocus>
-              Delete
+              Resolve
             </Button>
           </Stack>
         </Stack>

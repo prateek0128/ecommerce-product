@@ -33,7 +33,7 @@ import AssignTechnicianModal from './AssignTechnicianModal';
 import { Dialog, DialogTitle, IconButton, Modal } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { getComplaintDetails } from 'apiServices/complaint';
-
+import { useLoaderData, useNavigate, useLocation } from 'react-router-dom';
 // ==============================|| CUSTOMER - VIEW ||============================== //
 
 interface Props {
@@ -84,6 +84,8 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
   const [assignTechnicianModal, setAssignTechnicianModal] = useState<boolean>(false);
   const [previewOpen, setPreviewOpen] = useState<boolean>(false); // state for preview modal
   const [previewImage, setPreviewImage] = useState<string>(''); // state for image URL
+  const [complaintId, setComplaintId] = useState<number>();
+  const [customerId, setCustomerId] = useState<number>();
   const [customerName, setCustomerName] = useState<string>('');
   const [customerEmail, setCustomerEmail] = useState<string>('');
   const [customerConatct, setCustomerContact] = useState<string>('');
@@ -94,8 +96,12 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
   const [item, setItem] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [warranty, setWarranty] = useState<string>('');
+  const history = useNavigate();
   const handleModalToggler = () => {
     setAssignTechnicianModal((prev) => !prev);
+  };
+  const handleAssignCategory = () => {
+    history(`/apps/category/assign-category`, { state: { complaintIdView: complaintId } });
   };
   const openPreview = (imageSrc: string) => {
     setPreviewImage(imageSrc);
@@ -111,7 +117,10 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
         const complaintData = response.data as ComplaintData; // Cast to expected type
         const complaintDetails = complaintData.ComplaintDetails[0];
         const customerDetails = complaintData.ComplaintDetails[0].Customer_Details[0];
+        console.log('customerDetails.Customer_Id', customerDetails);
+        setComplaintId(complaintDetails.Complaint_Id);
         setCustomerName(customerDetails.First_Name + ' ' + customerDetails.Last_Name);
+        setCustomerId(customerDetails.Id);
         setCustomerContact(customerDetails.Contact);
         setCustomerEmail(customerDetails.Email);
         setCustomerAddress(customerDetails.Location);
@@ -125,9 +134,9 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
         console.error('Error fetching technicians:', error);
       }
     };
-
     fetchComplaintDetails();
   }, []);
+  console.log('customerDetails.Customer_Id2', customerId);
   return (
     <Transitions type="slide" direction="down" in={true}>
       <MainCard sx={{ ml: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
@@ -197,10 +206,21 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
               </Grid>
             </Stack>
           </Grid>
-          <Grid container item xs={12} justifyContent="flex-end" sx={{ mt: 2 }}>
-            <Button variant="contained" onClick={handleModalToggler} size="large">
-              Assign Technician
-            </Button>
+          <Grid container item xs={12} justifyContent="flex-end" sx={{ mt: 2 }} spacing={2}>
+            {status == 'InProgress' && (
+              <Grid item>
+                <Button variant="contained" onClick={handleAssignCategory} size="large">
+                  Assign Category
+                </Button>
+              </Grid>
+            )}
+            {status == 'pending' && (
+              <Grid item>
+                <Button variant="contained" onClick={handleModalToggler} size="large">
+                  Assign Technician
+                </Button>
+              </Grid>
+            )}
           </Grid>
         </Grid>
         {assignTechnicianModal && (
@@ -208,7 +228,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
             open={assignTechnicianModal}
             modalToggler={handleModalToggler}
             complaintId={data.id}
-            customerId={data.customerId}
+            customerId={Number(customerId)}
           />
         )}
         {/* Image Preview Modal */}

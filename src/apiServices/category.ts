@@ -32,7 +32,7 @@ export const addCategory = async <T>(data: any, config?: AxiosRequestConfig): Pr
   }
 };
 
-//Get All Customers
+//Get All Categories
 export const getAllCategories = async <T>(config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
     const response = await apiClient.get<T>('category/fetchCategory', config);
@@ -58,6 +58,16 @@ export const getAllSubcategories = async <T>(id: number, config?: AxiosRequestCo
 export const assignCategory = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
     const response = await apiClient.post('assignCategory', data, config);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+//Tech Details
+export const techDetailsComplaint = async <T>(complaintId: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get(`/techDetails-complaint?complaintId=${complaintId}`, config);
     return response;
   } catch (error) {
     throw error;

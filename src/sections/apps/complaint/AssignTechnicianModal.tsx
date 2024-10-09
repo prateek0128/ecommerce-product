@@ -92,7 +92,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
     }
   }, [allTechniciansData.length]);
   const assignTechnicianAPI = (techId: any) => {
-    const assignTechnicianData = { customerId: 1, technicianId: techId, complaintId: complaintId };
+    const assignTechnicianData = { customerId: Number(customerId), technicianId: Number(techId), complaintId: Number(complaintId) };
     assignTechnician(assignTechnicianData)
       .then((response) => {
         openSnackbar({
@@ -119,6 +119,13 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
   };
   // Define columns
   const columns: ColumnDef<any>[] = [
+    {
+      header: '#',
+      accessorKey: 'id',
+      meta: {
+        className: 'cell-center'
+      }
+    },
     { header: 'Technician Name', accessorKey: 'name' },
     { header: 'Contact', accessorKey: 'contact' },
     { header: 'Email', accessorKey: 'email' },
@@ -132,7 +139,8 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
             type="button"
             variant="contained"
             onClick={(event) => {
-              // event.stopPropagation();
+              event.stopPropagation();
+              console.log('assingTechnicianButton', row.original.id);
               assignTechnicianAPI(row.original.id);
             }}
           >
@@ -210,9 +218,37 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
                         <TableBody>
                           {table.getRowModel().rows.map((row) => (
                             <Fragment key={row.id}>
-                              <TableRow>
+                              <TableRow
+                                hover
+                                onClick={() => {
+                                  console.log('Row clicked', row.original.id);
+                                  // Handle row click logic if any
+                                }}
+                              >
                                 {row.getVisibleCells().map((cell) => (
-                                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                  <TableCell key={cell.id}>
+                                    {cell.column.id === 'availability' ? (
+                                      // Only for the 'availability' column where the Button is rendered
+                                      row.original.availability == 1 ? (
+                                        <Button
+                                          type="button"
+                                          variant="contained"
+                                          onClick={(event) => {
+                                            event.preventDefault();
+                                            event.stopPropagation(); // Prevent row click
+                                            console.log('Assign Technician Button clicked', row.original.id);
+                                            assignTechnicianAPI(row.original.id);
+                                          }}
+                                        >
+                                          Assign
+                                        </Button>
+                                      ) : (
+                                        'Not Available'
+                                      )
+                                    ) : (
+                                      flexRender(cell.column.columnDef.cell, cell.getContext())
+                                    )}
+                                  </TableCell>
                                 ))}
                               </TableRow>
                             </Fragment>

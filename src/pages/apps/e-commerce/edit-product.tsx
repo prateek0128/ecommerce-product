@@ -15,7 +15,7 @@ import MainCard from 'components/MainCard';
 
 // assets
 import { Camera, DocumentUpload } from 'iconsax-react';
-import { FormLabel, Select, SelectChangeEvent } from '@mui/material';
+import { Autocomplete, FormLabel, Select, SelectChangeEvent } from '@mui/material';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
 
 //api imoorts
@@ -45,7 +45,6 @@ const prices = [
     label: '400'
   }
 ];
-
 const quantities = [
   {
     id: '1',
@@ -60,7 +59,21 @@ const quantities = [
     label: '3'
   }
 ];
-
+const itemList = [
+  'CCTV Camera HD',
+  'CCTV Camera IP',
+  'EPABX/INTERCOM',
+  'Biometric Attendance Machine',
+  'GPS',
+  'Electric Fencing',
+  'Desktop Computer',
+  'Printers',
+  'Servers',
+  'Vedio Door Phone',
+  'Electronic Locks',
+  'Wifi/Networking',
+  'LED Monitors'
+];
 const stockList = [
   {
     value: 'in stock',
@@ -80,28 +93,43 @@ export default function AddNewProduct() {
   const history = useNavigate();
   const location = useLocation();
   const { productData } = location.state || {}; // Extract the passed data
+  console.log('productData', productData);
   const [productName, setProductName] = useState(productData.name);
   const [productDescription, setProductDescription] = useState(productData.description);
   const [quantity, setQuantity] = useState(productData?.quantity?.toString() || '');
   const [price, setPrice] = useState(productData.price);
   const [stockStatus, setStockStatus] = useState(productData.stock == 'In Stock' || 'instock' || 'in stock' ? 'in stock' : 'out of stock');
-  const [selectedCategory, setSelectedCategory] = useState(productData.category || 'Select Category');
+  const [selectedItem, setSelectedItem] = useState(productData.item || 'Select Item');
+  const [categoryForm, setCategoryForm] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState(productData.item || 'Select Item');
   const [productImage, setProductImage] = useState<string | undefined>(undefined);
   const fileInputRefProduct = useRef<HTMLInputElement | null>(null);
+  const [openCategoryModal, setOpenCategoryModal] = useState(false);
   useEffect(() => {
     if (productData?.quantity) {
       setQuantity(productData.quantity); // Update state when productData is available
     }
     if (productData?.category) {
-      setSelectedCategory(productData.category); // Update state when productData is available
+      setSelectedItem(productData.category); // Update state when productData is available
     }
   }, [productData]);
+  const handleItemModal = () => {
+    setOpenCategoryModal((prev) => !prev);
+  };
   const handleProductName = (event: ChangeEvent<HTMLInputElement>) => {
     setProductName(event.target.value);
   };
   const handleProductDescription = (event: ChangeEvent<HTMLInputElement>) => {
     setProductDescription(event.target.value);
+  };
+  const handleItemChange = (newValue: any) => {
+    if (newValue) {
+      setSelectedItem(newValue);
+      setCategoryForm(newValue);
+      //setCategoryId(newValue);
+    }
+    // Reset selected subcategory when category changes
+    setSelectedSubcategory('');
   };
   const handlePrice = (event: ChangeEvent<HTMLInputElement>) => {
     setPrice(event.target.value);
@@ -121,7 +149,7 @@ export default function AddNewProduct() {
   };
   const handleCategoryChange = (event: ChangeEvent<HTMLInputElement>) => {
     const categoryName = event.target.value;
-    setSelectedCategory(categoryName);
+    setSelectedItem(categoryName);
     // Reset selected subcategory when category changes
     setSelectedSubcategory('');
   };
@@ -147,7 +175,7 @@ export default function AddNewProduct() {
       id: productData.id,
       productName: productName,
       productDescription: productDescription,
-      category: selectedCategory,
+      category: selectedItem,
       item: selectedSubcategory,
       price: price,
       quantity: quantity,
@@ -202,53 +230,31 @@ export default function AddNewProduct() {
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <InputLabel sx={{ mb: 1 }}>Category</InputLabel>
-                  <TextField placeholder="Category" fullWidth select value={selectedCategory || ''} onChange={handleCategoryChange}>
-                    <MenuItem value="Select Category" disabled>
-                      Select Category
-                    </MenuItem>
-                    {/* Placeholder */}
-                    {categories.map((category) => (
-                      <MenuItem key={category.id} value={category.name}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-                <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Item</InputLabel>
-                  <TextField
-                    select
-                    fullWidth
-                    value={selectedSubcategory || ''}
-                    onChange={handleSubcategoryChange}
-                    disabled={!selectedCategory} // Disable if no category is selected
-                  >
-                    <MenuItem value="Select Item" disabled>
-                      {!selectedSubcategory ? 'Select Item' : 'Select Item'}
-                    </MenuItem>
-                    {/* Placeholder */}
-                    {selectedCategory
-                      ? categories
-                          .find((cat) => cat.name === selectedCategory) // Convert selectedCategory to number
-                          ?.subcategories.map((sub) => (
-                            <MenuItem key={sub} value={sub}>
-                              {sub}
-                            </MenuItem>
-                          ))
-                      : null}
-                  </TextField>
+                  <Autocomplete
+                    options={['Add New Item', ...(itemList ? itemList.sort() : []), 'Others']}
+                    value={selectedItem ? itemList.find((category: any) => category === selectedItem) : null}
+                    onChange={(event: React.SyntheticEvent, newValue) => {
+                      if (newValue) {
+                        if (typeof newValue === 'string' && newValue === 'Add New Category') {
+                          handleItemModal();
+                        } else if (typeof newValue !== 'string') {
+                          handleItemChange(newValue);
+                        }
+                      }
+                    }}
+                    renderInput={(params) => <TextField {...params} placeholder="Select Item" fullWidth />}
+                    freeSolo
+                    renderOption={(props, option) => (
+                      <MenuItem {...props} key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    )}
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Price (in Rupees)</InputLabel>
-                  <TextField placeholder="Select Price" fullWidth select value={price} onChange={handlePrice}>
-                    <MenuItem value={productData.price}>{productData.price}</MenuItem>
-                    {prices.map((option) => (
-                      <MenuItem key={option.id} value={option.label}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  <TextField placeholder="Enter Price" fullWidth type="number" value={price} onChange={handlePrice} />
                 </Grid>
               </Grid>
             </MainCard>
@@ -258,19 +264,15 @@ export default function AddNewProduct() {
               <Grid container direction="column" spacing={2}>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Quantity</InputLabel>
-                  <TextField placeholder="Select quantity" fullWidth select value={quantity} onChange={handleQuantity}>
-                    {/* <Select value={quantity} onChange={handleQuantity} fullWidth placeholder="Select quantity"> */}
-                    <MenuItem value={productData.quantity}>{productData.quantity}</MenuItem>
-                    {quantities
-                      .filter((option) => option.label != productData.quantity)
-                      .map((option) => (
-                        <MenuItem key={option.id} value={option.label}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    {/* </Select> */}
-                  </TextField>
+                  <TextField
+                    placeholder="Enter quantity"
+                    fullWidth
+                    value={quantity} // Assuming 'quantity' is a state variable
+                    onChange={handleQuantity} // Adjust handler to capture input value
+                    type="number" // Set input type to 'number' for quantity
+                  />
                 </Grid>
+
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Status</InputLabel>
                   <TextField placeholder="Select status" fullWidth select value={stockStatus} onChange={handleStockStatus}>

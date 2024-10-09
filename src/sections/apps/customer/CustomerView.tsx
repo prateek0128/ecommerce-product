@@ -25,19 +25,27 @@ import { ImagePath, getImageUrl } from 'utils/getImageUrl';
 // assets
 import { Link2, Location, Mobile, Sms } from 'iconsax-react';
 import { getCustomerDetails } from 'apiServices/customer';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+interface CustomerData {
+  message: string;
+  Details: any;
+}
 // ==============================|| CUSTOMER - VIEW ||============================== //
 
 export default function CustomerView({ data }: any) {
   const theme = useTheme();
   const matchDownMD = useMediaQuery(theme.breakpoints.down('md'));
+  const [customerProfile, setCustomerProfile] = useState('');
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
         const response = await getCustomerDetails(data.id);
-        //setAllTechniciansData(response.data || []);
+        const customerData = response.data as CustomerData;
+        const customerDetails = customerData.Details[0];
+        setCustomerProfile(customerDetails.Profile_Picture);
       } catch (error) {
-        console.error('Error fetching technicians:', error);
+        console.error('Error fetching customer details:', error);
       }
     };
 
@@ -46,163 +54,90 @@ export default function CustomerView({ data }: any) {
   return (
     <Transitions type="slide" direction="down" in={true}>
       <Grid container spacing={2.5} sx={{ pl: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
-        <Grid item xs={12} sm={5} md={4} lg={4} xl={3}>
-          <MainCard>
-            {/* <Chip
-              label={data.status}
-              size="small"
-              color="primary"
-              sx={{ position: 'absolute', right: 10, top: 10, fontSize: '0.675rem' }}
-            /> */}
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Stack spacing={2.5} alignItems="center">
-                  <Avatar
-                    alt="Avatar 1"
-                    size="xl"
-                    src={data.profileImage ? data.profileImage : getImageUrl(`avatar-${data.avatar}.png`, ImagePath.USERS)}
-                  />
-                  <Stack spacing={0.5} alignItems="center">
-                    <Typography variant="h5">{data.fatherName}</Typography>
-                    <Typography color="secondary">{data.role}</Typography>
-                  </Stack>
-                </Stack>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider />
-              </Grid>
-              <Grid item xs={12}>
-                <Stack direction="row" justifyContent="space-around" alignItems="center">
-                  <Stack spacing={0.5} alignItems="center">
-                    <Typography variant="h5">{data.age}</Typography>
-                    <Typography color="secondary">Age</Typography>
-                  </Stack>
-                  <Divider orientation="vertical" flexItem />
-                  <Stack spacing={0.5} alignItems="center">
-                    <Typography variant="h5">{data.progress}%</Typography>
-                    <Typography color="secondary">Progress</Typography>
-                  </Stack>
-                  <Divider orientation="vertical" flexItem />
-                  <Stack spacing={0.5} alignItems="center">
-                    <Typography variant="h5">{data.visits}</Typography>
-                    <Typography color="secondary">Visits</Typography>
-                  </Stack>
-                </Stack>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider />
-              </Grid>
-              <Grid item xs={12}>
-                <List aria-label="main mailbox folders" sx={{ py: 0, '& .MuiListItemIcon-root': { minWidth: 32 } }}>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Sms size={18} />
-                    </ListItemIcon>
-                    <ListItemSecondaryAction>
-                      <Typography align="right">{data.email}</Typography>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Mobile size={18} />
-                    </ListItemIcon>
-                    <ListItemSecondaryAction>
-                      <Typography align="right">
-                        <PatternFormat displayType="text" format="+1 (###) ###-####" mask="_" defaultValue={data.contact} />
-                      </Typography>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Location size={18} />
-                    </ListItemIcon>
-                    <ListItemSecondaryAction>
-                      <Typography align="right">{data.country}</Typography>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <Link2 size={18} />
-                    </ListItemIcon>
-                    <ListItemSecondaryAction>
-                      <Link align="right" href="https://google.com" target="_blank">
-                        https://anshan.dh.url
-                      </Link>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                </List>
-              </Grid>
-            </Grid>
-          </MainCard>
-        </Grid>
-        <Grid item xs={12} sm={7} md={8} lg={8} xl={9}>
+        <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
           <Stack spacing={2.5}>
-            <MainCard title="Personal Details">
-              <List sx={{ py: 0 }}>
-                <ListItem divider={!matchDownMD}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Stack spacing={0.5}>
-                        <Typography color="secondary">Full Name</Typography>
-                        <Typography>
-                          Mr. {data.firstName} {data.lastName}
-                        </Typography>
-                      </Stack>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Stack spacing={0.5}>
-                        <Typography color="secondary">Email</Typography>
-                        <Typography>{data.email}</Typography>
-                      </Stack>
-                    </Grid>
-                    {/* <Grid item xs={12} md={6}>
-                      <Stack spacing={0.5}>
-                        <Typography color="secondary">Father Name</Typography>
-                        <Typography>{data.fatherName}</Typography>
-                      </Stack>
-                    </Grid> */}
-                  </Grid>
-                </ListItem>
-                <ListItem divider={!matchDownMD}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Stack spacing={0.5}>
-                        <Typography color="secondary">Gender</Typography>
-                        <Typography>{data.gender}</Typography>
-                      </Stack>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Stack spacing={0.5}>
-                        <Typography color="secondary">Age</Typography>
-                        <Typography>{data.age}</Typography>
-                      </Stack>
-                    </Grid>
-                  </Grid>
-                  {/* <Grid item xs={12} md={6}>
+            <MainCard title="Customer Details">
+              <Grid container spacing={2.5} sx={{ display: 'flex', flexDirection: 'row' }}>
+                <Grid item xs={12} md={4}>
+                  <Stack spacing={2.5} alignItems="center">
+                    <Avatar
+                      alt="Avatar 1"
+                      sx={{ height: 150, width: 150 }}
+                      src={customerProfile ? customerProfile : getImageUrl(`avatar-${data.avatar}.png`, ImagePath.USERS)}
+                    />
+                    <Stack spacing={0.5} alignItems="center">
+                      <Typography variant="h5">{data.fatherName}</Typography>
+                      <Typography color="secondary">{data.role}</Typography>
+                    </Stack>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <List sx={{ py: 0 }}>
+                    <ListItem divider={!matchDownMD}>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Typography color="secondary">Full Name</Typography>
+                            <Typography>
+                              Mr. {data.firstName} {data.lastName}
+                            </Typography>
+                          </Stack>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Typography color="secondary">Email</Typography>
+                            <Typography>{data.email}</Typography>
+                          </Stack>
+                        </Grid>
+                        {/* <Grid item xs={12} md={6}>
                       <Stack spacing={0.5}>
                         <Typography color="secondary">Father Name</Typography>
                         <Typography>{data.fatherName}</Typography>
                       </Stack>
                     </Grid> */}
-                </ListItem>
-
-                <ListItem divider={!matchDownMD}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
+                      </Grid>
+                    </ListItem>
+                    <ListItem divider={!matchDownMD}>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Typography color="secondary">Gender</Typography>
+                            <Typography>{data.gender}</Typography>
+                          </Stack>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Typography color="secondary">Age</Typography>
+                            <Typography>{data.age}</Typography>
+                          </Stack>
+                        </Grid>
+                      </Grid>
+                      {/* <Grid item xs={12} md={6}>
                       <Stack spacing={0.5}>
-                        <Typography color="secondary">Contact</Typography>
-                        <Typography>{data.contact}</Typography>
+                        <Typography color="secondary">Father Name</Typography>
+                        <Typography>{data.fatherName}</Typography>
                       </Stack>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Stack spacing={0.5}>
-                        <Typography color="secondary">Address</Typography>
-                        <Typography>{data.location}</Typography>
-                      </Stack>
-                    </Grid>
-                  </Grid>
-                </ListItem>
-              </List>
+                    </Grid> */}
+                    </ListItem>
+                    <ListItem>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Typography color="secondary">Contact</Typography>
+                            <Typography>{data.contact}</Typography>
+                          </Stack>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Typography color="secondary">Address</Typography>
+                            <Typography>{data.location}</Typography>
+                          </Stack>
+                        </Grid>
+                      </Grid>
+                    </ListItem>
+                  </List>
+                </Grid>
+              </Grid>
             </MainCard>
             {/* <MainCard title="About me">
               <Typography color="secondary">

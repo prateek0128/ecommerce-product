@@ -49,13 +49,17 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
   }
 
   const subtotal = invoiceInfo?.invoice_detail?.reduce((prev: any, curr: any) => {
-    if (curr.name.trim().length > 0) return prev + Number(curr.price * Math.floor(curr.qty));
-    else return prev;
+    if (curr?.name && curr.name.trim().length > 0) {
+      return prev + Number(curr.price * Math.floor(curr.qty));
+    } else {
+      return prev;
+    }
   }, 0);
-  const taxRate = (invoiceInfo.tax * subtotal) / 100;
+
+  const taxRate = (invoiceInfo.gst * subtotal) / 100;
   const discountRate = (invoiceInfo.discount * subtotal) / 100;
   const total = subtotal - discountRate + taxRate;
-
+  console.log('invoiceInfoStatus', invoiceInfo);
   return (
     <Dialog
       open={isOpen}
@@ -74,7 +78,22 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
             <Stack sx={{ flexDirection: { xs: 'column', sm: 'row' } }} justifyContent="space-between">
               <Box sx={{ pt: 2.5 }}>
                 <Stack direction="row" spacing={2}>
-                  <Logo /> <Chip label="Paid" variant="light" color="success" />
+                  <Logo />{' '}
+                  {invoiceInfo.status && (
+                    <Chip
+                      label={
+                        invoiceInfo.status == 'Paid'
+                          ? 'Paid'
+                          : invoiceInfo.status == 'Unpaid'
+                            ? 'Unpaid'
+                            : invoiceInfo.status == 'Cancelled'
+                              ? 'Cancelled'
+                              : ''
+                      }
+                      variant="light"
+                      color="success"
+                    />
+                  )}
                 </Stack>
                 <Typography color="secondary">{invoiceInfo.invoice_id}</Typography>
               </Box>
@@ -85,12 +104,12 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
                   </Typography>
                   <Typography>{date}</Typography>
                 </Stack>
-                <Stack direction="row" justifyContent="space-between">
+                {/* <Stack direction="row" justifyContent="space-between">
                   <Typography sx={{ pr: 2, overflow: 'hidden' }} variant="subtitle1">
                     Due Date
                   </Typography>
                   <Typography>{dueDate}</Typography>
-                </Stack>
+                </Stack> */}
               </Box>
             </Stack>
             <Box sx={{ pt: 2.5 }}>
@@ -147,8 +166,12 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.description}</TableCell>
                     <TableCell align="right">{item.qty}</TableCell>
-                    <TableCell align="right">${Number(item.price).toFixed(2)}</TableCell>
-                    <TableCell align="right">${Number(item.price * item.qty).toFixed(2)}</TableCell>
+                    <TableCell align="right">
+                      ₹{Number(item.price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell align="right">
+                      ₹{Number(item.price * item.qty).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -160,23 +183,37 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
                 <Stack spacing={2}>
                   <Stack direction="row" justifyContent="space-between">
                     <Typography color="secondary">Sub Total:</Typography>
-                    <Typography variant="h6">${subtotal.toFixed(2)}</Typography>
+                    <Typography variant="h6">
+                      ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
                   </Stack>
                   <Stack direction="row" justifyContent="space-between">
                     <Typography color="secondary">Discount:</Typography>
                     <Typography variant="h6" color={theme.palette.success.main}>
-                      ${discountRate.toFixed(2)}
+                      ₹{discountRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
                   </Stack>
                   <Stack direction="row" justifyContent="space-between">
-                    <Typography color={theme.palette.secondary.main}>Tax:</Typography>
-                    <Typography variant="h6">${taxRate.toFixed(2)}</Typography>
+                    <Typography color="secondary">Service Charge:</Typography>
+                    <Typography variant="h6" color={theme.palette.success.main}>
+                      ₹{invoiceInfo.serviceCharge.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography color={theme.palette.secondary.main}>GST:</Typography>
+                    <Typography variant="h6">
+                      {taxRate ? `₹${taxRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '₹0.00'}
+                    </Typography>
                   </Stack>
                   <Stack direction="row" justifyContent="space-between">
                     <Typography sx={{ pr: 2 }} variant="subtitle1">
                       Grand Total:
                     </Typography>
-                    <Typography variant="h6">${total % 1 === 0 ? total : total.toFixed(2)}</Typography>
+                    <Typography variant="h6">
+                      {total
+                        ? `₹${total % 1 === 0 ? total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : '₹0.00'}
+                    </Typography>
                   </Stack>
                 </Stack>
               </Grid>
@@ -191,7 +228,10 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
             Cancel
           </Button>
           <PDFDownloadLink
-            document={<ExportPDFView list={invoiceInfo} />}
+            document={
+              //@ts-ignore
+              <ExportPDFView list={invoiceInfo} />
+            }
             fileName={`${invoiceInfo?.invoiceId || invoiceInfo?.invoice_id}-${
               invoiceInfo?.customer_name || invoiceInfo?.from?.name || invoiceInfo?.customerInfo?.name
             }.pdf`}

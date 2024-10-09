@@ -11,7 +11,7 @@ const AuthForgotPassword = Loadable(lazy(() => import('pages/auth/auth1/forgot-p
 const AuthCheckMail = Loadable(lazy(() => import('pages/auth/auth1/check-mail')));
 const AuthResetPassword = Loadable(lazy(() => import('pages/auth/auth1/reset-password')));
 const AuthCodeVerification = Loadable(lazy(() => import('pages/auth/auth1/code-verification')));
-
+const AppInvoiceCreate = Loadable(lazy(() => import('pages/apps/invoice/create')));
 // ==============================|| AUTH ROUTES ||============================== //
 
 const LoginRoutes = {
@@ -44,7 +44,8 @@ const LoginRoutes = {
         {
           path: 'code-verification',
           element: <AuthCodeVerification />
-        }
+        },
+        { path: 'create-invoice', element: <AppInvoiceCreate /> }
       ]
     }
   ]

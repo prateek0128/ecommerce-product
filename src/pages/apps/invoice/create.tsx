@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -57,8 +57,13 @@ import { Add, Edit } from 'iconsax-react';
 // types
 import { SnackbarProps } from 'types/snackbar';
 import { CountryType, InvoiceList, InvoiceProps } from 'types/invoice';
-import { useEffect, useState } from 'react';
-
+import { ChangeEvent, useEffect, useState } from 'react';
+import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import ExportPDFView from 'sections/apps/invoice/export-pdf';
+import LoadingButton from 'components/@extended/LoadingButton';
+import { sendInvoice, invoicePreData, createInvoice } from 'apiServices/invoice';
+import { getComplaintDetails } from 'apiServices/complaint';
+import useAuth from 'hooks/useAuth';
 const validationSchema = yup.object({
   date: yup.date().required('Invoice date is required'),
   due_date: yup
@@ -87,7 +92,20 @@ interface FormProps {
   lists: InvoiceList[];
   invoiceMaster: InvoiceProps;
 }
-
+interface ComplaintData {
+  message: string;
+  ComplaintDetails: any;
+  // Add other properties that exist in the response data
+}
+interface ComplaintResolvedData {
+  PreData: any;
+  message: any;
+}
+// Define the type for repair part
+interface RepairPart {
+  part: string;
+  quantity: number;
+}
 // ==============================|| INVOICE - CREATE ||============================== //
 
 function CreateForm({ lists, invoiceMaster }: FormProps) {
@@ -104,7 +122,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
       email: values.cashierInfo?.email,
       avatar: Number(Math.round(Math.random() * 10)),
       discount: Number(values.discount),
-      tax: Number(values.tax),
+      serviceCharge: Number(values.serviceCharge),
+      gst: Number(values.gst),
       date: format(new Date(values.date), 'MM/dd/yyyy'),
       due_date: format(new Date(values.due_date), 'MM/dd/yyyy'),
       quantity: Number(
@@ -137,26 +156,43 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
     const randomNumber = Math.floor(1000 + Math.random() * 9000); // Generates a number from 1000 to 9999
     return randomNumber.toString();
   };
-
+  // Function to generate sequential number
+  const generateSequentialNumber = () => {
+    const lastNumber = localStorage.getItem('lastInvoiceNumber');
+    let newNumber = lastNumber ? parseInt(lastNumber, 10) + 1 : 1; // Start from 0001 if no previous number
+    localStorage.setItem('lastInvoiceNumber', newNumber.toString().padStart(4, '0')); // Save the new number
+    return newNumber.toString().padStart(4, '0'); // Ensure the number is 4 digits, e.g., 0001
+  };
   // Function to generate sequential invoice ID
   const generateInvoiceId = () => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Ensure 2 digits for the month
-    const datePart = `${year}${month}`; // YYYYMM format
+    const day = currentDate.getDate().toString().padStart(2, '0');
+    const datePart = `${year}${month}${day}`; // YYYYMM format
 
     // Generate a new random sequential number
-    const sequentialNumber = generateRandomNumber();
-
+    //const sequentialNumber = generateRandomNumber();
+    const sequentialNumber = generateSequentialNumber();
     // Construct the invoice ID
     return `INV-${datePart}-${sequentialNumber}`;
   };
   // Generate the invoice ID when the component mounts
   useEffect(() => {
-    const newInvoiceId = generateInvoiceId();
-    setInvoiceId(newInvoiceId);
+    // Check if an invoice ID is already stored
+    const storedInvoiceId = localStorage.getItem('currentInvoiceId');
+
+    if (!storedInvoiceId) {
+      // If no invoice ID exists, generate a new one and store it
+      const newInvoiceId = generateInvoiceId();
+      setInvoiceId(newInvoiceId);
+      localStorage.setItem('currentInvoiceId', newInvoiceId);
+    } else {
+      // If an invoice ID exists, use it
+      setInvoiceId(storedInvoiceId);
+    }
   }, []);
-  console.log('Date.now()', invoiceId);
+
   return (
     <Formik
       initialValues={{
@@ -166,10 +202,11 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
         date: new Date(),
         due_date: null,
         cashierInfo: {
-          name: 'Belle J. Richter',
-          address: '1300 Cooks Mine, NM 87829',
-          phone: '305-829-7809',
-          email: 'belljrc23@gmail.com'
+          name: 'Maheshwari Infotech Mathura',
+          address: 'Shop No.5 Usha Kiran Plaza, Dampier Nagar, Mathura',
+          contact: '07409548907, 09897808544',
+          email: 'maheshwariinfotechmtr@gmail.com',
+          gstIn: '09BEWPM4982E1ZR'
         },
         customerInfo: {
           address: '',
@@ -181,39 +218,256 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
           {
             id: UIDV4(),
             name: '',
-            description: '',
-            qty: 1,
-            price: '1.00'
+            // description: '',
+            qty: 0,
+            price: '0.00'
           }
         ],
         serviceCharge: 0,
         discount: 0,
-        tax: 0,
+        gst: 0,
         notes: ''
       }}
       validationSchema={validationSchema}
       onSubmit={(values) => {
-        handlerCreate(values);
+        // handlerCreate(values);
       }}
     >
       {({ handleBlur, errors, handleChange, handleSubmit, values, isValid, setFieldValue, touched }) => {
         const subtotal = values?.invoice_detail.reduce((prev, curr: any) => {
-          if (curr.name.trim().length > 0) return prev + Number(curr.price * Math.floor(curr.qty));
-          else return prev;
+          // Ensure curr.name is defined before calling .trim()
+          if (curr?.name && curr.name.length > 0) {
+            return prev + Number(curr.price * Math.floor(curr.qty));
+          } else {
+            return prev;
+          }
         }, 0);
-        const taxRate = (values.tax * subtotal) / 100;
+        const taxRate = (values.gst * subtotal) / 100;
         const discountRate = (values.discount * subtotal) / 100;
         const total = subtotal - discountRate + taxRate + values.serviceCharge;
-        console.log('totalType', total, typeof total);
+        const [complaintId, setComplaintId] = useState<number>();
+        const [customerId, setCustomerId] = useState<number>();
+        const [customerEmail, setCustomerEmail] = useState<string>('');
+        const [customerAddress, setCustomerAddress] = useState<string>('');
+        const [repairParts, setRepairParts] = useState<RepairPart[]>([]);
+        const [priceNew, setPrice] = useState(0);
+        const { isLoggedIn, login } = useAuth();
+        console.log('isLoggedIn', isLoggedIn);
+        const query = new URLSearchParams(useLocation().search);
+        const myToken = query.get('token');
+        const location = useLocation();
+        console.log('location', location);
+        console.log('token', myToken);
         // Set invoice_id in Formik after invoiceId is generated
         useEffect(() => {
           if (invoiceId) {
             setFieldValue('invoice_id', invoiceId);
           }
         }, [invoiceId, setFieldValue]); // Trigger only when invoiceId is set
+        const invoiceDetails = [
+          {
+            id: 1,
+            name: 'Mobile',
+            description: 'Device working',
+            qty: 2,
+            price: '10000'
+          },
+          {
+            id: 2,
+            name: 'Cover',
+            description: 'Fine cover',
+            qty: 3,
+            price: '3000'
+          },
+          {
+            id: 3,
+            name: 'Display',
+            description: 'New display',
+            qty: 4,
+            price: '2000'
+          },
+          {
+            id: 4,
+            name: 'Charger',
+            description: 'Fast charger',
+            qty: 5,
+            price: '1000'
+          }
+        ];
+        const handleGeneratePDF = async () => {
+          //setIsLoader(true);
+          // Remove the currentInvoiceId from localStorage
+          localStorage.removeItem('currentInvoiceId');
+          // Generate the PDF blob
+          const doc = <ExportPDFView list={values} />;
+          const pdfBlob = await pdf(doc).toBlob(); // Convert document to blob
+
+          // Example: Use the blob (e.g., sending it to a server, previewing, etc.)
+          console.log('pdfBlob', pdfBlob);
+
+          // If you want to trigger download manually
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(pdfBlob);
+          link.download = `${values?.invoice_id}-${values?.customerInfo.name}.pdf`;
+          link.click();
+
+          //setIsLoader(false);
+
+          const formData = new FormData();
+          formData.append('attachment', pdfBlob, `${values?.invoice_id}-${values?.customerInfo.name}.pdf`);
+          formData.append('subject', 'The email containing invoice pdf');
+          const emailData = {
+            subject: 'The email containing invoice pdf',
+            text: 'This is the test email.This email has confidential data regarding customer invoice details pdf.'
+          };
+          formData.append('text', 'This is the test email.This email has confidential data regarding customer invoice details pdf.');
+          const formdata = new FormData();
+          formdata.append('subject', 'testmail');
+          formdata.append('text ', 'positive');
+          formdata.append('attachment', pdfBlob, `${values?.invoice_id}-${values?.customerInfo.name}.pdf`);
+
+          const requestOptions = {
+            method: 'POST',
+            body: formdata,
+            redirect: 'follow'
+          };
+          // fetch('https://complaint.smartmaheshwari.com/sendEmail', requestOptions)
+          //   .then((response) => response.text())
+          //   .then((result) => console.log(result))
+          //   .catch((error) => console.error(error));
+          sendInvoice(formData)
+            .then((response) => {
+              console.log('responsePDF', response.data);
+              //openInvoiceForm();
+            })
+            .catch((error) => {
+              console.log('responsePDF', error);
+            });
+          handleCreateInvoice();
+        };
+        const openInvoiceForm = () => {
+          // Check if the user is on a mobile device
+          const isMobile = navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/iPhone|iPad|iPod/i);
+
+          if (isMobile) {
+            // Open in a new tab in mobile browser
+            window.open(`https://smartmaheshwari-ecommerce.netlify.app/create-invoice`, '_blank');
+            //handleGeneratePDF();
+          } else {
+            // Handle desktop view or show an alert
+            //alert('This link is best viewed on a mobile device.');
+          }
+        };
+        const fetchComplaintResolvedDetails = () => {
+          const accessToken = 8388;
+          //invoicePreData(accessToken)
+          invoicePreData(myToken)
+            .then((response) => {
+              const complaintResolvedDetails = response.data as ComplaintResolvedData;
+              const complaintId = complaintResolvedDetails.PreData.Complaint_id;
+              const repairParts = complaintResolvedDetails.PreData.Repair_parts;
+              // Map repairParts to invoice_detail and set it in Formik
+              const updatedInvoiceDetail = repairParts.map((part: any) => ({
+                id: UIDV4(),
+                name: part.part, // Assuming partName is the relevant field from repairParts
+                qty: part.quantity,
+                price: part.price || '0.00'
+              }));
+              console.log('complaintResponseInvoice', updatedInvoiceDetail);
+              setFieldValue('invoice_detail', updatedInvoiceDetail); // Update invoice_detail in Formik
+              setComplaintId(complaintId);
+              setRepairParts(repairParts);
+              fetchComplaintDetails(complaintId);
+            })
+            .catch((error) => {
+              console.log('complaintError', error);
+            });
+        };
+        useEffect(() => {
+          fetchComplaintResolvedDetails();
+          openInvoiceForm();
+        }, []);
+        const fetchComplaintDetails = async (complaintId: any) => {
+          try {
+            const response = await getComplaintDetails(complaintId);
+            const complaintData = response.data as ComplaintData; // Cast to expected type
+            const complaintDetails = complaintData.ComplaintDetails[0];
+            const customerDetails = complaintData.ComplaintDetails[0].Customer_Details[0];
+            setFieldValue('customerInfo.name', customerDetails.First_Name + ' ' + customerDetails.Last_Name);
+            setFieldValue('customerInfo.email', customerDetails.Email);
+            setFieldValue('customerInfo.contact', customerDetails.Contact);
+            setFieldValue('customerInfo.address', customerDetails.Location);
+            setCustomerId(customerDetails.Id);
+            setCustomerEmail(customerDetails.Email);
+            setCustomerAddress(customerDetails.Location);
+          } catch (error) {
+            console.error('Error fetching technicians:', error);
+          }
+        };
+        const handleCreateInvoice = () => {
+          console.log('values?.date', values?.date);
+          const date = new Date(values?.date);
+          const formattedDate = date.toISOString().split('T')[0];
+          const invoiceDetails = {
+            invoiceId: values?.invoice_id,
+            //invoiceId: 'INV-002',
+            customerId: customerId,
+            customerEmail: customerEmail,
+            customerAddress: customerAddress,
+            status: values?.status,
+            date: formattedDate,
+            technicianCharges: values?.serviceCharge,
+            taxAmount: values?.gst,
+            discount: values?.discount,
+            totalAmount: total,
+            notes: 'Invoice Details'
+          };
+          const itemDetails = values?.invoice_detail.map((details, index) => {
+            return {
+              invoiceId: values?.invoice_id,
+              //invoiceId: 'INV-002',
+              itemName: details.name,
+              quantity: details.qty,
+              unitPrice: details.price
+            };
+          });
+          const createInvoiceData = {
+            invoice: invoiceDetails,
+            items: itemDetails
+          };
+          createInvoice(createInvoiceData)
+            .then((response) => {
+              console.log('createInvoiceResponse', response);
+            })
+            .catch((error) => {
+              console.log('createInvoiceError', error);
+            });
+        };
         return (
           <Form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
+              {isLoggedIn && (
+                <Grid item xs={12} sm={6} md={3}>
+                  <Box color="grey.200">
+                    <Button
+                      size="small"
+                      startIcon={<Add />}
+                      color="primary"
+                      variant="contained"
+                      // onClick={() => handlerCustomerTo(true)}
+                      sx={{ height: '46px', width: '100%', mt: '28px' }} // Adjust height as needed
+                      onClick={() => setShowAddressModal(true)}
+                    >
+                      Add Customer
+                    </Button>
+                    <AddressModal
+                      open={showAddressModal}
+                      setOpen={(value) => setShowAddressModal(value as boolean)}
+                      handlerAddress={(value) => setFieldValue('customerInfo', value)}
+                    />
+                  </Box>
+                </Grid>
+              )}
               <Grid item xs={12} sm={6} md={3}>
                 <Stack spacing={1}>
                   <InputLabel>Invoice Id</InputLabel>
@@ -270,7 +524,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                 </Stack>
                 {touched.date && errors.date && <FormHelperText error={true}>{errors.date as string}</FormHelperText>}
               </Grid>
-              {/* <Grid item xs={12} sm={6} md={3}>
+              <>
+                {/* <Grid item xs={12} sm={6} md={3}>
                 <Stack spacing={1}>
                   <InputLabel>Due Date</InputLabel>
                   <FormControl sx={{ width: '100%' }} error={Boolean(touched.due_date && errors.due_date)}>
@@ -285,6 +540,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                 </Stack>
                 {touched.due_date && errors.due_date && <FormHelperText error={true}>{errors.due_date as string}</FormHelperText>}
               </Grid> */}
+              </>
               <Grid item xs={12} sm={6}>
                 <MainCard sx={{ minHeight: 168 }}>
                   <Grid container spacing={2}>
@@ -294,8 +550,9 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                         <Stack sx={{ width: '100%' }}>
                           <Typography variant="subtitle1">{values?.cashierInfo?.name}</Typography>
                           <Typography color="secondary">{values?.cashierInfo?.address}</Typography>
-                          <Typography color="secondary">{values?.cashierInfo?.phone}</Typography>
+                          <Typography color="secondary">{values?.cashierInfo?.contact}</Typography>
                           <Typography color="secondary">{values?.cashierInfo?.email}</Typography>
+                          <Typography color="secondary">GSTIN: {values?.cashierInfo.gstIn}</Typography>
                         </Stack>
                       </Stack>
                     </Grid>
@@ -323,7 +580,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
               <Grid item xs={12} sm={6}>
                 <MainCard sx={{ minHeight: 168 }}>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} sm={8}>
+                    <Grid item xs={12} sm={7}>
                       <Stack spacing={2}>
                         <Typography variant="h5">To:</Typography>
                         <Stack sx={{ width: '100%' }}>
@@ -334,8 +591,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                         </Stack>
                       </Stack>
                     </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Box textAlign="right" color="grey.200">
+                    <Grid item xs={12} sm={5}>
+                      <Box textAlign="right" color="grey.200" sx={{ display: 'flex', justifyContent: !isLoggedIn ? 'left' : 'right' }}>
                         <Button
                           size="small"
                           startIcon={<Add />}
@@ -344,7 +601,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                           // onClick={() => handlerCustomerTo(true)}
                           onClick={() => setShowAddressModal(true)}
                         >
-                          Add
+                          Add Customer
                         </Button>
                         <AddressModal
                           open={showAddressModal}
@@ -374,8 +631,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                               <TableRow>
                                 <TableCell>#</TableCell>
                                 <TableCell>Name</TableCell>
-                                <TableCell>Description</TableCell>
-                                <TableCell>Qty</TableCell>
+                                {/* <TableCell>Description</TableCell> */}
+                                <TableCell>Quantity</TableCell>
                                 <TableCell>Price</TableCell>
                                 <TableCell align="right">Amount</TableCell>
                                 <TableCell align="center">Action</TableCell>
@@ -390,7 +647,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                                     id={item.id}
                                     index={index}
                                     name={item.name}
-                                    description={item.description}
+                                    // description={item.description}
                                     qty={item.qty}
                                     price={item.price}
                                     onDeleteItem={(index: number) => remove(index)}
@@ -421,8 +678,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                                     id: UIDV4(),
                                     name: '',
                                     description: '',
-                                    qty: 1,
-                                    price: '1.00'
+                                    qty: 0,
+                                    price: '0.00'
                                   })
                                 }
                                 variant="dashed"
@@ -474,10 +731,10 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                                   <TextField
                                     type="number"
                                     fullWidth
-                                    name="tax"
-                                    id="tax"
+                                    name="gst"
+                                    id="gst"
                                     placeholder="0.0"
-                                    value={values.tax}
+                                    value={values.gst}
                                     onChange={handleChange}
                                     inputProps={{
                                       min: 0
@@ -492,27 +749,40 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                               <Stack direction="row" justifyContent="space-between" spacing={20}>
                                 <Typography color={theme.palette.secondary.main}>Sub Total:</Typography>
                                 {/* <Typography>{invoiceMaster.country?.prefix + '' + subtotal.toFixed(2)}</Typography> */}
-                                <Typography>₹{subtotal.toFixed(2)}</Typography>
+                                {/* <Typography>
+                                  ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography> */}
+                                <Typography>
+                                  ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography>
                               </Stack>
                               <Stack direction="row" justifyContent="space-between">
                                 <Typography color={theme.palette.secondary.main}>Discount:</Typography>
                                 {/* <Typography variant="h6" color="success.main">
                                   {invoiceMaster.country?.prefix + '' + discountRate.toFixed(2)}
                                 </Typography> */}
+                                {/* <Typography variant="h6" color="success.main">
+                                  ₹{discountRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography> */}
                                 <Typography variant="h6" color="success.main">
-                                  ₹{discountRate.toFixed(2)}
+                                  ₹{discountRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </Typography>
                               </Stack>
                               <Stack direction="row" justifyContent="space-between">
                                 <Typography color={theme.palette.secondary.main}>Service Charge:</Typography>
                                 <Typography variant="h6" color="success.main">
-                                  ₹{values.serviceCharge}
+                                  ₹{values.serviceCharge.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </Typography>
                               </Stack>
                               <Stack direction="row" justifyContent="space-between">
                                 <Typography color={theme.palette.secondary.main}>GST:</Typography>
                                 {/* <Typography>{invoiceMaster.country?.prefix + '' + taxRate.toFixed(2)}</Typography> */}
-                                <Typography>₹{taxRate.toFixed(2)}</Typography>
+                                {/* <Typography>
+                                  ₹{taxRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography> */}
+                                <Typography>
+                                  ₹{taxRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography>
                               </Stack>
                               <Stack direction="row" justifyContent="space-between">
                                 <Typography variant="subtitle1">Grand Total:</Typography>
@@ -522,11 +792,17 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                                     ? invoiceMaster.country?.prefix + '' + total
                                     : invoiceMaster.country?.prefix + '' + total.toFixed(2)}
                                 </Typography> */}
+                                {/* <Typography variant="subtitle1">
+                                  ₹
+                                  {total % 1 === 0
+                                    ? total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                    : total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography> */}
                                 <Typography variant="subtitle1">
                                   ₹
                                   {total % 1 === 0
-                                    ? total
-                                    : total.toLocaleString('en-UN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    ? total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                    : total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </Typography>
                               </Stack>
                             </Stack>
@@ -537,7 +813,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                   }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <>
+                {/* <Grid item xs={12}>
                 <Stack spacing={1}>
                   <InputLabel>Notes</InputLabel>
                   <TextField
@@ -561,7 +838,8 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                     }}
                   />
                 </Stack>
-              </Grid>
+              </Grid> */}
+              </>
               <>
                 {/* <Grid item xs={12} sm={6}>
                 <Stack spacing={1}>
@@ -631,7 +909,13 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                   <Button
                     variant="outlined"
                     color="secondary"
-                    disabled={values.status === '' || !isValid}
+                    disabled={
+                      values.status == '' ||
+                      values.date == null ||
+                      values.cashierInfo.address == '' ||
+                      values.customerInfo.address == '' ||
+                      values.invoice_detail[0].name == ''
+                    }
                     sx={{ color: 'secondary.dark' }}
                     onClick={() => handlerPreview(true)}
                   >
@@ -640,9 +924,25 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                   <Button variant="outlined" color="secondary" sx={{ color: 'secondary.dark' }}>
                     Save
                   </Button>
-                  <Button color="primary" variant="contained" type="submit">
+                  {/* <Button color="primary" variant="contained" type="submit">
                     Create & Send
-                  </Button>
+                  </Button> */}
+                  {/* <PDFDownloadLink
+                    document={<ExportPDFView list={values} />}
+                    fileName={`${values?.invoice_id}-${values?.customerInfo.name}.pdf`}
+                  > */}
+                  <LoadingButton
+                    //loading={isLoader}
+                    color="primary"
+                    variant="contained"
+                    loadingPosition="center"
+                    sx={{ color: 'secondary.lighter' }}
+                    onClick={handleGeneratePDF}
+                    //onClick={handleCreateInvoice}
+                  >
+                    Create & Send
+                  </LoadingButton>
+                  {/* </PDFDownloadLink> */}
                   <InvoiceModal
                     isOpen={invoiceMaster.isOpen}
                     setIsOpen={(value: any) => handlerPreview(value)}
@@ -688,7 +988,7 @@ export default function Create() {
 
   return (
     <>
-      <Breadcrumbs custom heading="New Invoice" links={breadcrumbLinks} />
+      <Breadcrumbs custom heading="New Invoice" links={breadcrumbLinks} sx={{ padding: '24px 24px 0 24px' }} />
       <MainCard>{isLoader ? loader : <CreateForm {...{ lists: invoice, invoiceMaster }} />}</MainCard>
     </>
   );

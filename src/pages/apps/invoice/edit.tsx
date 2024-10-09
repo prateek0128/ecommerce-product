@@ -87,7 +87,8 @@ const invoiceSingleList: InvoiceList['cashierInfo'] = {
   name: '',
   address: '',
   contact: '',
-  email: ''
+  email: '',
+  gstIn: ''
 };
 
 interface FormProps {
@@ -111,7 +112,8 @@ function EditForm({ list, invoiceMaster }: FormProps) {
       email: values.cashierInfo?.email,
       avatar: Number(list?.avatar),
       discount: Number(values.discount),
-      tax: Number(values.tax),
+      serviceCharge: Number(values.serviceCharge),
+      gst: Number(values.tax),
       date: format(new Date(values.date), 'MM/dd/yyyy'),
       due_date: format(new Date(values.due_date), 'MM/dd/yyyy'),
       quantity: Number(
@@ -153,7 +155,7 @@ function EditForm({ list, invoiceMaster }: FormProps) {
         customerInfo: list.customerInfo || invoiceSingleList,
         invoice_detail: list.invoice_detail || [],
         discount: list.discount || 0,
-        tax: list.tax || 0,
+        tax: list.gst || 0,
         notes: list.notes || ''
       }}
       validationSchema={validationSchema}

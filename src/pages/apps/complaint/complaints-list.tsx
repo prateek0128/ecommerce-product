@@ -37,9 +37,9 @@ import MainCard from 'components/MainCard';
 import ScrollX from 'components/ScrollX';
 import Avatar from 'components/@extended/Avatar';
 import IconButton from 'components/@extended/IconButton';
-
+import DoneIcon from '@mui/icons-material/Done';
 //import ComplaintModal from 'sections/apps/complaint/ComplaintModal';
-import AlertComplaintDelete from 'sections/apps/complaint/AlertComplaintDelete';
+import ForceResolveComplaint from 'sections/apps/complaint/ForceResolveComplaint';
 import ComplaintView from 'sections/apps/complaint/ComplaintView';
 
 import {
@@ -381,8 +381,16 @@ export default function ComplaintListPage() {
           const status = getValue() as string;
           return (
             <Chip
-              color={status === 'Completed' ? 'success' : 'info'}
-              label={status === 'Completed' ? 'Completed' : 'Pending'}
+              color={status === 'Completed' ? 'success' : status === 'InProgress' ? 'info' : status === 'pending' ? 'warning' : 'error'}
+              label={
+                status === 'Completed'
+                  ? 'Completed'
+                  : status === 'InProgress'
+                    ? 'In Progress'
+                    : status === 'pending'
+                      ? 'Pending'
+                      : 'Cancelled'
+              }
               size="small"
               variant="light"
             />
@@ -420,16 +428,17 @@ export default function ComplaintListPage() {
                   <Edit />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Delete">
+              <Tooltip title="Resolve Complaint">
                 <IconButton
-                  color="error"
+                  color="success"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
                     e.stopPropagation();
                     handleClose();
                     setComplaintDeleteId(Number(row.original.id));
                   }}
+                  disabled={row.original.status == 'Completed' || row.original.status == 'Cancelled'}
                 >
-                  <Trash />
+                  <DoneIcon />
                 </IconButton>
               </Tooltip>
             </Stack>
@@ -444,7 +453,7 @@ export default function ComplaintListPage() {
     <>
       <Breadcrumbs custom heading="Complaint List" links={breadcrumbLinks} />
       <ReactTable data={allComplaints || []} columns={columns} loading={loading} />
-      <AlertComplaintDelete id={Number(complaintDeleteId)} title={complaintDeleteId} open={complaintModal} handleClose={handleClose} />
+      <ForceResolveComplaint id={Number(complaintDeleteId)} title={complaintDeleteId} open={complaintModal} handleClose={handleClose} />
     </>
   );
 }

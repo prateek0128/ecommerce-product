@@ -1,6 +1,4 @@
 import { useState, ChangeEvent, useEffect, SetStateAction } from 'react';
-import { useNavigate } from 'react-router-dom';
-
 // material-ui
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
@@ -22,12 +20,14 @@ import { Autocomplete, Chip } from '@mui/material';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
 import { APP_DEFAULT_PATH } from 'config';
 import repairParts from './repairParts';
-import { assignCategory } from 'apiServices/category';
+import { assignCategory, techDetailsComplaint } from 'apiServices/category';
 import { getAllTechnicians } from 'apiServices/technician';
 import { categories, technicianRoles, technicians } from './assignCategoryData';
 import { SnackbarProps } from 'types/snackbar';
 import { openSnackbar } from 'api/snackbar';
 import { getAllComplaints } from 'apiServices/complaint';
+import { useLoaderData, useNavigate, useLocation } from 'react-router-dom';
+
 // Define categories and subcategories explicitly
 type Category =
   | 'Electronics'
@@ -324,19 +324,28 @@ interface ComplaintsData {
   message: string;
   Complaints: any;
 }
+interface TechData {
+  message: string;
+  assignedDetails: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AssignCategory() {
   const history = useNavigate();
+  const location = useLocation();
+  const { complaintIdView } = location.state || 0;
+  console.log('complaintIdView', complaintIdView);
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Assign Category' }];
-  const [roles, setRoles] = useState<string | null>(null);
-  const [technicianName, setTechnicianName] = useState<string | null>(null);
-  const [complaintId, setComplaintId] = useState<number | null>(null);
+  const [technicianId, setTechnicianId] = useState<number | null>(null);
+  const [technicianName, setTechnicianName] = useState<string>('');
+  const [technicianContact, setTechnicianContact] = useState<string>('');
+  const [complaintId, setComplaintId] = useState<number>();
   const [expanded, setExpanded] = useState<string | false>(false);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | ''>('');
-  const [selectedRepairParts, setSelectedRepairParts] = useState<string[]>([]);
+  const [selectedRepairParts, setSelectedRepairParts] = useState<{ part: string; quantity: number }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [tabs, setTabs] = useState<{ category: string; subcategory: string; parts: string[] }[]>([]);
+  // const [tabs, setTabs] = useState<{ category: string; subcategory: string; parts: string[] }[]>([]);
+  const [tabs, setTabs] = useState<{ category: string; subcategory: string; parts: { part: string; quantity: number }[] }[]>([]); // Update parts to include quantity
   const [activeTab, setActiveTab] = useState<number>(0);
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
@@ -347,13 +356,12 @@ export default function AssignCategory() {
   const allComplaints =
     allComplaintsData &&
     allComplaintsData
-      .filter((complaint: any) => complaint.Status === 'pending') // Filter only the pending complaints
+      .filter((complaint: any) => complaint.Status === 'InProgress') // Filter only the pending complaints
       .map((complaint: any) => complaint.Complaint_Id);
-  console.log('allComplaints', allComplaints);
   const allTechnicians =
     allTechniciansData &&
     allTechniciansData.map((technician: any, index: any) => {
-      return technician.First_Name + ' ' + technician.Last_Name;
+      return `${technician.First_Name} ${technician.Last_Name} ${'-'} (${technician.Contact})`;
     });
 
   const getAllComplaintsAPI = () => {
@@ -368,9 +376,26 @@ export default function AssignCategory() {
         console.error(error);
       });
   };
+  const getTechDetailsAPI = (complaintId: number) => {
+    setLoading(true);
+    techDetailsComplaint(complaintId)
+      .then((response) => {
+        setLoading(false);
+        const techData = response.data as TechData;
+        setTechnicianId(techData.assignedDetails.Technician_Id);
+        setTechnicianName(techData.assignedDetails.Technician_Name);
+        setTechnicianContact(techData.assignedDetails.Contact);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
   useEffect(() => {
     getAllComplaintsAPI();
-  }, []);
+    if (complaintIdView && complaintIdView > 0) {
+      getTechDetailsAPI(complaintIdView);
+    }
+  }, [complaintIdView]);
   useEffect(() => {
     const fetchTechnicians = async () => {
       try {
@@ -403,45 +428,80 @@ export default function AssignCategory() {
       setActiveTab(tabs.length); // Set the new tab as active
     }
   };
-
   const handleSubcategoryChange = (event: SelectChangeEvent) => {
     const newSubcategory = event.target.value;
     setSelectedSubcategory(newSubcategory);
     //setSelectedRepairParts([]); // Reset repair parts when subcategory changes
     setTabs((prevTabs) => prevTabs.map((tab, index) => (index === activeTab ? { ...tab, subcategory: newSubcategory, parts: [] } : tab))); // Update the subcategory in the active tab
   };
-
-  const handleRepairPartsChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleRepairPartsChange = (event: ChangeEvent<HTMLInputElement>, partName: string) => {
     const { value, checked } = event.target;
     const part = event.target.value;
-    if (event.target.checked) {
-      setSelectedRepairParts((prevParts) => [...prevParts, part]); // Add the part to the selected list
-    } else {
-      setSelectedRepairParts((prevParts) => prevParts.filter((p) => p !== part)); // Remove the part if unchecked
-    }
+    // if (event.target.checked) {
+    //   setSelectedRepairParts((prevParts) => [...prevParts, part]); // Add the part to the selected list
+    // } else {
+    //   setSelectedRepairParts((prevParts) => prevParts.filter((p) => p !== part)); // Remove the part if unchecked
+    // }
+    // setTabs((prevTabs) =>
+    //   prevTabs.map((tab, index) =>
+    //     index === activeTab
+    //       ? {
+    //           ...tab,
+    //           parts: checked ? [...tab.parts, value] : tab.parts.filter((part) => part !== value)
+    //         }
+    //       : tab
+    //   )
+    // ); // Update repair parts in the active tab
+    setTabs((prevTabs) => {
+      // Create the updated tabs array
+      const updatedTabs = prevTabs.map((tab, index) =>
+        index === activeTab
+          ? {
+              ...tab,
+              parts: checked
+                ? [...tab.parts, { part: partName, quantity: 1 }] // Set default quantity as 1 when checked
+                : tab.parts.filter((part) => part.part !== partName) // Remove part when unchecked
+            }
+          : tab
+      );
+
+      // Immediately update selectedRepairParts based on the current active tab
+      const currentParts = updatedTabs[activeTab]?.parts || [];
+      setSelectedRepairParts(currentParts); // This can now be safely set here
+
+      return updatedTabs; // Return the updated tabs
+    });
+  };
+  const handleQuantityChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, partName: string) => {
+    const quantity = parseInt(event.target.value, 10);
     setTabs((prevTabs) =>
       prevTabs.map((tab, index) =>
         index === activeTab
           ? {
               ...tab,
-              parts: checked ? [...tab.parts, value] : tab.parts.filter((part) => part !== value)
+              parts: tab.parts.map((part) => (part.part === partName ? { ...part, quantity: quantity } : part))
             }
           : tab
       )
-    ); // Update repair parts in the active tab
+    );
   };
-
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
     const selectedTab = tabs[newValue];
+    console.log('selectedTab', selectedTab);
     setSelectedCategory(selectedTab.category);
     setSelectedSubcategory(selectedTab.subcategory);
+    console.log('selectedRepairParts3', selectedTab.parts);
     setSelectedRepairParts(selectedTab.parts);
   };
+  console.log('selectedRepairParts1', selectedRepairParts);
   const assignCategoryAPI = () => {
+    console.log('selectedRepairParts2', selectedRepairParts);
     const assignCategoryData = {
       complaintId: complaintId,
+      technicianId: technicianId,
       technicianName: technicianName,
+      // technicianContact: technicianContact,
       //technicianRole: roles,
       category: selectedCategory,
       subCategory: selectedSubcategory,
@@ -481,35 +541,52 @@ export default function AssignCategory() {
             <MainCard>
               <Grid container spacing={1} direction="column">
                 <Grid item xs={12}>
-                  <InputLabel htmlFor="techinicians" sx={{ mb: 1 }}>
+                  <InputLabel htmlFor="complaintId" sx={{ mb: 1 }}>
                     Complaint Id
                   </InputLabel>
-                  <Autocomplete
-                    fullWidth
-                    id="techinicians"
-                    options={allComplaints}
-                    value={complaintId}
-                    onChange={(event: React.SyntheticEvent, newValue: number | null) => {
-                      setComplaintId(newValue); // This should work now
-                    }}
-                    renderInput={(params) => <TextField {...params} placeholder="Select complaint id" />}
-                  />
+                  {complaintIdView ? (
+                    <TextField
+                      fullWidth
+                      id="technicianName"
+                      value={complaintIdView} // Display the technician name
+                      placeholder="Technician name"
+                      InputProps={{
+                        readOnly: true // Set to read-only
+                      }}
+                    />
+                  ) : (
+                    <Autocomplete
+                      fullWidth
+                      id="complaintId"
+                      options={allComplaints}
+                      value={complaintId}
+                      onChange={(event: React.SyntheticEvent, newValue: number | null) => {
+                        setComplaintId(Number(newValue)); // This should work now
+                        if (newValue) {
+                          getTechDetailsAPI(Number(newValue)); // Call the API only if there's a valid new value
+                        }
+                      }}
+                      renderInput={(params) => <TextField {...params} placeholder="Select complaint id" />}
+                    />
+                  )}
                 </Grid>
                 <Grid item xs={12}>
-                  <InputLabel htmlFor="techinicians" sx={{ mb: 1 }}>
+                  <InputLabel htmlFor="technicianName" sx={{ mb: 1 }}>
                     Technician Name
                   </InputLabel>
-                  <Autocomplete
+                  <TextField
                     fullWidth
-                    id="techinicians"
-                    options={allTechnicians}
-                    value={technicianName}
-                    onChange={(event: React.SyntheticEvent, newValue: string | null) => {
-                      setTechnicianName(newValue); // This should work now
+                    id="technicianName"
+                    value={
+                      (complaintId || complaintIdView) && `${technicianName || ''} ${technicianContact && '-'} ${technicianContact || ''}`
+                    } // Display the technician name
+                    placeholder={complaintId || complaintIdView == null ? 'Technician name' : 'Technician Details'}
+                    InputProps={{
+                      readOnly: true // Set to read-only
                     }}
-                    renderInput={(params) => <TextField {...params} placeholder="Select technician name" />}
                   />
                 </Grid>
+
                 {/* <Grid item xs={12}>
                   <InputLabel htmlFor="techinician-role" sx={{ mb: 1 }}>
                     Technician Role
@@ -595,21 +672,50 @@ export default function AssignCategory() {
                                 {tab.category && tab.subcategory && (
                                   <>
                                     <InputLabel sx={{ mb: 1 }}>Repair Parts</InputLabel>
-
                                     <FormControl component="fieldset">
                                       {(repairParts[tab.category as Category][tab.subcategory as Subcategory] ?? []).length > 0 ? (
                                         (repairParts[tab.category as Category][tab.subcategory as Subcategory] ?? []).map((part) => (
-                                          <FormControlLabel
+                                          <Grid
+                                            container
                                             key={part}
-                                            control={
-                                              <Checkbox
-                                                checked={tab.parts.includes(part)}
-                                                onChange={handleRepairPartsChange}
-                                                value={part}
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                            spacing={2}
+                                          >
+                                            <Grid item xs={6}>
+                                              <FormControlLabel
+                                                control={
+                                                  <Checkbox
+                                                    checked={tab.parts.some((p) => p.part === part)}
+                                                    onChange={(e) => handleRepairPartsChange(e, part)}
+                                                    value={part}
+                                                  />
+                                                }
+                                                label={part}
                                               />
-                                            }
-                                            label={part}
-                                          />
+                                            </Grid>
+                                            <Grid item xs={6}>
+                                              {tab.parts.some((p) => p.part === part) && (
+                                                <TextField
+                                                  type="number"
+                                                  label="Quantity"
+                                                  inputProps={{ min: 1 }}
+                                                  value={tab.parts.find((p) => p.part === part)?.quantity || 1}
+                                                  sx={{
+                                                    '& .MuiInputBase-root': {
+                                                      height: '30px', // Adjust input height
+                                                      padding: '4px' // Reduce padding for smaller height
+                                                    },
+                                                    '& .MuiInputLabel-root': {
+                                                      fontSize: '0.875rem' // Adjust label font size to better fit
+                                                    }
+                                                  }}
+                                                  onChange={(e) => handleQuantityChange(e, part)}
+                                                />
+                                              )}
+                                            </Grid>
+                                          </Grid>
                                         ))
                                       ) : (
                                         <Typography variant="body2" color="textSecondary">

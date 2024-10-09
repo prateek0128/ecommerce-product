@@ -91,9 +91,24 @@ const styles = StyleSheet.create({
   flex03: { flex: '0.3 1 0px' },
   flex07: { flex: '0.7 1 0px' },
   flex17: { flex: '1.7 1 0px' },
-  flex20: { flex: '2 1 0px' }
+  flex20: { flex: '2 1 0px' },
+  notesRow: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  checkbox: {
+    marginRight: 8
+  }
 });
+interface CheckBoxProps {
+  checked: boolean;
+}
 
+const CheckBox = ({ checked }: CheckBoxProps) => (
+  <View style={styles.checkbox}>
+    <Text>{checked ? '✔️' : '❌'}</Text>
+  </View>
+);
 interface Props {
   list: InvoiceList | null;
 }
@@ -101,15 +116,16 @@ interface Props {
 // ==============================|| INVOICE EXPORT - CONTENT  ||============================== //
 
 export default function Content({ list }: Props) {
+  console.log('listPDF', list);
   const theme = useTheme();
   const subtotal = list?.invoice_detail?.reduce((prev: any, curr: any) => {
     if (curr.name.trim().length > 0) return prev + Number(curr.price * Math.floor(curr.qty));
     else return prev;
   }, 0);
 
-  const taxRate = (Number(list?.tax) * subtotal) / 100;
+  const taxRate = (Number(list?.gst) * subtotal) / 100;
   const discountRate = (Number(list?.discount) * subtotal) / 100;
-  const total = subtotal - discountRate + taxRate;
+  const total = subtotal - discountRate + taxRate + Number(list?.serviceCharge);
   return (
     <View style={styles.container}>
       <View style={[styles.row, styles.subRow]}>
@@ -119,6 +135,7 @@ export default function Content({ list }: Props) {
           <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.address}</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.contact}</Text>
           <Text style={[styles.caption, styles.pb5]}>{list?.cashierInfo?.email}</Text>
+          <Text style={[styles.caption, styles.pb5]}>GSTIN: {list?.cashierInfo?.gstIn}</Text>
         </View>
         <View style={styles.card}>
           <Text style={[styles.title, { marginBottom: 8 }]}>To:</Text>
@@ -164,7 +181,13 @@ export default function Content({ list }: Props) {
       </View>
       <View style={[styles.row, styles.amountSection]}>
         <View style={[styles.row, styles.amountRow]}>
-          <Text style={styles.caption}>Tax:</Text>
+          <Text style={styles.caption}>Service Charge:</Text>
+          <Text style={[styles.caption, { color: theme.palette.success.main }]}>${list?.serviceCharge.toFixed(2)}</Text>
+        </View>
+      </View>
+      <View style={[styles.row, styles.amountSection]}>
+        <View style={[styles.row, styles.amountRow]}>
+          <Text style={styles.caption}>GST:</Text>
           <Text style={[styles.caption]}>${taxRate?.toFixed(2)}</Text>
         </View>
       </View>
@@ -174,11 +197,22 @@ export default function Content({ list }: Props) {
           <Text style={styles.tableCell}>${total % 1 === 0 ? total : total?.toFixed(2)}</Text>
         </View>
       </View>
-      <View style={[styles.row, { alignItems: 'flex-start', marginTop: 20, width: '95%' }]}>
-        <Text style={styles.caption}>Notes </Text>
-        <Text style={styles.tableCell}>
-          {' '}
-          It was a pleasure working with you and your team. We hope you will keep us in mind for future freelance projects. Thank You!
+      <View style={[styles.row, { alignItems: 'flex-start', marginTop: 20, width: '95%', flexDirection: 'column' }]}>
+        <Text style={styles.caption}>Notes:</Text>
+        <View style={styles.notesRow}>
+          {/* <CheckBox checked={true} /> */}
+          <Text style={[styles.tableCell, { textAlign: 'left' }]}>1. You have received the Surveillance Setup in working condition.</Text>
+        </View>
+        <Text style={[styles.tableCell, { textAlign: 'left' }]}>2. The new part provided will not be returned.</Text>
+        <Text style={[styles.tableCell, { textAlign: 'left' }]}>3. In case of any inconvenience, please contact the complaint number.</Text>
+        <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+          4. Maheshwari Infotech will not be responsible for any tampering of the Surveillance Setup by unauthorized persons.
+        </Text>
+        <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+          5. The customer can request a bill for the amount paid, but at an additional charge.
+        </Text>
+        <Text style={[styles.tableCell, { textAlign: 'left' }]}>
+          6. Tuesday is a holiday; complaints can be made from 10 AM to 6 PM on other days.
         </Text>
       </View>
     </View>

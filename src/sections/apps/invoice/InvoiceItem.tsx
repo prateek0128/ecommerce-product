@@ -26,7 +26,7 @@ import { Trash } from 'iconsax-react';
 
 // types
 import { SnackbarProps } from 'types/snackbar';
-
+import TextField from '@mui/material/TextField';
 // ==============================|| INVOICE - ITEMS ||============================== //
 
 export default function InvoiceItem({ id, name, description, qty, price, onDeleteItem, onEditItem, index, Blur, errors, touched }: any) {
@@ -35,6 +35,7 @@ export default function InvoiceItem({ id, name, description, qty, price, onDelet
   const mode = theme.palette.mode;
 
   const [open, setOpen] = useState(false);
+
   const handleModalClose = (status: boolean) => {
     setOpen(false);
     if (status) {
@@ -64,14 +65,14 @@ export default function InvoiceItem({ id, name, description, qty, price, onDelet
       errors: errorName,
       touched: touchedName
     },
-    {
-      placeholder: 'Description',
-      label: 'Description',
-      name: `invoice_detail.${index}.description`,
-      type: 'text',
-      id: id + '_description',
-      value: description
-    },
+    // {
+    //   placeholder: 'Description',
+    //   label: 'Description',
+    //   name: `invoice_detail.${index}.description`,
+    //   type: 'text',
+    //   id: id + '_description',
+    //   value: description
+    // },
     { placeholder: '', label: 'Qty', type: 'number', name: `invoice_detail.${index}.qty`, id: id + '_qty', value: qty },
     { placeholder: '', label: 'price', type: 'number', name: `invoice_detail.${index}.price`, id: id + '_price', value: price }
   ];

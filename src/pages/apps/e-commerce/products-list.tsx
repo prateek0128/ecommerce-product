@@ -372,7 +372,7 @@ export default function ProductList() {
       {
         header: 'Price',
         accessorKey: 'price',
-        cell: ({ getValue }) => <NumericFormat value={getValue() as number} displayType="text" thousandSeparator prefix="$" />,
+        cell: ({ getValue }) => <NumericFormat value={getValue() as number} displayType="text" thousandSeparator prefix="₹" />,
         meta: {
           className: 'cell-right'
         }

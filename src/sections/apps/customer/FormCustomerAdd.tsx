@@ -130,6 +130,9 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
     firstName: Yup.string().max(255).required('First Name is required'),
     lastName: Yup.string().max(255).required('Last Name is required'),
     email: Yup.string().max(255).required('Email is required').email('Must be a valid email'),
+    contact: Yup.string()
+      .matches(/^[0-9]{10}$/, 'Contact must be exactly 10 digits')
+      .required('Contact is required'),
     status: Yup.string(),
     location: Yup.string().max(500),
     about: Yup.string().max(500)
@@ -457,6 +460,14 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
                           {...getFieldProps('contact')}
                           error={Boolean(touched.contact && errors.contact)}
                           helperText={touched.contact && errors.contact}
+                          inputProps={{
+                            maxLength: 10, // Limits the input to 10 characters
+                            pattern: '[0-9]*' // Ensures only numeric input is allowed
+                          }}
+                          onInput={(e) => {
+                            const input = e.target as HTMLInputElement; // Cast event target to HTMLInputElement
+                            input.value = input.value.replace(/[^0-9]/g, ''); // Allow only digits
+                          }}
                         />
                       </Stack>
                     </Grid>

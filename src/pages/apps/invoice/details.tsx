@@ -42,6 +42,7 @@ import { DocumentDownload, Edit, Printer, Share } from 'iconsax-react';
 function PDFIconButton({ list }: { list: InvoiceList }) {
   const theme = useTheme();
   return (
+    //@ts-ignore
     <PDFDownloadLink document={<ExportPDFView list={list} />} fileName={`${list.invoice_id}-${list.customer_name}.pdf`}>
       <IconButton>
         <DocumentDownload color={theme.palette.mode === ThemeMode.DARK ? theme.palette.background.paper : theme.palette.text.secondary} />
@@ -89,7 +90,7 @@ export default function Details() {
     else return prev;
   }, 0);
 
-  const taxRate = (Number(list?.tax) * subtotal) / 100;
+  const taxRate = (Number(list?.gst) * subtotal) / 100;
   const discountRate = (Number(list?.discount) * subtotal) / 100;
   const total = subtotal - discountRate + taxRate;
   const componentRef: Ref<HTMLDivElement> = useRef(null);
@@ -298,8 +299,15 @@ export default function Details() {
               </Grid>
             </Grid>
           </Box>
+
           <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ p: 2.5, a: { textDecoration: 'none', color: 'inherit' } }}>
-            <PDFDownloadLink document={<ExportPDFView list={list} />} fileName={`${list?.invoice_id}-${list?.customer_name}.pdf`}>
+            <PDFDownloadLink
+              document={
+                //@ts-ignore
+                <ExportPDFView list={list} />
+              }
+              fileName={`${list?.invoice_id}-${list?.customer_name}.pdf`}
+            >
               <LoadingButton
                 loading={isLoader}
                 color="primary"

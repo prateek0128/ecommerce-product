@@ -15,29 +15,21 @@ import capitalize from '@mui/utils/capitalize';
 
 // ==============================|| PRODUCT - VIEW ||============================== //
 interface ProductData {
-  Picture: any;
+  Details: any;
+  message: string;
 }
-// Function to convert byte array to Base64 string
-const arrayBufferToBase64 = (buffer: any) => {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-};
 export default function ProductView({ data }: any) {
   const theme = useTheme();
   const [productImage, setProductImage] = useState<string | undefined>(undefined);
+  const [productStock, setProductStock] = useState('');
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const response = await getProductDetails(data.id);
-        const productData = response.data as ProductData[];
-        // Convert the byte array to Base64 and set the product image
-        const base64String = arrayBufferToBase64(productData[0].Picture);
-        setProductImage(`data:image/jpeg;base64,${base64String}`);
+        const productData = response.data as ProductData;
+        const productDetails = productData.Details[0];
+        setProductImage(productDetails.Picture);
+        setProductStock(productDetails.Stock);
       } catch (error) {
         console.error('Error fetching technicians:', error);
       }
@@ -49,14 +41,13 @@ export default function ProductView({ data }: any) {
       <Grid item xs={6} sm={5} md={4} lg={3}>
         <Box sx={{ position: 'relative' }}>
           <img
-            // src={data.image && getImageUrl(`${data.image}`, ImagePath.ECOMMERCE)}
-            src={productImage}
+            src={productImage ? productImage : getImageUrl(`${data.image}`, ImagePath.ECOMMERCE)}
             alt="product"
             style={{ background: theme.palette.secondary[200], width: '100%' }}
           />
           <Chip
-            label={data.stock ? 'In Stock' : 'Out of Stock'}
-            color={data.stock ? 'success' : 'error'}
+            label={productStock == 'In Stock' || 'instock' || 'in stock' ? 'In Stock' : 'Out of Stock'}
+            color={productStock == 'In Stock' || 'instock' || 'in stock' ? 'success' : 'error'}
             size="small"
             sx={{ position: 'absolute', right: 8, top: 8 }}
           />

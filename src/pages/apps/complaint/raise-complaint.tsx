@@ -24,395 +24,32 @@ import { openSnackbar } from 'api/snackbar';
 import { SnackbarProps } from 'types/snackbar';
 import { APP_DEFAULT_PATH } from 'config';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
-import { getAllCustomers, deleteCustomer } from 'apiServices/customer';
+import { getAllCustomers, deleteCustomer, getCustomerDetails } from 'apiServices/customer';
 // constant
 const warrantyStatus = [
   {
     value: 1,
-    label: 'In Warranty'
+    label: 'Yes'
   },
   {
     value: 0,
-    label: 'Out of Warranty'
+    label: 'No'
   }
 ];
-const categories = [
-  {
-    id: 1,
-    name: 'Electronics',
-    subcategories: [
-      'Mobile Phones',
-      'Laptops',
-      'Headphones',
-      'Cameras',
-      'Smartwatches',
-      'Televisions',
-      'Home Audio',
-      'Wearable Technology',
-      'Gaming Consoles',
-      'Smart Home Devices',
-      'Drones',
-      'Portable Speakers'
-    ]
-  },
-  {
-    id: 2,
-    name: 'Clothing',
-    subcategories: [
-      "Men's Clothing",
-      "Women's Clothing",
-      "Kids' Clothing",
-      'Accessories',
-      'Footwear',
-      'Activewear',
-      'Outerwear',
-      'Swimwear',
-      'Sleepwear',
-      'Plus Size',
-      'Maternity',
-      'Uniforms'
-    ]
-  },
-  {
-    id: 3,
-    name: 'Home & Kitchen',
-    subcategories: [
-      'Furniture',
-      'Cookware',
-      'Decor',
-      'Appliances',
-      'Bedding',
-      'Storage Solutions',
-      'Outdoor Furniture',
-      'Lighting',
-      'Garden Tools',
-      'Cleaning Supplies',
-      'Kitchen Storage',
-      'Small Kitchen Appliances',
-      'Barware'
-    ]
-  },
-  {
-    id: 4,
-    name: 'Books',
-    subcategories: [
-      'Fiction',
-      'Non-Fiction',
-      'Educational',
-      "Children's Books",
-      'Comics & Graphic Novels',
-      'Cookbooks',
-      'Self-Help',
-      'Biographies',
-      'Science Fiction & Fantasy',
-      'History',
-      'Romance',
-      'Travel',
-      'Cookery'
-    ]
-  },
-  {
-    id: 5,
-    name: 'Health & Beauty',
-    subcategories: [
-      'Skincare',
-      'Haircare',
-      'Personal Care',
-      'Vitamins & Supplements',
-      'Makeup',
-      'Fragrances',
-      'Fitness Equipment',
-      'Oral Care',
-      "Men's Grooming",
-      'Body Care',
-      'Hair Tools',
-      'Health Monitors',
-      'Wellness'
-    ]
-  },
-  {
-    id: 6,
-    name: 'Toys & Games',
-    subcategories: [
-      'Action Figures',
-      'Board Games',
-      'Educational Toys',
-      'Dolls',
-      'Outdoor Play',
-      'Building Toys',
-      'Puzzles',
-      'Pretend Play',
-      'Remote Control',
-      'Ride-Ons',
-      'Arts & Crafts',
-      'Electronic Toys',
-      'STEM Toys'
-    ]
-  },
-  {
-    id: 7,
-    name: 'Sports & Outdoors',
-    subcategories: [
-      'Camping & Hiking',
-      'Fitness & Exercise',
-      'Sports Equipment',
-      'Cycling',
-      'Fishing',
-      'Water Sports',
-      'Winter Sports',
-      'Running',
-      'Outdoor Furniture',
-      'Sports Apparel',
-      'Yoga & Pilates',
-      'Climbing Gear',
-      'Golf'
-    ]
-  },
-  {
-    id: 8,
-    name: 'Automotive',
-    subcategories: [
-      'Car Electronics',
-      'Interior Accessories',
-      'Exterior Accessories',
-      'Tools & Equipment',
-      'Car Care',
-      'Replacement Parts',
-      'Motorcycles & ATVs',
-      'Car Safety',
-      'Auto Detailing',
-      'Truck Accessories',
-      'Car Covers',
-      'Towing Equipment',
-      'Car Lighting'
-    ]
-  },
-  {
-    id: 9,
-    name: 'Office Supplies',
-    subcategories: [
-      'Furniture',
-      'Stationery',
-      'Printer Supplies',
-      'Office Electronics',
-      'Organization',
-      'Office Décor',
-      'Desks & Chairs',
-      'Mailing Supplies',
-      'Breakroom Supplies',
-      'Calendars & Planners',
-      'Filing & Storage',
-      'Whiteboards',
-      'Presentation Supplies'
-    ]
-  },
-  {
-    id: 10,
-    name: 'Pet Supplies',
-    subcategories: [
-      'Dog Supplies',
-      'Cat Supplies',
-      'Bird Supplies',
-      'Fish Supplies',
-      'Small Animal Supplies',
-      'Pet Furniture',
-      'Pet Health',
-      'Grooming',
-      'Training & Behavior',
-      'Pet Travel',
-      'Aquarium Supplies',
-      'Reptile Supplies',
-      'Pet Apparel'
-    ]
-  },
-  {
-    id: 11,
-    name: 'Garden & Outdoor',
-    subcategories: [
-      'Plants',
-      'Garden Tools',
-      'Outdoor Furniture',
-      'Grills & Outdoor Cooking',
-      'Planters & Pots',
-      'Outdoor Lighting',
-      'Fencing',
-      'Gardening Supplies',
-      'Outdoor Decor',
-      'Landscaping',
-      'Water Features',
-      'Outdoor Heating',
-      'Patio Furniture'
-    ]
-  },
-  {
-    id: 12,
-    name: 'Jewelry & Watches',
-    subcategories: [
-      'Necklaces & Pendants',
-      'Earrings',
-      'Bracelets',
-      'Rings',
-      'Watches',
-      'Brooches & Pins',
-      "Men's Jewelry",
-      'Jewelry Sets',
-      'Jewelry Care & Storage',
-      'Engagement & Wedding',
-      'Luxury Watches',
-      'Fashion Jewelry',
-      'Custom Jewelry'
-    ]
-  },
-  {
-    id: 13,
-    name: 'Arts & Crafts',
-    subcategories: [
-      'Drawing & Painting',
-      'Craft Supplies',
-      'Sewing & Knitting',
-      'Beading & Jewelry Making',
-      'Scrapbooking',
-      'Model Building',
-      'Art Supplies',
-      'Fabric & Textiles',
-      'Craft Kits',
-      'Painting Tools',
-      'DIY Projects',
-      'Art Storage',
-      'Craft Tools'
-    ]
-  },
-  {
-    id: 14,
-    name: 'Musical Instruments',
-    subcategories: [
-      'Guitars',
-      'Pianos & Keyboards',
-      'Drums',
-      'Orchestral Instruments',
-      'Wind Instruments',
-      'Electronic Instruments',
-      'Recording Equipment',
-      'Accessories',
-      'Sheet Music',
-      'Amplifiers',
-      'Instrument Care',
-      'Microphones',
-      'DJ Equipment'
-    ]
-  },
-  {
-    id: 15,
-    name: 'Baby Products',
-    subcategories: [
-      'Clothing',
-      'Diapers & Wipes',
-      'Feeding',
-      'Nursery Furniture',
-      'Toys',
-      'Baby Gear',
-      'Health & Safety',
-      'Bedding',
-      'Travel Gear',
-      'Bath',
-      'Car Seats',
-      'Baby Monitors',
-      'Swings & Bouncers'
-    ]
-  },
-  {
-    id: 16,
-    name: 'Food & Beverage',
-    subcategories: [
-      'Snacks',
-      'Beverages',
-      'Groceries',
-      'Gourmet Foods',
-      'Health Foods',
-      'Specialty Foods',
-      'Organic',
-      'Packaged Meals',
-      'Baking Ingredients',
-      'Condiments & Sauces',
-      'Canned & Jarred Foods',
-      'Frozen Foods',
-      'Organic Produce'
-    ]
-  },
-  {
-    id: 17,
-    name: 'Industrial & Scientific',
-    subcategories: [
-      'Lab Equipment',
-      'Industrial Tools',
-      'Safety Equipment',
-      'Scientific Instruments',
-      'Cleaning Supplies',
-      'Office Supplies',
-      'Material Handling',
-      'Measuring & Testing',
-      'HVAC',
-      'Workplace Safety',
-      'Construction Supplies',
-      'Industrial Lighting',
-      'Pumps & Valves'
-    ]
-  },
-  {
-    id: 18,
-    name: 'Travel',
-    subcategories: [
-      'Luggage',
-      'Travel Accessories',
-      'Travel Clothing',
-      'Outdoor Gear',
-      'Travel Guides',
-      'Electronics',
-      'Travel Bags',
-      'Travel Toiletries',
-      'Camping Equipment',
-      'Travel Health',
-      'Travel Organizers',
-      'Travel Security',
-      'Travel Pillows'
-    ]
-  },
-  {
-    id: 19,
-    name: 'Furniture',
-    subcategories: [
-      'Living Room Furniture',
-      'Bedroom Furniture',
-      'Office Furniture',
-      'Outdoor Furniture',
-      'Storage & Organization',
-      'Dining Room Furniture',
-      "Kids' Furniture",
-      'Furniture Sets',
-      'Mattresses',
-      'Accent Furniture',
-      'Home Office Furniture',
-      'Furniture Accessories'
-    ]
-  },
-  {
-    id: 20,
-    name: 'Hobbies',
-    subcategories: [
-      'Model Trains',
-      'RC Vehicles',
-      'Drones',
-      'Collectibles',
-      'Puzzles',
-      'Board Games',
-      'Craft Kits',
-      'Hobby Tools',
-      'Kits & Supplies',
-      'Gardening',
-      'Bird Watching',
-      'Fishing'
-    ]
-  }
+const itemList = [
+  'CCTV Camera HD',
+  'CCTV Camera IP',
+  'EPABX/INTERCOM',
+  'Biometric Attendance Machine',
+  'GPS',
+  'Electric Fencing',
+  'Desktop Computer',
+  'Printers',
+  'Servers',
+  'Vedio Door Phone',
+  'Electronic Locks',
+  'Wifi/Networking',
+  'LED Monitors'
 ];
 interface ErrorData {
   response: any;
@@ -421,6 +58,10 @@ interface CustomersData {
   message: string;
   Customers: any;
 }
+interface CustomerData {
+  message: string;
+  Details: any;
+}
 // ==============================|| ECOMMERCE - ADD PRODUCT ||============================== //
 
 export default function AddNewProduct() {
@@ -428,9 +69,11 @@ export default function AddNewProduct() {
   const theme = useTheme();
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [customerId, setCustomerId] = useState<number | null>(null);
+  const [complaintAddress, setComplaintAddress] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState('');
   const [warranty, setWarranty] = useState<number | null>(1);
-  const [selectedCategory, setSelectedCategory] = useState('Select Category');
+  const [selectedItem, setSelectedItem] = useState('Select Category');
   const [selectedSubcategory, setSelectedSubcategory] = useState('Select Item');
   const [itemImageUrl, setItemImageUrl] = useState<string | undefined>(undefined);
   const [itemFile, setItemFile] = useState<File | undefined>(undefined);
@@ -453,6 +96,7 @@ export default function AddNewProduct() {
       // If newValue is not null, handle it
       setCustomerName(newValue.customerName); // Set customer name
       setCustomerId(newValue.customerId); // Set customer ID
+      fetchCustomerDetails(newValue.customerId);
     } else {
       // Handle case when newValue is null (e.g., when clearing the selection)
       setCustomerName(''); // Clear customer name
@@ -460,11 +104,9 @@ export default function AddNewProduct() {
     }
   };
   const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => setDescription(event.target.value);
-  const handleSubcategoryChange = (newValue: string | null) => {
-    if (newValue !== null) {
-      setSelectedSubcategory(newValue); // Handle the new value if it's not null
-    } else {
-      setSelectedSubcategory(''); // Optionally, reset if null
+  const handleItemChange = (newValue: any) => {
+    if (newValue) {
+      setSelectedItem(newValue);
     }
   };
   const handleWarranty = (event: ChangeEvent<HTMLInputElement>) => {
@@ -504,10 +146,20 @@ export default function AddNewProduct() {
         console.error(error);
       });
   };
+  const fetchCustomerDetails = async (customerId: number) => {
+    try {
+      const response = await getCustomerDetails(customerId);
+      const customerData = response.data as CustomerData;
+      const customerDetails = customerData.Details[0];
+      setComplaintAddress(customerDetails.Location);
+      setContactNumber(customerDetails.Contact);
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+    }
+  };
   useEffect(() => {
     getAllCustomersAPI();
   }, []);
-
   const raiseComplaintAPI = async (event: { preventDefault: () => void }) => {
     event?.preventDefault();
     const raiseComplaintData = {
@@ -580,26 +232,58 @@ export default function AddNewProduct() {
                     onChange={(event: React.SyntheticEvent, newValue: { customerName: string; customerId: number } | null) => {
                       handleCustomerNameChange(event, newValue); // Handle change
                     }}
-                    renderInput={(params) => <TextField {...params} placeholder="Select technician name" />}
+                    renderInput={(params) => <TextField {...params} placeholder="Select customer name" />}
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <InputLabel sx={{ mb: 1 }}> Description</InputLabel>
+                  <InputLabel htmlFor="complaintAddress" sx={{ mb: 1 }}>
+                    Complaint Address{' '}
+                  </InputLabel>
+                  <TextField
+                    fullWidth
+                    id="complaintAddress"
+                    value={complaintAddress}
+                    placeholder={'Enter address'}
+                    InputProps={{
+                      readOnly: true // Set to read-only
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <InputLabel htmlFor="contactNumber" sx={{ mb: 1 }}>
+                    Registered Contact Number
+                  </InputLabel>
+                  <TextField
+                    fullWidth
+                    id="contactNumber"
+                    value={contactNumber}
+                    placeholder={'Enter contact number'}
+                    InputProps={{
+                      readOnly: true // Set to read-only
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <InputLabel sx={{ mb: 1 }}>Complaint Description</InputLabel>
                   <TextField placeholder="Enter description" value={description} fullWidth onChange={handleDescriptionChange} />
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Item</InputLabel>
                   <Autocomplete
-                    fullWidth
-                    options={useMemo(() => {
-                      // Get all subcategories from all categories and sort them alphabetically
-                      return categories
-                        .flatMap((cat) => cat.subcategories) // Flatten all subcategories into a single array
-                        .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
-                    }, [categories])}
-                    value={selectedSubcategory || ''}
-                    onChange={(event, newValue) => handleSubcategoryChange(newValue)}
-                    renderInput={(params) => <TextField {...params} label={!selectedSubcategory ? 'Select Item' : 'Select Item'} />}
+                    options={itemList ? itemList.sort() : []}
+                    value={selectedItem ? itemList.find((category: any) => category === selectedItem) : null}
+                    onChange={(event: React.SyntheticEvent, newValue) => {
+                      if (newValue) {
+                        handleItemChange(newValue);
+                      }
+                    }}
+                    renderInput={(params) => <TextField {...params} placeholder="Select Item" fullWidth />}
+                    freeSolo
+                    renderOption={(props, option) => (
+                      <MenuItem {...props} key={option} value={option}>
+                        {option}
+                      </MenuItem>
+                    )}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -619,7 +303,7 @@ export default function AddNewProduct() {
             <MainCard>
               <Grid container direction="column" spacing={2}>
                 <Grid item xs={12}>
-                  <InputLabel sx={{ mb: 1 }}>Image of Item</InputLabel>
+                  <InputLabel sx={{ mb: 1 }}>Faulty Image of Item</InputLabel>
                   <Typography color="error.main">
                     *{' '}
                     <Typography component="span" color="text.secondary">

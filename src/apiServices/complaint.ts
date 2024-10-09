@@ -54,9 +54,9 @@ export const getAllComplaints = async <T>(config?: AxiosRequestConfig): Promise<
   }
 };
 //Delete Complaint
-export const deleteComplaint = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+export const forceResolveComplaint = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
-    const response = await apiClient.delete<T>(`complaint/deleteComplaint?id=${id}`, config);
+    const response = await apiClient.post<T>(`forceResolveComplaint?id=${id}`, config);
     return response;
   } catch (error) {
     // Handle error (e.g., log it, show notification, etc.)
