@@ -33,8 +33,8 @@ const AppCustomerCard = Loadable(lazy(() => import('pages/apps/customer/card')))
 const AppTechnicianList = Loadable(lazy(() => import('pages/apps/technician/technician-list')));
 const AppTechnicianCard = Loadable(lazy(() => import('pages/apps/technician/card')));
 
-const AppCategoryList = Loadable(lazy(() => import('pages/apps/category/category-list')));
-const AppAssignCategory = Loadable(lazy(() => import('pages/apps/category/assign-category')));
+const AppAssignedRepairPartsList = Loadable(lazy(() => import('pages/apps/repairParts/assignedRepairPartsList')));
+const AppAssignRepairParts = Loadable(lazy(() => import('pages/apps/repairParts/assignRepairParts')));
 
 const AppComplaintList = Loadable(lazy(() => import('pages/apps/complaint/complaints-list')));
 const AppRaiseComplaint = Loadable(lazy(() => import('pages/apps/complaint/raise-complaint')));
@@ -186,15 +186,15 @@ const MainRoutes = {
               ]
             },
             {
-              path: 'category',
+              path: 'repairParts',
               children: [
                 {
-                  path: 'assign-category',
-                  element: <AppAssignCategory />
+                  path: 'assignRepairParts',
+                  element: <AppAssignRepairParts />
                 },
                 {
-                  path: 'category-list',
-                  element: <AppCategoryList />
+                  path: 'assignedRepairPartsList',
+                  element: <AppAssignedRepairPartsList />
                 }
               ]
             },

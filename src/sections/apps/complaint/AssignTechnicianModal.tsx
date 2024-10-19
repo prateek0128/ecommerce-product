@@ -59,7 +59,7 @@ const HeaderSort = ({ column }: { column: any }) => {
 };
 
 export default function AssignTechnicianModal({ open, modalToggler, complaintId, customerId }: Props) {
-  // const { customersLoading: loading } = useGetCustomer();
+  const closeModal = () => modalToggler(false);
   const [allTechniciansData, setAllTechniciansData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   // Memoize the derived allTechnicians to avoid recalculation on each render
@@ -95,6 +95,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
     const assignTechnicianData = { customerId: Number(customerId), technicianId: Number(techId), complaintId: Number(complaintId) };
     assignTechnician(assignTechnicianData)
       .then((response) => {
+        closeModal();
         openSnackbar({
           open: true,
           message: 'Technician assigned successfully.',
@@ -150,7 +151,7 @@ export default function AssignTechnicianModal({ open, modalToggler, complaintId,
         )
     }
   ];
-  const closeModal = () => modalToggler(false);
+
   // Table setup
   const table = useReactTable({
     data: allTechnicians,

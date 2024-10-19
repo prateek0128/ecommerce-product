@@ -18,7 +18,8 @@ import MainCard from 'components/MainCard';
 // assets
 import { Box, DocumentUpload } from 'iconsax-react';
 import { Camera, CloseCircle, Trash } from 'iconsax-react';
-import { Autocomplete, FormLabel } from '@mui/material';
+import Radio from '@mui/material/Radio';
+import { Autocomplete, FormControlLabel, FormLabel, RadioGroup } from '@mui/material';
 import { raiseComplaint } from 'apiServices/complaint';
 import { openSnackbar } from 'api/snackbar';
 import { SnackbarProps } from 'types/snackbar';
@@ -70,6 +71,8 @@ export default function AddNewProduct() {
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [complaintAddress, setComplaintAddress] = useState('');
+  const [isSameAddress, setIsSameAddress] = useState('yes');
+  const [newComplaintAddress, setNewComplaintAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState('');
   const [warranty, setWarranty] = useState<number | null>(1);
@@ -103,6 +106,7 @@ export default function AddNewProduct() {
       setCustomerId(null); // Clear customer ID
     }
   };
+  const handleNewComplaintAddressChange = (event: ChangeEvent<HTMLInputElement>) => setNewComplaintAddress(event.target.value);
   const handleDescriptionChange = (event: ChangeEvent<HTMLInputElement>) => setDescription(event.target.value);
   const handleItemChange = (newValue: any) => {
     if (newValue) {
@@ -165,6 +169,8 @@ export default function AddNewProduct() {
     const raiseComplaintData = {
       customerId: customerId,
       customerName: customerName,
+      address: isSameAddress ? complaintAddress : newComplaintAddress,
+      contact: contactNumber,
       description: description,
       item: selectedSubcategory,
       warranty: warranty
@@ -184,6 +190,9 @@ export default function AddNewProduct() {
     formData.append('data', JSON.stringify(raiseComplaintData));
     try {
       const response = await raiseComplaint(formData);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Complaint raised successfully.',
@@ -192,6 +201,7 @@ export default function AddNewProduct() {
           color: 'success'
         }
       } as SnackbarProps);
+      history('/apps/complaint/complaints-list');
       // closeModal();
     } catch (error) {
       console.error('Error fetching complaints:', error);
@@ -235,19 +245,51 @@ export default function AddNewProduct() {
                     renderInput={(params) => <TextField {...params} placeholder="Select customer name" />}
                   />
                 </Grid>
+
+                {isSameAddress == 'yes' ? (
+                  <Grid item xs={12}>
+                    <InputLabel htmlFor="complaintAddress" sx={{ mb: 1 }}>
+                      Registered Complaint Address
+                    </InputLabel>
+                    <TextField
+                      fullWidth
+                      id="complaintAddress"
+                      value={complaintAddress}
+                      placeholder={'Enter address'}
+                      InputProps={{
+                        readOnly: true // Set to read-only
+                      }}
+                    />
+                  </Grid>
+                ) : (
+                  <Grid item xs={12}>
+                    <InputLabel htmlFor="complaintAddress" sx={{ mb: 1 }}>
+                      New Complaint Address
+                    </InputLabel>
+                    <TextField
+                      fullWidth
+                      id="complaintAddress"
+                      value={newComplaintAddress}
+                      placeholder={'Enter new address'}
+                      onChange={handleNewComplaintAddressChange}
+                    />
+                  </Grid>
+                )}
+
                 <Grid item xs={12}>
-                  <InputLabel htmlFor="complaintAddress" sx={{ mb: 1 }}>
-                    Complaint Address{' '}
+                  <InputLabel htmlFor="isSameAddress" sx={{ mb: 1 }}>
+                    Is the complaint address the same as the registered address?
                   </InputLabel>
-                  <TextField
-                    fullWidth
-                    id="complaintAddress"
-                    value={complaintAddress}
-                    placeholder={'Enter address'}
-                    InputProps={{
-                      readOnly: true // Set to read-only
-                    }}
-                  />
+                  <RadioGroup
+                    row
+                    aria-labelledby="complaint-address-radio-group"
+                    name="isSameAddress"
+                    value={isSameAddress}
+                    onChange={(e) => setIsSameAddress(e.target.value)}
+                  >
+                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="no" control={<Radio />} label="No" />
+                  </RadioGroup>
                 </Grid>
                 <Grid item xs={12}>
                   <InputLabel htmlFor="contactNumber" sx={{ mb: 1 }}>
@@ -286,6 +328,12 @@ export default function AddNewProduct() {
                     )}
                   />
                 </Grid>
+              </Grid>
+            </MainCard>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <MainCard>
+              <Grid container direction="column" spacing={2}>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Warranty</InputLabel>
                   <TextField placeholder="Select warranty status" fullWidth select value={warranty} onChange={handleWarranty}>
@@ -296,12 +344,6 @@ export default function AddNewProduct() {
                     ))}
                   </TextField>
                 </Grid>
-              </Grid>
-            </MainCard>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MainCard>
-              <Grid container direction="column" spacing={2}>
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Faulty Image of Item</InputLabel>
                   <Typography color="error.main">

@@ -231,6 +231,9 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
     }
     try {
       const response = await addCustomer(formData);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Customer added successfully.',
@@ -277,6 +280,9 @@ export default function FormCustomerAdd({ customer, closeModal }: { customer: Cu
     // }
     try {
       const response = await updateCustomer(updateCustomerData);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Customer updated successfully.',

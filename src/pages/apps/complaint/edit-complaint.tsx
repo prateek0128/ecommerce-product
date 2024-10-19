@@ -195,6 +195,9 @@ export default function AddNewProduct() {
     formData.append('data', JSON.stringify(editComplaintData));
     try {
       const response = await updateComplaint(formData);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Complaint updated successfully.',
@@ -203,6 +206,7 @@ export default function AddNewProduct() {
           color: 'success'
         }
       } as SnackbarProps);
+      history('/apps/complaint/complaints-list');
       // closeModal();
     } catch (error) {
       console.error('Error fetching complaints:', error);

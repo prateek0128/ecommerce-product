@@ -15,6 +15,7 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import HomeRepairServiceIcon from '@mui/icons-material/HomeRepairService';
 // icons
 const icons = {
   applications: KyberNetwork,
@@ -119,29 +120,29 @@ const applications: NavItemType = {
           url: '/apps/invoice/create',
           breadcrumbs: false
         },
-        {
-          id: 'details',
-          title: <FormattedMessage id="details" />,
-          type: 'item',
-          url: '/apps/invoice/details/1',
-          link: '/apps/invoice/details/:id',
-          breadcrumbs: false
-        },
+        // {
+        //   id: 'details',
+        //   title: <FormattedMessage id="details" />,
+        //   type: 'item',
+        //   url: '/apps/invoice/details/1',
+        //   link: '/apps/invoice/details/:id',
+        //   breadcrumbs: false
+        // },
         {
           id: 'list',
           title: <FormattedMessage id="list" />,
           type: 'item',
           url: '/apps/invoice/list',
           breadcrumbs: false
-        },
-        {
-          id: 'edit',
-          title: <FormattedMessage id="edit" />,
-          type: 'item',
-          url: '/apps/invoice/edit/1',
-          link: '/apps/invoice/edit/:id',
-          breadcrumbs: false
         }
+        // {
+        //   id: 'edit',
+        //   title: <FormattedMessage id="edit" />,
+        //   type: 'item',
+        //   url: '/apps/invoice/edit/1',
+        //   link: '/apps/invoice/edit/:id',
+        //   breadcrumbs: false
+        // }
       ]
     },
     {
@@ -190,31 +191,25 @@ const applications: NavItemType = {
       // ]
     },
     {
-      id: 'category',
-      title: <FormattedMessage id="Category" />,
+      id: 'repairParts',
+      title: <FormattedMessage id="Repair Parts" />,
       type: 'collapse',
-      icon: icons.ecommerce,
+      //icon: icons.ecommerce,
+      icon: HomeRepairServiceIcon,
       children: [
         {
-          id: 'category',
-          title: <FormattedMessage id="Category" />,
+          id: 'assignedRepairParts',
+          title: <FormattedMessage id="Assigned Repair Parts" />,
           type: 'item',
-          url: '/apps/category/category-list'
+          link: '/apps/repairParts/assignedRepairPartsList',
+          url: '/apps/repairParts/assignedRepairPartsList'
         },
         {
-          id: 'category-details',
-          title: <FormattedMessage id="Sub-Category" />,
+          id: 'assignRepairParts',
+          title: <FormattedMessage id="Assign Repair Parts" />,
           type: 'item',
-          link: '/apps/e-commerce/product-details/:id',
-          url: '/apps/e-commerce/product-details/1',
-          breadcrumbs: false
-        },
-        {
-          id: 'assign-category',
-          title: <FormattedMessage id="Assign Category" />,
-          type: 'item',
-          //link: '/apps/category/assign-category',
-          url: '/apps/category/assign-category',
+          link: '/apps/repairParts/assignRepairParts',
+          url: '/apps/repairParts/assignRepairParts',
           breadcrumbs: false
         }
       ]

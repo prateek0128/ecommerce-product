@@ -55,7 +55,7 @@ export const getAllSubcategories = async <T>(id: number, config?: AxiosRequestCo
 };
 
 //Assign Category
-export const assignCategory = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+export const assignRepairparts = async <T>(data: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
     const response = await apiClient.post('assignCategory', data, config);
     return response;
@@ -67,7 +67,47 @@ export const assignCategory = async <T>(data: any, config?: AxiosRequestConfig):
 //Tech Details
 export const techDetailsComplaint = async <T>(complaintId: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
   try {
-    const response = await apiClient.get(`/techDetails-complaint?complaintId=${complaintId}`, config);
+    const response = await apiClient.get(`techDetails-complaint?complaintId=${complaintId}`, config);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+//Get Assigned Repair Parts
+export const getAssignedRepairParts = async <T>(config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get(`list-productsAssigned`, config);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+//Get Assigned Repair Parts
+export const getAssignedRepairPartsQuantity = async <T>(assignmentId: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get(`list-repairParts?assignmentId=${assignmentId}`, config);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+//Get Items
+export const getItemList = async <T>(config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get(`category/fetchItem`, config);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+//Get Repair Parts
+export const getRepairPartsList = async <T>(itemId: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get(`category/fetchItemRepairParts?id=${itemId}`, config);
     return response;
   } catch (error) {
     throw error;

@@ -55,7 +55,6 @@ import {
 import complaintData from './complaintData';
 
 // types
-//import { CustomerList } from 'types/customer';
 import { ComplaintList } from 'types/complaint';
 import capitalize from '@mui/utils/capitalize';
 // assets
@@ -148,9 +147,9 @@ function ReactTable({ data, columns, loading }: any) {
           <Button variant="contained" startIcon={<Add />} onClick={handleRaiseCompaint} size="large">
             Raise Complaint
           </Button>
-          <CSVExport
+          {/* <CSVExport
             {...{ data: table.getSelectedRowModel().flatRows.map((row) => row.original), headers, filename: 'complaint-list.csv' }}
-          />
+          /> */}
         </Stack>
       </Stack>
       <ScrollX>
@@ -303,28 +302,28 @@ export default function ComplaintListPage() {
   }, []);
   const columns = useMemo<ColumnDef<any>[]>(
     () => [
-      {
-        id: 'Row Selection',
-        header: ({ table }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
+      // {
+      //   id: 'Row Selection',
+      //   header: ({ table }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: table.getIsAllRowsSelected(),
+      //         indeterminate: table.getIsSomeRowsSelected(),
+      //         onChange: table.getToggleAllRowsSelectedHandler()
+      //       }}
+      //     />
+      //   ),
+      //   cell: ({ row }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: row.getIsSelected(),
+      //         disabled: !row.getCanSelect(),
+      //         indeterminate: row.getIsSomeSelected(),
+      //         onChange: row.getToggleSelectedHandler()
+      //       }}
+      //     />
+      //   )
+      // },
       {
         header: '#',
         accessorKey: 'id',
@@ -340,7 +339,6 @@ export default function ComplaintListPage() {
             <Avatar alt="Avatar" size="sm" src={`/path/to/avatars/avatar-${!row.original.avatar ? 1 : row.original.avatar}.png`} />
             <Stack spacing={0}>
               <Typography variant="subtitle1">{capitalize(getValue() as string)}</Typography>
-              {/* <Typography color="text.secondary">{row.original.email as string}</Typography> */}
             </Stack>
           </Stack>
         )
@@ -363,11 +361,11 @@ export default function ComplaintListPage() {
         header: 'In-Warranty',
         accessorKey: 'warranty',
         cell: ({ getValue }) => {
-          const status = getValue() as string;
+          const warrantyStatus = getValue();
           return (
             <Chip
-              color={status === 'Yes' || 'yes' ? 'success' : 'error'}
-              label={status === 'Yes' || 'yes' ? 'Yes' : 'No'}
+              color={warrantyStatus == 1 ? 'success' : 'error'}
+              label={warrantyStatus == 1 ? 'Yes' : 'No'}
               size="small"
               variant="light"
             />
@@ -424,6 +422,7 @@ export default function ComplaintListPage() {
                     e.stopPropagation();
                     navigate('/apps/complaint/edit-complaint', { state: { complaintData: row.original } }); // Pass the data array in state
                   }}
+                  disabled={row.original.status == 'Completed' || row.original.status == 'Cancelled'}
                 >
                   <Edit />
                 </IconButton>

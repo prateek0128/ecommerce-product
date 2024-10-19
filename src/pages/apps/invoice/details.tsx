@@ -299,7 +299,6 @@ export default function Details() {
               </Grid>
             </Grid>
           </Box>
-
           <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ p: 2.5, a: { textDecoration: 'none', color: 'inherit' } }}>
             <PDFDownloadLink
               document={

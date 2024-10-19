@@ -219,18 +219,15 @@ export default function InvoiceModal({ isOpen, setIsOpen, invoiceInfo, items, on
             </Grid>
           </Box>
         </Box>
-        <Box sx={{ p: 2.5 }}>
+        {/* <Box sx={{ p: 2.5 }}>
           <Typography>Notes: {invoiceInfo.notes}</Typography>
-        </Box>
+        </Box> */}
         <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ p: 2.5 }}>
           <Button color="secondary" onClick={addNextInvoiceHandler}>
             Cancel
           </Button>
           <PDFDownloadLink
-            document={
-              //@ts-ignore
-              <ExportPDFView list={invoiceInfo} />
-            }
+            document={<ExportPDFView list={invoiceInfo} />}
             fileName={`${invoiceInfo?.invoiceId || invoiceInfo?.invoice_id}-${
               invoiceInfo?.customer_name || invoiceInfo?.from?.name || invoiceInfo?.customerInfo?.name
             }.pdf`}

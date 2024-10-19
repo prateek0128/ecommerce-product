@@ -191,7 +191,9 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
     }
     try {
       const response = await addTechnician(formData);
-      console;
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Technician added successfully.',
@@ -240,6 +242,9 @@ export default function FormTechnicianAdd({ technician, closeModal }: { technici
     // }
     try {
       const response = await updateTechnician(updateTechnicianData);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Technician updated successfully.',

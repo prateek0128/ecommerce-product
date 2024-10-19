@@ -47,13 +47,13 @@ import Breadcrumbs from 'components/@extended/Breadcrumbs';
 import InvoiceCard from 'components/cards/invoice/InvoiceCard';
 import InvoiceChart from 'components/cards/invoice/InvoiceChart';
 
-import AlertProductDelete from 'sections/apps/invoice/AlertProductDelete';
+import UpdateInvoiceStatusPopup from 'sections/apps/invoice/UpdateInvoiceStatusPopup';
 
 import { APP_DEFAULT_PATH } from 'config';
 import { openSnackbar } from 'api/snackbar';
 import { handlerDelete, deleteInvoice, useGetInvoice, useGetInvoiceMaster } from 'api/invoice';
 import { ImagePath, getImageUrl } from 'utils/getImageUrl';
-
+import PaymentIcon from '@mui/icons-material/Payment';
 import {
   CSVExport,
   DebouncedInput,
@@ -63,15 +63,16 @@ import {
   SelectColumnSorting,
   TablePagination
 } from 'components/third-party/react-table';
-
+import DownloadIcon from '@mui/icons-material/Download';
 // types
 import { SnackbarProps } from 'types/snackbar';
 import { InvoiceList } from 'types/invoice';
 
 // assets
 import { Edit, Eye, InfoCircle, ProfileTick, Trash } from 'iconsax-react';
+import { getAllInvoices, getInvoicePDF } from 'apiServices/invoice';
 
-export const fuzzyFilter: FilterFn<InvoiceList> = (row, columnId, value, addMeta) => {
+export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // rank the item
   const itemRank = rankItem(row.getValue(columnId), value);
 
@@ -93,16 +94,22 @@ interface InvoiceWidgets {
 }
 
 interface Props {
-  data: InvoiceList[];
-  columns: ColumnDef<InvoiceList>[];
+  data: any;
+  columns: ColumnDef<any>[];
 }
-
+interface PDFData {
+  url: string;
+}
+interface InvoiceData {
+  message: string;
+  Invoices: any;
+}
 // ==============================|| REACT TABLE - LIST ||============================== //
 
 function ReactTable({ data, columns }: Props) {
-  const groups = ['All', ...new Set(data.map((item: InvoiceList) => item.status))];
-
-  const countGroup = data.map((item: InvoiceList) => item.status);
+  // const groups = ['All', ...new Set(data.map((item: any) => item.status))];
+  const groups = ['All', 'Paid', 'Partial Paid', 'Overdue', 'Cancelled'];
+  const countGroup = data.map((item: any) => item.status);
   const counts = countGroup.reduce(
     (acc: any, value: any) => ({
       ...acc,
@@ -110,13 +117,16 @@ function ReactTable({ data, columns }: Props) {
     }),
     {}
   );
-
   const [activeTab, setActiveTab] = useState(groups[0]);
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'customer_name', desc: false }]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'customerName', desc: false }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState('');
-
+  //@ts-ignore
+  const exactTextFilter = (row: Row<any>, columnId: string, filterValue: string) => {
+    const cellValue = row.getValue(columnId);
+    return cellValue === filterValue;
+  };
   const table = useReactTable({
     data,
     columns,
@@ -137,6 +147,8 @@ function ReactTable({ data, columns }: Props) {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: fuzzyFilter,
+    //@ts-ignore
+    filterFn: exactTextFilter,
     debugTable: true
   });
 
@@ -153,7 +165,18 @@ function ReactTable({ data, columns }: Props) {
   );
 
   useEffect(() => {
-    setColumnFilters(activeTab === 'All' ? [] : [{ id: 'status', value: activeTab }]);
+    setColumnFilters(
+      activeTab === 'All'
+        ? []
+        : [
+            {
+              id: 'status',
+              value: activeTab.toLowerCase(),
+              //@ts-ignore
+              exact: true
+            }
+          ] // Use exact matching
+    );
   }, [activeTab]);
 
   return (
@@ -175,12 +198,24 @@ function ReactTable({ data, columns }: Props) {
                     status === 'All'
                       ? data.length
                       : status === 'Paid'
-                        ? counts.Paid
-                        : status === 'Unpaid'
-                          ? counts.Unpaid
-                          : counts.Cancelled
+                        ? counts.Paid || 0
+                        : status === 'PartialPaid'
+                          ? counts.PartialPaid || 0
+                          : status === 'Overdue'
+                            ? counts.Overdue || 0
+                            : counts.Cancelled || 0
                   }
-                  color={status === 'All' ? 'primary' : status === 'Paid' ? 'success' : status === 'Unpaid' ? 'warning' : 'error'}
+                  color={
+                    status === 'All'
+                      ? 'primary'
+                      : status === 'Paid'
+                        ? 'success'
+                        : status === 'PartialPaid'
+                          ? 'info'
+                          : status === 'Unpaid'
+                            ? 'warning'
+                            : 'error'
+                  }
                   variant="light"
                   size="small"
                 />
@@ -194,14 +229,13 @@ function ReactTable({ data, columns }: Props) {
         <DebouncedInput
           value={globalFilter ?? ''}
           onFilterChange={(value) => setGlobalFilter(String(value))}
-          placeholder={`Search ${data.length} records...`}
+          placeholder={`Search ${activeTab == 'All' ? data.length : activeTab == 'Paid' ? counts.Paid : activeTab == 'Overdue' ? counts.Overdue : counts.Cancelled} records...`}
         />
-
         <Stack direction="row" alignItems="center" spacing={2}>
           <SelectColumnSorting {...{ getState: table.getState, getAllColumns: table.getAllColumns, setSorting }} />
-          <CSVExport
+          {/* <CSVExport
             {...{ data: table.getSelectedRowModel().flatRows.map((row) => row.original), headers, filename: 'customer-list.csv' }}
-          />
+          /> */}
         </Stack>
       </Stack>
       <ScrollX>
@@ -277,57 +311,100 @@ function ReactTable({ data, columns }: Props) {
 // ==============================|| INVOICE - LIST ||============================== //
 
 export default function List() {
-  const { invoiceLoading, invoice: list } = useGetInvoice();
-  const { invoiceMaster } = useGetInvoiceMaster();
   const [invoiceId, setInvoiceId] = useState(0);
-
+  const [invoiceData, setInvoiceData] = useState();
+  const [allInvoices, setAllInvoices] = useState([]);
+  const [updateStatusPopup, setUpdateStatusPopup] = useState(false);
   const navigation = useNavigate();
-  const handleClose = (status: boolean) => {
-    if (status) {
-      deleteInvoice(invoiceId);
-      openSnackbar({
-        open: true,
-        message: 'Column deleted successfully',
-        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-        variant: 'alert',
-        alert: { color: 'success' }
-      } as SnackbarProps);
-    }
-    handlerDelete(false);
+  const allInvoicesData =
+    allInvoices &&
+    allInvoices.map((invoice: any, index) => {
+      const date = new Date(invoice?.Date);
+      const formattedDate = date.toISOString().split('T')[0];
+      return {
+        invoiceId: invoice.Invoice_Id,
+        customerName: invoice.Customer_Name,
+        customerEmail: invoice.Customer_Email,
+        date: formattedDate,
+        status: invoice.Status == 'Unpaid' ? 'Overdue' : invoice.Status,
+        totalAmount: invoice.Total_Amount
+      };
+    });
+  const fetchAllInvoices = () => {
+    getAllInvoices()
+      .then((response) => {
+        const invoiceData = response.data as InvoiceData;
+        const invoices = invoiceData.Invoices;
+        setAllInvoices(invoices);
+      })
+      .catch((error) => {
+        console.log('errorInvoice', error);
+      });
   };
-
-  const columns = useMemo<ColumnDef<InvoiceList>[]>(
+  useEffect(() => {
+    fetchAllInvoices();
+  }, []);
+  const handlePDFUrl = (id: number) => {
+    getInvoicePDF(id)
+      .then((response) => {
+        const pdfData = response.data as PDFData;
+        if (pdfData.url) {
+          window.open(pdfData.url, '_blank');
+        }
+      })
+      .catch((error) => {
+        console.log('errorPDF', error);
+      });
+  };
+  const handleClose = (status: boolean) => {
+    // if (status) {
+    //   deleteInvoice(invoiceId);
+    //   openSnackbar({
+    //     open: true,
+    //     message: 'Column deleted successfully',
+    //     anchorOrigin: { vertical: 'top', horizontal: 'right' },
+    //     variant: 'alert',
+    //     alert: { color: 'success' }
+    //   } as SnackbarProps);
+    // }
+    // handlerDelete(false);
+    setUpdateStatusPopup(false);
+  };
+  const handlerUpdateStatus = () => {
+    setUpdateStatusPopup(true);
+  };
+  const columns = useMemo<ColumnDef<any>[]>(
     () => [
-      {
-        id: 'Row Selection',
-        header: ({ table }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
+      // {
+      //   id: 'Row Selection',
+      //   header: ({ table }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: table.getIsAllRowsSelected(),
+      //         indeterminate: table.getIsSomeRowsSelected(),
+      //         onChange: table.getToggleAllRowsSelectedHandler()
+      //       }}
+      //     />
+      //   ),
+      //   cell: ({ row }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: row.getIsSelected(),
+      //         disabled: !row.getCanSelect(),
+      //         indeterminate: row.getIsSomeSelected(),
+      //         onChange: row.getToggleSelectedHandler()
+      //       }}
+      //     />
+      //   )
+      // },
       {
         header: 'Invoice Id',
-        accessorKey: 'id',
+        accessorKey: 'invoiceId',
         meta: { className: 'cell-center' }
       },
       {
         header: 'User Info',
-        accessorKey: 'customer_name',
+        accessorKey: 'customerName',
         cell: ({ row, getValue }) => (
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Avatar
@@ -336,8 +413,8 @@ export default function List() {
               src={getImageUrl(`avatar-${!row.original.avatar ? 1 : row.original.avatar}.png`, ImagePath.USERS)}
             />
             <Stack spacing={0}>
-              <Typography variant="subtitle1">{getValue() as string}</Typography>
-              <Typography color="text.secondary">{row.original.email as string}</Typography>
+              <Typography variant="subtitle1">{row.original.customerName as string}</Typography>
+              <Typography color="text.secondary">{row.original.customerEmail as string}</Typography>
             </Stack>
           </Stack>
         )
@@ -345,14 +422,6 @@ export default function List() {
       {
         header: 'Create Date',
         accessorKey: 'date'
-      },
-      {
-        header: 'Due Date',
-        accessorKey: 'due_date'
-      },
-      {
-        header: 'Quantity',
-        accessorKey: 'quantity'
       },
       {
         header: 'Status',
@@ -363,9 +432,8 @@ export default function List() {
               return <Chip color="error" label="Cancelled" size="small" variant="light" />;
             case 'Paid':
               return <Chip color="success" label="Paid" size="small" variant="light" />;
-            case 'Unpaid':
-            default:
-              return <Chip color="info" label="Unpaid" size="small" variant="light" />;
+            case 'Overdue':
+              return <Chip color="warning" label="Overdue" size="small" variant="light" />;
           }
         }
       },
@@ -376,15 +444,16 @@ export default function List() {
         cell: ({ row }) => {
           return (
             <Stack direction="row" alignItems="center" justifyContent="center" spacing={0}>
-              <Tooltip title="View">
+              <Tooltip title="Download PDF">
                 <IconButton
-                  color="secondary"
+                  color="info"
                   onClick={(e: any) => {
-                    e.stopPropagation();
-                    navigation(`/apps/invoice/details/${row?.original?.id}`);
+                    //e.stopPropagation();
+                    // navigation(`/apps/invoice/details/${row?.original?.id}`);
+                    handlePDFUrl(row?.original?.invoiceId);
                   }}
                 >
-                  <Eye />
+                  <DownloadIcon />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Edit">
@@ -392,22 +461,26 @@ export default function List() {
                   color="primary"
                   onClick={(e: any) => {
                     e.stopPropagation();
-                    navigation(`/apps/invoice/edit/${row?.original?.id}`);
+                    navigation(`/apps/invoice/edit/${row?.original?.invoiceId}`);
                   }}
+                  disabled={row?.original?.status == 'Paid'}
                 >
                   <Edit />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Delete">
+
+              <Tooltip title="Update Status">
                 <IconButton
                   color="error"
                   onClick={(e: any) => {
                     e.stopPropagation();
-                    setInvoiceId(row?.original?.id);
-                    handlerDelete(true);
+                    setInvoiceId(row?.original?.invoiceId);
+                    setInvoiceData(row?.original);
+                    handlerUpdateStatus();
                   }}
+                  disabled={row?.original?.status == 'Paid'}
                 >
-                  <Trash />
+                  <PaymentIcon />
                 </IconButton>
               </Tooltip>
             </Stack>
@@ -418,136 +491,19 @@ export default function List() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
-
   const theme = useTheme();
   const matchDownSM = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const widgetsData: InvoiceWidgets[] = [
-    {
-      title: 'Paid',
-      count: '$7,825',
-      percentage: 70.5,
-      isLoss: false,
-      invoice: '9',
-      color: theme.palette.success,
-      chartData: [200, 600, 100, 400, 300, 400, 50]
-    },
-    {
-      title: 'Unpaid',
-      count: '$1,880',
-      percentage: 27.4,
-      isLoss: true,
-      invoice: '6',
-      color: theme.palette.warning,
-      chartData: [100, 550, 300, 350, 200, 100, 300]
-    },
-    {
-      title: 'Overdue',
-      count: '$3,507',
-      percentage: 27.4,
-      isLoss: true,
-      invoice: '4',
-      color: theme.palette.error,
-      chartData: [100, 550, 200, 300, 100, 200, 300]
-    }
-  ];
-
   let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Invoice', to: '/apps/invoice/dashboard' }, { title: 'List' }];
 
   return (
     <>
       <Breadcrumbs custom heading="Invoice List" links={breadcrumbLinks} />
       <Grid container direction={matchDownSM ? 'column' : 'row'} spacing={2} sx={{ pb: 2 }}>
-        <Grid item md={8}>
-          <Grid container direction="row" spacing={2}>
-            {widgetsData &&
-              widgetsData.map((widget: InvoiceWidgets, index: number) => (
-                <Grid item sm={4} xs={12} key={index}>
-                  <MainCard>
-                    <InvoiceCard
-                      title={widget.title}
-                      count={widget.count}
-                      percentage={widget.percentage}
-                      isLoss={widget.isLoss}
-                      invoice={widget.invoice}
-                      color={widget.color.main}
-                    >
-                      <InvoiceChart color={widget.color} data={widget.chartData} />
-                    </InvoiceCard>
-                  </MainCard>
-                </Grid>
-              ))}
-          </Grid>
-        </Grid>
-        <Grid item md={4} sm={12} xs={12}>
-          <Box
-            sx={{
-              background: `linear-gradient(to right, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-              borderRadius: 1,
-              p: 1.75
-            }}
-          >
-            <Stack direction="row" alignItems="flex-end" justifyContent="space-between" spacing={1}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Avatar alt="Natacha" variant="rounded" type="filled">
-                  <ProfileTick style={{ fontSize: '20px' }} />
-                </Avatar>
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="body1" color="white">
-                      Total Recievables
-                    </Typography>
-                    <InfoCircle color={theme.palette.background.paper} />
-                  </Stack>
-                  <Stack direction="row" spacing={1}>
-                    <Typography variant="body2" color="white">
-                      Current
-                    </Typography>
-                    <Typography variant="body1" color="white">
-                      109.1k
-                    </Typography>
-                  </Stack>
-                </Box>
-              </Stack>
-              <Stack direction="row" spacing={1}>
-                <Typography variant="body2" color="white">
-                  Overdue
-                </Typography>
-                <Typography variant="body1" color="white">
-                  62k
-                </Typography>
-              </Stack>
-            </Stack>
-            <Typography variant="h4" color="white" sx={{ pt: 2, pb: 1, zIndex: 1 }}>
-              $43,078
-            </Typography>
-            <Box sx={{ maxWidth: '100%' }}>
-              <LinearWithLabel value={90} />
-            </Box>
-          </Box>
-        </Grid>
         <Grid item xs={12}>
-          {invoiceLoading && <ReactTable {...{ data: list || [], columns }} />}
-          <AlertProductDelete
-            title={invoiceId.toString()}
-            open={invoiceMaster ? invoiceMaster.alertPopup : false}
-            handleClose={handleClose}
-          />
+          <ReactTable data={allInvoicesData || []} columns={columns} />
         </Grid>
       </Grid>
+      <UpdateInvoiceStatusPopup invoiceId={invoiceId} open={updateStatusPopup} handleClose={handleClose} invoiceData={invoiceData} />
     </>
-  );
-}
-
-function LinearWithLabel({ value, ...others }: LinearProgressProps) {
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Box sx={{ width: '100%', mr: 1 }}>
-        <LinearProgress color="warning" variant="determinate" value={value} {...others} />
-      </Box>
-      <Box sx={{ minWidth: 35 }}>
-        <Typography variant="body2" color="white">{`${Math.round(value!)}%`}</Typography>
-      </Box>
-    </Box>
   );
 }

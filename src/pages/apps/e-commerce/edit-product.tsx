@@ -183,6 +183,9 @@ export default function AddNewProduct() {
     };
     try {
       const response = await updateProduct(editProductData);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Product updated successfully.',
@@ -191,6 +194,7 @@ export default function AddNewProduct() {
           color: 'success'
         }
       } as SnackbarProps);
+      history(`/apps/e-commerce/product-list`);
       // closeModal();
     } catch (error) {
       console.error('Error fetching products:', error);

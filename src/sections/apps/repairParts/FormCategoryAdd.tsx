@@ -56,7 +56,7 @@ import { CustomerList } from 'types/customer';
 import { CategoryList } from 'types/category';
 //api imoorts
 import { updateCustomer } from 'apiServices/customer';
-import { addCategory, getAllCategories } from 'apiServices/category';
+import { addCategory, getAllCategories } from 'apiServices/repairParts';
 // CONSTANT
 const getInitialValues = (category: CategoryList | null) => {
   const newCategory = {

@@ -34,6 +34,9 @@ export default function AlertCustomerDelete({ id, title, open, handleClose }: Pr
   const deletehandler = async () => {
     await deleteCustomer(id)
       .then(() => {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
         openSnackbar({
           open: true,
           message: 'Customer deleted successfully',

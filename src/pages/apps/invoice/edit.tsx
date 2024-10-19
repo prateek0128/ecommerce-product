@@ -113,6 +113,7 @@ function EditForm({ list, invoiceMaster }: FormProps) {
       avatar: Number(list?.avatar),
       discount: Number(values.discount),
       serviceCharge: Number(values.serviceCharge),
+      balance: Number(values.balance),
       gst: Number(values.tax),
       date: format(new Date(values.date), 'MM/dd/yyyy'),
       due_date: format(new Date(values.due_date), 'MM/dd/yyyy'),
@@ -336,7 +337,7 @@ function EditForm({ list, invoiceMaster }: FormProps) {
                               <TableRow>
                                 <TableCell>#</TableCell>
                                 <TableCell>Name</TableCell>
-                                <TableCell>Description</TableCell>
+                                {/* <TableCell>Description</TableCell> */}
                                 <TableCell>Qty</TableCell>
                                 <TableCell>Price</TableCell>
                                 <TableCell align="right">Amount</TableCell>
@@ -352,7 +353,7 @@ function EditForm({ list, invoiceMaster }: FormProps) {
                                     id={item.id}
                                     index={index}
                                     name={item.name}
-                                    description={item.description}
+                                    // description={item.description}
                                     qty={item.qty}
                                     price={item.price}
                                     onDeleteItem={(index: number) => remove(index)}

@@ -26,44 +26,12 @@ import { Description } from '@mui/icons-material';
 import { categories } from './productCategories';
 import { APP_DEFAULT_PATH } from 'config';
 import Breadcrumbs from 'components/@extended/Breadcrumbs';
-import CategoryModal from '../../../sections/apps/category/CategoryModal';
+import CategoryModal from '../../../sections/apps/repairParts/CategoryModal';
 import SubcategoryModal from '../../../sections/apps/subcategory/SubcategoryModal';
-import { addCategory, getAllCategories, getAllSubcategories } from 'apiServices/category';
+import { getItemList, getRepairPartsList } from 'apiServices/repairParts';
 import { number } from 'yup';
 // constant
-const prices = [
-  {
-    id: '1',
-    label: '100'
-  },
-  {
-    id: '2',
-    label: '200'
-  },
-  {
-    id: '3',
-    label: '300'
-  },
-  {
-    id: '4',
-    label: '400'
-  }
-];
-const quantities = [
-  {
-    id: '1',
-    label: '1'
-  },
-  {
-    id: '2',
-    label: '2'
-  },
-  {
-    id: '3',
-    label: '3'
-  }
-];
-const statuss = [
+const stockStatusOptions = [
   {
     value: 'in stock',
     label: 'In Stock'
@@ -106,7 +74,7 @@ export default function AddNewProduct() {
   const [quantity, setQuantity] = useState('1');
   const [price, setPrice] = useState('100');
   const [stockStatus, setStockStatus] = useState('in stock');
-  const [selectedItem, seSelectedItem] = useState('Select Category');
+  const [selectedItem, seSelectedItem] = useState('Select Item');
   const [categoryId, setCategoryId] = useState(0);
   const [selectedSubcategory, setSelectedSubcategory] = useState('Select Item');
   const [categoryForm, setCategoryForm] = useState('');
@@ -115,13 +83,9 @@ export default function AddNewProduct() {
   const fileInputRefProduct = useRef<HTMLInputElement | null>(null);
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [openSubcategoryModal, setOpenSubcategoryModal] = useState(false);
-  const [allCategoriesData, setAllCategoriesData] = useState<any>([]);
-  const [allSubcategoriesData, setAllSubcategoriesData] = useState<any>([]);
+  const [allItemsData, setAllItemsData] = useState<any>([]);
   const handleItemModal = () => {
     setOpenCategoryModal((prev) => !prev);
-  };
-  const handleSubcategoryModal = () => {
-    setOpenSubcategoryModal((prev) => !prev);
   };
   const handleProductName = (event: ChangeEvent<HTMLInputElement>) => {
     setProductName(event.target.value);
@@ -150,11 +114,6 @@ export default function AddNewProduct() {
     // Reset selected subcategory when category changes
     setSelectedSubcategory('');
   };
-  const handleSubcategoryChange = (subcategoryName: string | null) => {
-    if (subcategoryName) {
-      setSelectedSubcategory(subcategoryName);
-    }
-  };
   const handleButtonClickProduct = () => {
     // Trigger the file input when the button is clicked
     fileInputRefProduct.current?.click();
@@ -167,36 +126,25 @@ export default function AddNewProduct() {
       setProductFile(file);
     }
   };
-  const allCategories =
-    allCategoriesData &&
-    allCategoriesData.map((category: any, index: any) => ({ categoryName: category.Category_Name, categoryId: category.Category_Id }));
-  const allSubcategories = allSubcategoriesData
-    ? allSubcategoriesData
-    : [].map((subcategory: any, index: any) => {
-        return subcategory.Sub_Category_Name;
-      });
-  const getAllCategoriesAPI = () => {
-    getAllCategories()
+  const allitems =
+    allItemsData &&
+    allItemsData.map((item: any, index: any) => ({
+      itemName: item.Item_Name,
+      itemId: item.Item_Id,
+      isEnabled: item.IsEnabled
+    }));
+  const getAllItemsAPI = () => {
+    getItemList()
       .then((response) => {
         const categoryData = response.data as CategoryData;
-        setAllCategoriesData(categoryData.data.categories || []);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-  const getAllSubcategoriesAPI = (categoryId: number) => {
-    getAllSubcategories(categoryId)
-      .then((response) => {
-        setAllSubcategoriesData(response.data || []);
+        setAllItemsData(categoryData.data.categories || []);
       })
       .catch((error) => {
         console.error(error);
       });
   };
   useEffect(() => {
-    getAllCategoriesAPI();
-    getAllSubcategoriesAPI(categoryId);
+    getAllItemsAPI();
   }, [categoryId]);
   const addProductAPI = async (event: { preventDefault: () => void }) => {
     event?.preventDefault();
@@ -227,6 +175,9 @@ export default function AddNewProduct() {
 
     try {
       const response = await addProduct(formData);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       openSnackbar({
         open: true,
         message: 'Product added successfully.',
@@ -235,6 +186,7 @@ export default function AddNewProduct() {
           color: 'success'
         }
       } as SnackbarProps);
+      history(`/apps/e-commerce/product-list`);
       // closeModal();
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -274,26 +226,32 @@ export default function AddNewProduct() {
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Item</InputLabel>
                   <Autocomplete
-                    options={['Add New Item', ...(itemList ? itemList.sort() : []), 'Others']}
-                    value={selectedItem ? itemList.find((category: any) => category === selectedItem) : null}
-                    onChange={(event: React.SyntheticEvent, newValue) => {
+                    options={[
+                      { itemName: 'Add New Item', itemId: 'new' },
+                      ...(allitems ? allitems.sort((a: any, b: any) => a.itemName.localeCompare(b.itemName)) : []),
+                      { itemName: 'Others', itemId: 'others' }
+                    ]}
+                    getOptionLabel={(option: any) => (typeof option === 'string' ? option : option.itemName)}
+                    value={selectedItem ? allitems.find((item: any) => item.itemName === selectedItem) : null}
+                    onChange={(event: React.SyntheticEvent, newValue: any) => {
                       if (newValue) {
-                        if (typeof newValue === 'string' && newValue === 'Add New Category') {
+                        if (newValue.itemId === 'new') {
                           handleItemModal();
-                        } else if (typeof newValue !== 'string') {
+                        } else {
                           handleItemChange(newValue);
                         }
                       }
                     }}
                     renderInput={(params) => <TextField {...params} placeholder="Select Item" fullWidth />}
                     freeSolo
-                    renderOption={(props, option) => (
-                      <MenuItem {...props} key={option} value={option}>
-                        {option}
+                    renderOption={(props, option: any) => (
+                      <MenuItem {...props} key={option.itemId} value={option.itemId}>
+                        {option.itemName}
                       </MenuItem>
                     )}
                   />
                 </Grid>
+
                 {/* <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Item</InputLabel>
                   <Autocomplete
@@ -342,7 +300,7 @@ export default function AddNewProduct() {
                 <Grid item xs={12}>
                   <InputLabel sx={{ mb: 1 }}>Status</InputLabel>
                   <TextField placeholder="Select status" fullWidth select value={stockStatus} onChange={handleStockStatus}>
-                    {statuss.map((option) => (
+                    {stockStatusOptions.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>

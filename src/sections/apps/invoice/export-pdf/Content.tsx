@@ -2,11 +2,16 @@
 import { useTheme } from '@mui/material/styles';
 
 // third-party
-import { Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Font, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 // types
 import { InvoiceList } from 'types/invoice';
 
+// Register a font that supports the Rs. symbol (e.g., Roboto or Noto Sans)
+// Font.register({
+//   family: 'Roboto',
+//   src: 'https://fonts.gstatic.com/s/roboto/v27/KFOmCnqEu92Fr1Me5Q.ttf' // URL to Roboto font (you can also use Noto Sans)
+// });
 const textPrimary = '#262626';
 const textSecondary = '#8c8c8c';
 const border = '#f0f0f0';
@@ -148,7 +153,7 @@ export default function Content({ list }: Props) {
         <View style={[styles.row, styles.tableHeader, { backgroundColor: theme.palette.secondary[100] }]}>
           <Text style={[styles.tableTitle, styles.flex03]}>#</Text>
           <Text style={[styles.tableTitle, styles.flex17]}>NAME</Text>
-          <Text style={[styles.tableTitle, styles.flex20]}>DESCRIPTION</Text>
+          {/* <Text style={[styles.tableTitle, styles.flex20]}>DESCRIPTION</Text> */}
           <Text style={[styles.tableTitle, styles.flex07]}>QTY</Text>
           <Text style={[styles.tableTitle, styles.flex07]}>PRICE</Text>
           <Text style={[styles.tableTitle, styles.flex07]}>AMOUNT</Text>
@@ -158,10 +163,14 @@ export default function Content({ list }: Props) {
             <View style={[styles.row, styles.tableRow]} key={row.id}>
               <Text style={[styles.tableCell, styles.flex03]}>{index + 1}</Text>
               <Text style={[styles.tableCell, styles.flex17, { textOverflow: 'ellipsis' }]}>{row.name}</Text>
-              <Text style={[styles.tableCell, styles.flex20]}>{row.description}</Text>
+              {/* <Text style={[styles.tableCell, styles.flex20]}>{row.description}</Text> */}
               <Text style={[styles.tableCell, styles.flex07]}>{row.qty}</Text>
-              <Text style={[styles.tableCell, styles.flex07]}>{`$${Number(row.price).toFixed(2)}`}</Text>
-              <Text style={[styles.tableCell, styles.flex07]}>{`$${Number(row.price * row.qty).toFixed(2)}`}</Text>
+              <Text style={[styles.tableCell, styles.flex07]}>
+                Rs.{(Number(row.price) * row.qty).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Text>
+              <Text style={[styles.tableCell, styles.flex07]}>
+                Rs.{(Number(row.price) * row.qty).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Text>
             </View>
           );
         })}
@@ -169,31 +178,51 @@ export default function Content({ list }: Props) {
       <View style={[styles.row, { paddingTop: 25, margin: 0, paddingRight: 25, justifyContent: 'flex-end' }]}>
         <View style={[styles.row, styles.amountRow]}>
           <Text style={styles.caption}>Sub Total:</Text>
-          <Text style={styles.tableCell}>${subtotal?.toFixed(2)}</Text>
+          <Text style={styles.tableCell}>
+            Rs.{subtotal?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
         </View>
       </View>
       <View style={[styles.row, styles.amountSection]}>
         <View style={[styles.row, styles.amountRow]}>
           <Text style={styles.caption}>Discount:</Text>
-          <Text style={[styles.caption, { color: theme.palette.success.main }]}>${discountRate?.toFixed(2)}</Text>
+          <Text style={[styles.caption, { color: theme.palette.success.main }]}>
+            Rs.{discountRate?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
         </View>
       </View>
       <View style={[styles.row, styles.amountSection]}>
         <View style={[styles.row, styles.amountRow]}>
           <Text style={styles.caption}>Service Charge:</Text>
-          <Text style={[styles.caption, { color: theme.palette.success.main }]}>${list?.serviceCharge.toFixed(2)}</Text>
+          <Text style={[styles.caption]}>
+            Rs.{list?.serviceCharge.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
         </View>
       </View>
       <View style={[styles.row, styles.amountSection]}>
         <View style={[styles.row, styles.amountRow]}>
           <Text style={styles.caption}>GST:</Text>
-          <Text style={[styles.caption]}>${taxRate?.toFixed(2)}</Text>
+          <Text style={[styles.caption]}>
+            Rs.{taxRate?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
         </View>
       </View>
+      {list?.status == 'PartialPaid' && (
+        <View style={[styles.row, styles.amountSection]}>
+          <View style={[styles.row, styles.amountRow]}>
+            <Text style={styles.caption}>Balance:</Text>
+            <Text style={[styles.caption]}>
+              Rs.{list?.balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Text>
+          </View>
+        </View>
+      )}
       <View style={[styles.row, styles.amountSection]}>
         <View style={[styles.row, styles.amountRow]}>
           <Text style={styles.tableCell}>Grand Total:</Text>
-          <Text style={styles.tableCell}>${total % 1 === 0 ? total : total?.toFixed(2)}</Text>
+          <Text style={styles.tableCell}>
+            Rs.{total % 1 === 0 ? total : total?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
         </View>
       </View>
       <View style={[styles.row, { alignItems: 'flex-start', marginTop: 20, width: '95%', flexDirection: 'column' }]}>
@@ -208,7 +237,7 @@ export default function Content({ list }: Props) {
           4. Maheshwari Infotech will not be responsible for any tampering of the Surveillance Setup by unauthorized persons.
         </Text>
         <Text style={[styles.tableCell, { textAlign: 'left' }]}>
-          5. The customer can request a bill for the amount paid, but at an additional charge.
+          5. The customer can request a bill for the amount paid, but it will incur an additional charge of 18% GST.
         </Text>
         <Text style={[styles.tableCell, { textAlign: 'left' }]}>
           6. Tuesday is a holiday; complaints can be made from 10 AM to 6 PM on other days.

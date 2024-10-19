@@ -32,6 +32,9 @@ export default function ForceResolveComplaint({ id, title, open, handleClose }: 
   const deletehandler = async () => {
     await forceResolveComplaint(id)
       .then(() => {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
         openSnackbar({
           open: true,
           message: 'Compaint resolved successfully',

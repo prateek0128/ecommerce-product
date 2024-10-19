@@ -49,6 +49,7 @@ export interface InvoiceList {
   gst: number | null;
   customerInfo: InfoType;
   notes: string;
+  balance: number;
 }
 
 export interface InvoiceDetail {

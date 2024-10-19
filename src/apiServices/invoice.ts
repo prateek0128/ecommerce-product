@@ -54,3 +54,47 @@ export const sendInvoice = async <T>(data: any, config?: AxiosRequestConfig): Pr
     throw error;
   }
 };
+
+//Get All Invoices
+export const getAllInvoices = async <T>(config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get<T>(`invoice/all-Invoices`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};
+
+//Get Invoice Details
+export const getInvoicesDetails = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.get<T>(`invoice/details?id=${id}`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};
+
+//Get Invoice PDF
+export const getInvoicePDF = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await formApiClientAPI.get<T>(`invoice/pdfUrl?id=${id}`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};
+
+//Update Invoice Status
+export const updateInvoiceStatus = async <T>(id: number, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response = await apiClient.post<T>(`invoice/markAsPaid?id=${id}`, config);
+    return response;
+  } catch (error) {
+    // Handle error (e.g., log it, show notification, etc.)
+    throw error;
+  }
+};

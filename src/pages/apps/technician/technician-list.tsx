@@ -129,9 +129,9 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
           <Button variant="contained" startIcon={<Add />} onClick={modalToggler} size="large">
             Add Technician
           </Button>
-          <CSVExport
+          {/* <CSVExport
             {...{ data: table.getSelectedRowModel().flatRows.map((row) => row.original), headers, filename: 'customer-list.csv' }}
-          />
+          /> */}
         </Stack>
       </Stack>
       <ScrollX>
@@ -285,28 +285,28 @@ export default function CustomerListPage() {
   }, []);
   const columns = useMemo<ColumnDef<TechnicianList>[]>(
     () => [
-      {
-        id: 'Row Selection',
-        header: ({ table }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
+      // {
+      //   id: 'Row Selection',
+      //   header: ({ table }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: table.getIsAllRowsSelected(),
+      //         indeterminate: table.getIsSomeRowsSelected(),
+      //         onChange: table.getToggleAllRowsSelectedHandler()
+      //       }}
+      //     />
+      //   ),
+      //   cell: ({ row }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: row.getIsSelected(),
+      //         disabled: !row.getCanSelect(),
+      //         indeterminate: row.getIsSomeSelected(),
+      //         onChange: row.getToggleSelectedHandler()
+      //       }}
+      //     />
+      //   )
+      // },
       {
         header: '#',
         accessorKey: 'id',
@@ -351,21 +351,6 @@ export default function CustomerListPage() {
         header: 'Technician Role',
         accessorKey: 'techRole'
       },
-      // {
-      //   header: 'Status',
-      //   accessorKey: 'status',
-      //   cell: (cell) => {
-      //     switch (cell.getValue()) {
-      //       case 3:
-      //         return <Chip color="error" label="Rejected" size="small" variant="light" />;
-      //       case 1:
-      //         return <Chip color="success" label="Verified" size="small" variant="light" />;
-      //       case 2:
-      //       default:
-      //         return <Chip color="info" label="Pending" size="small" variant="light" />;
-      //     }
-      //   }
-      // },
       {
         header: 'Actions',
         meta: {
@@ -398,7 +383,7 @@ export default function CustomerListPage() {
                   <Edit />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Delete">
+              {/* <Tooltip title="Delete">
                 <IconButton
                   color="error"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
@@ -409,7 +394,7 @@ export default function CustomerListPage() {
                 >
                   <Trash />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </Stack>
           );
         }

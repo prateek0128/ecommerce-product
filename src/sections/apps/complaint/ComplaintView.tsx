@@ -61,12 +61,12 @@ const PreviewModal = ({ open, onClose, imgSrc, imgAlt }: { open: boolean; onClos
     <DialogTitle>
       <IconButton
         aria-label="close"
+        color="error"
         onClick={onClose}
         sx={{
           position: 'absolute',
           right: 8,
-          top: 8,
-          color: (theme) => theme.palette.grey[500]
+          top: 8
         }}
       >
         <CloseIcon />
@@ -101,7 +101,7 @@ export default function ComplaintView({ data }: any, { modalToggler }: Props) {
     setAssignTechnicianModal((prev) => !prev);
   };
   const handleAssignCategory = () => {
-    history(`/apps/category/assign-category`, { state: { complaintIdView: complaintId } });
+    history('/apps/repairParts/assignRepairParts', { state: { complaintIdView: complaintId } });
   };
   const openPreview = (imageSrc: string) => {
     setPreviewImage(imageSrc);

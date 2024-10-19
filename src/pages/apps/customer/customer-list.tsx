@@ -82,6 +82,7 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState('');
+  const [pageInput, setPageInput] = useState<string | number>('');
 
   const table = useReactTable({
     data,
@@ -104,6 +105,8 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
     getPaginationRowModel: getPaginationRowModel(),
     debugTable: true
   });
+  const [pageLimitTable, setPageLimitTable] = useState<any>(table.getState().pagination.pageSize);
+  const [pageIndexTable, setPageIndexTable] = useState<any>(table.getState().pagination.pageIndex);
   const backColor = alpha(theme.palette.primary.lighter, 0.1);
   let headers: LabelKeyObject[] = [];
   columns.map(
@@ -129,9 +132,9 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
           <Button variant="contained" startIcon={<Add />} onClick={modalToggler} size="large">
             Add Customer
           </Button>
-          <CSVExport
+          {/* <CSVExport
             {...{ data: table.getSelectedRowModel().flatRows.map((row) => row.original), headers, filename: 'customer-list.csv' }}
-          />
+          /> */}
         </Stack>
       </Stack>
       <ScrollX>
@@ -223,6 +226,7 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                 {...{
                   setPageSize: table.setPageSize,
                   setPageIndex: table.setPageIndex,
+                  pageIndex: pageIndexTable,
                   getState: table.getState,
                   getPageCount: table.getPageCount
                 }}
@@ -238,8 +242,6 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
 
 export default function CustomerListPage() {
   const theme = useTheme();
-
-  //const { customersLoading: loading, customers: lists } = useGetCustomer();
   const [open, setOpen] = useState<boolean>(false);
   const [customerModal, setCustomerModal] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerList | null>(null);
@@ -283,28 +285,28 @@ export default function CustomerListPage() {
   }, []);
   const columns = useMemo<ColumnDef<CustomerList>[]>(
     () => [
-      {
-        id: 'Row Selection',
-        header: ({ table }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
+      // {
+      //   id: 'Row Selection',
+      //   header: ({ table }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: table.getIsAllRowsSelected(),
+      //         indeterminate: table.getIsSomeRowsSelected(),
+      //         onChange: table.getToggleAllRowsSelectedHandler()
+      //       }}
+      //     />
+      //   ),
+      //   cell: ({ row }) => (
+      //     <IndeterminateCheckbox
+      //       {...{
+      //         checked: row.getIsSelected(),
+      //         disabled: !row.getCanSelect(),
+      //         indeterminate: row.getIsSomeSelected(),
+      //         onChange: row.getToggleSelectedHandler()
+      //       }}
+      //     />
+      //   )
+      // },
       {
         header: '#',
         accessorKey: 'id',
@@ -396,7 +398,7 @@ export default function CustomerListPage() {
                   <Edit />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Delete">
+              {/* <Tooltip title="Delete">
                 <IconButton
                   color="error"
                   onClick={(e: MouseEvent<HTMLButtonElement>) => {
@@ -407,7 +409,7 @@ export default function CustomerListPage() {
                 >
                   <Trash />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </Stack>
           );
         }

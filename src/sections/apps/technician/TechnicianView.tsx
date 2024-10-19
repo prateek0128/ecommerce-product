@@ -9,6 +9,7 @@ import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import ListItem from '@mui/material/ListItem';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 
@@ -26,7 +27,7 @@ import { ImagePath, getImageUrl } from 'utils/getImageUrl';
 import { Link2, Location, Mobile, Sms } from 'iconsax-react';
 import { getTechnicianDetails } from 'apiServices/technician';
 import { useEffect, useState } from 'react';
-
+import AssignedComplaintsModal from './AssingedComplaintsModal';
 interface TechnicianData {
   message: string;
   Details: any;
@@ -37,6 +38,7 @@ export default function TechnicianView({ data }: any) {
   const theme = useTheme();
   const matchDownMD = useMediaQuery(theme.breakpoints.down('md'));
   const [technicianProfile, setTechnicianProfile] = useState('');
+  const [assignedComplaintsModal, setAssignedComplaintsModal] = useState<boolean>(false);
   useEffect(() => {
     const fetchTechnicianDetails = async () => {
       try {
@@ -51,6 +53,9 @@ export default function TechnicianView({ data }: any) {
 
     fetchTechnicianDetails();
   }, []);
+  const handleModalToggler = () => {
+    setAssignedComplaintsModal((prev) => !prev);
+  };
   return (
     <Transitions type="slide" direction="down" in={true}>
       <Grid container spacing={2.5} sx={{ pl: { xs: 0, sm: 5, md: 6, lg: 10, xl: 12 } }}>
@@ -144,20 +149,29 @@ export default function TechnicianView({ data }: any) {
                     </Grid> */}
                     </ListItem>
                     <ListItem>
-                      <Stack spacing={0.5}>
-                        <Typography color="secondary">Address</Typography>
-                        <Typography>{data.location}</Typography>
-                      </Stack>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Typography color="secondary">Address</Typography>
+                            <Typography>{data.location}</Typography>
+                          </Stack>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={0.5}>
+                            <Button variant="contained" onClick={handleModalToggler} size="large">
+                              Assigned Complaints
+                            </Button>
+                          </Stack>
+                        </Grid>
+                      </Grid>
                     </ListItem>
                   </List>
                 </Grid>
               </Grid>
             </MainCard>
-            {/* <MainCard title="About me">
-              <Typography color="secondary">
-                Hello, I’m {data.fatherName} {data.role} based in international company, {data.about}
-              </Typography>
-            </MainCard> */}
+            {assignedComplaintsModal && (
+              <AssignedComplaintsModal open={assignedComplaintsModal} modalToggler={handleModalToggler} complaintId={data.id} />
+            )}
           </Stack>
         </Grid>
       </Grid>

@@ -34,6 +34,9 @@ interface ErrorData {
 
 export default function AlertTechnicianDelete({ id, title, open, handleClose }: Props) {
   const deletehandler = async () => {
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
     await deleteTechnician(id)
       .then(() => {
         openSnackbar({

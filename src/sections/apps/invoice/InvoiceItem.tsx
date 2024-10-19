@@ -73,8 +73,8 @@ export default function InvoiceItem({ id, name, description, qty, price, onDelet
     //   id: id + '_description',
     //   value: description
     // },
-    { placeholder: '', label: 'Qty', type: 'number', name: `invoice_detail.${index}.qty`, id: id + '_qty', value: qty },
-    { placeholder: '', label: 'price', type: 'number', name: `invoice_detail.${index}.price`, id: id + '_price', value: price }
+    { placeholder: '00', label: 'Qty', type: 'number', name: `invoice_detail.${index}.qty`, id: id + '_qty', value: qty },
+    { placeholder: '0.00', label: 'price', type: 'number', name: `invoice_detail.${index}.price`, id: id + '_price', value: price }
   ];
 
   return (
@@ -100,10 +100,10 @@ export default function InvoiceItem({ id, name, description, qty, price, onDelet
       <TableCell>
         <Stack direction="column" justifyContent="flex-end" alignItems="flex-end" spacing={2}>
           <Box sx={{ pl: 2 }}>
-            {invoiceMaster === undefined ? (
+            {price * qty === undefined ? (
               <Skeleton width={520} height={16} />
             ) : (
-              <Typography>{invoiceMaster.country?.prefix + '' + (price * qty).toFixed(2)}</Typography>
+              <Typography>₹{(price * qty).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Typography>
             )}
           </Box>
         </Stack>

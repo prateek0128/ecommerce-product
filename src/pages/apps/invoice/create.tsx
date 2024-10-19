@@ -64,6 +64,7 @@ import LoadingButton from 'components/@extended/LoadingButton';
 import { sendInvoice, invoicePreData, createInvoice } from 'apiServices/invoice';
 import { getComplaintDetails } from 'apiServices/complaint';
 import useAuth from 'hooks/useAuth';
+import CircularProgress from '@mui/material/CircularProgress';
 const validationSchema = yup.object({
   date: yup.date().required('Invoice date is required'),
   due_date: yup
@@ -106,6 +107,14 @@ interface RepairPart {
   part: string;
   quantity: number;
 }
+interface InvoiceResponse {
+  message: string;
+  invoiceId: string;
+  error: string;
+}
+interface ErrorData {
+  response: any;
+}
 // ==============================|| INVOICE - CREATE ||============================== //
 
 function CreateForm({ lists, invoiceMaster }: FormProps) {
@@ -113,6 +122,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
   const navigation = useNavigate();
   const notesLimit: number = 500;
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [invoiceId, setInvoiceId] = useState('');
   const handlerCreate = (values: any) => {
     const newList: InvoiceList = {
@@ -123,6 +133,7 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
       avatar: Number(Math.round(Math.random() * 10)),
       discount: Number(values.discount),
       serviceCharge: Number(values.serviceCharge),
+      balance: Number(values.balance),
       gst: Number(values.gst),
       date: format(new Date(values.date), 'MM/dd/yyyy'),
       due_date: format(new Date(values.due_date), 'MM/dd/yyyy'),
@@ -194,329 +205,342 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
   }, []);
 
   return (
-    <Formik
-      initialValues={{
-        id: 120,
-        invoice_id: invoiceId,
-        status: '',
-        date: new Date(),
-        due_date: null,
-        cashierInfo: {
-          name: 'Maheshwari Infotech Mathura',
-          address: 'Shop No.5 Usha Kiran Plaza, Dampier Nagar, Mathura',
-          contact: '07409548907, 09897808544',
-          email: 'maheshwariinfotechmtr@gmail.com',
-          gstIn: '09BEWPM4982E1ZR'
-        },
-        customerInfo: {
-          address: '',
-          email: '',
-          name: '',
-          contact: ''
-        },
-        invoice_detail: [
-          {
-            id: UIDV4(),
+    <>
+      {/* {loading ? (
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%', // Take full viewport height
+              p: 2
+            }}
+          >
+            <CircularProgress size={40} />
+          </Box>
+        </>
+      ) : ( */}
+      <Formik
+        initialValues={{
+          id: 120,
+          invoice_id: invoiceId,
+          status: '',
+          date: new Date(),
+          due_date: null,
+          cashierInfo: {
+            name: 'Maheshwari Infotech Mathura',
+            address: 'Shop No.5 Usha Kiran Plaza, Dampier Nagar, Mathura',
+            contact: '07409548907, 09897808544',
+            email: 'maheshwariinfotechmtr@gmail.com',
+            gstIn: '09BEWPM4982E1ZR'
+          },
+          customerInfo: {
+            id: 0,
+            address: '',
+            email: '',
             name: '',
-            // description: '',
-            qty: 0,
-            price: '0.00'
-          }
-        ],
-        serviceCharge: 0,
-        discount: 0,
-        gst: 0,
-        notes: ''
-      }}
-      validationSchema={validationSchema}
-      onSubmit={(values) => {
-        // handlerCreate(values);
-      }}
-    >
-      {({ handleBlur, errors, handleChange, handleSubmit, values, isValid, setFieldValue, touched }) => {
-        const subtotal = values?.invoice_detail.reduce((prev, curr: any) => {
-          // Ensure curr.name is defined before calling .trim()
-          if (curr?.name && curr.name.length > 0) {
-            return prev + Number(curr.price * Math.floor(curr.qty));
-          } else {
-            return prev;
-          }
-        }, 0);
-        const taxRate = (values.gst * subtotal) / 100;
-        const discountRate = (values.discount * subtotal) / 100;
-        const total = subtotal - discountRate + taxRate + values.serviceCharge;
-        const [complaintId, setComplaintId] = useState<number>();
-        const [customerId, setCustomerId] = useState<number>();
-        const [customerEmail, setCustomerEmail] = useState<string>('');
-        const [customerAddress, setCustomerAddress] = useState<string>('');
-        const [repairParts, setRepairParts] = useState<RepairPart[]>([]);
-        const [priceNew, setPrice] = useState(0);
-        const { isLoggedIn, login } = useAuth();
-        const query = new URLSearchParams(useLocation().search);
-        const myToken = query.get('token');
-        const location = useLocation();
-        // Set invoice_id in Formik after invoiceId is generated
-        useEffect(() => {
-          if (invoiceId) {
-            setFieldValue('invoice_id', invoiceId);
-          }
-        }, [invoiceId, setFieldValue]); // Trigger only when invoiceId is set
-        const invoiceDetails = [
-          {
-            id: 1,
-            name: 'Mobile',
-            description: 'Device working',
-            qty: 2,
-            price: '10000'
+            contact: ''
           },
-          {
-            id: 2,
-            name: 'Cover',
-            description: 'Fine cover',
-            qty: 3,
-            price: '3000'
-          },
-          {
-            id: 3,
-            name: 'Display',
-            description: 'New display',
-            qty: 4,
-            price: '2000'
-          },
-          {
-            id: 4,
-            name: 'Charger',
-            description: 'Fast charger',
-            qty: 5,
-            price: '1000'
-          }
-        ];
-        const handleGeneratePDF = async () => {
-          //setIsLoader(true);
-          // Remove the currentInvoiceId from localStorage
-          localStorage.removeItem('currentInvoiceId');
-          // Generate the PDF blob
-          const doc = <ExportPDFView list={values} />;
-          const pdfBlob = await pdf(doc).toBlob(); // Convert document to blob
-          // If you want to trigger download manually
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(pdfBlob);
-          link.download = `${values?.invoice_id}-${values?.customerInfo.name}.pdf`;
-          link.click();
-
-          //setIsLoader(false);
-
-          const formData = new FormData();
-          formData.append('attachment', pdfBlob, `${values?.invoice_id}-${values?.customerInfo.name}.pdf`);
-          formData.append('subject', 'The email containing invoice pdf');
-          const emailData = {
-            subject: 'The email containing invoice pdf',
-            text: 'This is the test email.This email has confidential data regarding customer invoice details pdf.'
+          invoice_detail: [
+            {
+              id: UIDV4(),
+              name: '',
+              // description: '',
+              qty: 0,
+              price: '0.00'
+            }
+          ],
+          paidAmount: 0,
+          serviceCharge: 0,
+          discount: 0,
+          gst: 0,
+          notes: ''
+        }}
+        validationSchema={validationSchema}
+        onSubmit={(values) => {
+          // handlerCreate(values);
+        }}
+      >
+        {({ handleBlur, errors, handleChange, handleSubmit, values, isValid, setFieldValue, touched }) => {
+          const subtotal = values?.invoice_detail.reduce((prev, curr: any) => {
+            // Ensure curr.name is defined before calling .trim()
+            if (curr?.name && curr.name.length > 0) {
+              return prev + Number(curr.price * Math.floor(curr.qty));
+            } else {
+              return prev;
+            }
+          }, 0);
+          const taxRate = (values.gst * subtotal) / 100;
+          const discountRate = (values.discount * subtotal) / 100;
+          const total = subtotal - discountRate + taxRate + values.serviceCharge;
+          const balance = total - values.paidAmount;
+          const [complaintId, setComplaintId] = useState<number>();
+          const [customerId, setCustomerId] = useState<number>();
+          const [customerEmail, setCustomerEmail] = useState<string>('');
+          const [customerAddress, setCustomerAddress] = useState<string>('');
+          const [customerName, setCustomerName] = useState('');
+          const [repairParts, setRepairParts] = useState<RepairPart[]>([]);
+          const [priceNew, setPrice] = useState(0);
+          const { isLoggedIn, login } = useAuth();
+          const query = new URLSearchParams(useLocation().search);
+          const myToken = query.get('token');
+          const location = useLocation();
+          const history = useNavigate();
+          // Set invoice_id in Formik after invoiceId is generated
+          useEffect(() => {
+            if (invoiceId) {
+              setFieldValue('invoice_id', invoiceId);
+            }
+          }, [invoiceId, setFieldValue]); // Trigger only when invoiceId is set
+          const handleEmailPDF = async () => {
+            setLoading(true);
+            // Remove the currentInvoiceId from localStorage
+            localStorage.removeItem('currentInvoiceId');
+            // Generate the PDF blob
+            const doc = <ExportPDFView list={values} />;
+            const pdfBlob = await pdf(doc).toBlob(); // Convert document to blob
+            // If you want to trigger download manually
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = `${values?.invoice_id}-${values?.customerInfo.name}.pdf`;
+            link.click();
+            //setIsLoader(false);
+            const date = new Date(values?.date);
+            const formattedDate = date.toISOString().split('T')[0];
+            const emailBody = `
+          Dear ${values?.customerInfo.name || customerName},
+      
+          We hope this message finds you well. Please find attached the invoice for the services provided in the month of  ${formattedDate}.
+      
+          If you have any questions regarding this invoice, please feel free to reach out.
+      
+          Thank you for using our services.
+      
+          Best regards,
+          Maheshwari Infotech
+        `;
+            const formData = new FormData();
+            formData.append('attachment', pdfBlob, `${values?.invoice_id}-${values?.customerInfo.name || customerName}.pdf`);
+            formData.append('to', values?.customerInfo.email || customerEmail);
+            //formData.append('to', 's.ronit2812@gmail.com');
+            formData.append('subject', `Invoice ${values?.invoice_id} from Maheshwari Infotech`);
+            formData.append('text', emailBody);
+            sendInvoice(formData)
+              .then((response) => {
+                setLoading(false);
+                //This console is being used by Customer View in Flutter.
+                console.log('emailResponse', response.data);
+                openSnackbar({
+                  open: true,
+                  message: response.data,
+                  variant: 'alert',
+                  alert: {
+                    color: 'success'
+                  }
+                } as SnackbarProps);
+                if (isLoggedIn) {
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 1000);
+                  history('/apps/invoice/list');
+                }
+              })
+              .catch((error) => {
+                console.log('responsePDF', error);
+              });
           };
-          formData.append('text', 'This is the test email.This email has confidential data regarding customer invoice details pdf.');
-          const formdata = new FormData();
-          formdata.append('subject', 'testmail');
-          formdata.append('text ', 'positive');
-          formdata.append('attachment', pdfBlob, `${values?.invoice_id}-${values?.customerInfo.name}.pdf`);
-
-          const requestOptions = {
-            method: 'POST',
-            body: formdata,
-            redirect: 'follow'
+          const openInvoiceForm = () => {
+            // Check if the user is on a mobile device
+            const isMobile = navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/iPhone|iPad|iPod/i);
+            if (isMobile) {
+              window.open(`https://maheshwariinfotech.netlify.app/create-invoice`, '_blank');
+            } else {
+              //alert('This link is best viewed on a mobile device.');
+            }
           };
-          // fetch('https://complaint.smartmaheshwari.com/sendEmail', requestOptions)
-          //   .then((response) => response.text())
-          //   .then((result) => console.log(result))
-          //   .catch((error) => console.error(error));
-          sendInvoice(formData)
-            .then((response) => {
-              console.log('responsePDF', response.data);
-              //openInvoiceForm();
-            })
-            .catch((error) => {
-              console.log('responsePDF', error);
-            });
-          handleCreateInvoice();
-        };
-        const openInvoiceForm = () => {
-          // Check if the user is on a mobile device
-          const isMobile = navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/iPhone|iPad|iPod/i);
-
-          if (isMobile) {
-            // Open in a new tab in mobile browser
-            window.open(`https://smartmaheshwari-ecommerce.netlify.app/create-invoice`, '_blank');
-            //handleGeneratePDF();
-          } else {
-            // Handle desktop view or show an alert
-            //alert('This link is best viewed on a mobile device.');
-          }
-        };
-        const fetchComplaintResolvedDetails = () => {
-          const accessToken = 8388;
-          //invoicePreData(accessToken)
-          invoicePreData(myToken)
-            .then((response) => {
-              const complaintResolvedDetails = response.data as ComplaintResolvedData;
-              const complaintId = complaintResolvedDetails.PreData.Complaint_id;
-              const repairParts = complaintResolvedDetails.PreData.Repair_parts;
-              // Map repairParts to invoice_detail and set it in Formik
-              const updatedInvoiceDetail = repairParts.map((part: any) => ({
-                id: UIDV4(),
-                name: part.part, // Assuming partName is the relevant field from repairParts
-                qty: part.quantity,
-                price: part.price || '0.00'
-              }));
-              setFieldValue('invoice_detail', updatedInvoiceDetail); // Update invoice_detail in Formik
-              setComplaintId(complaintId);
-              setRepairParts(repairParts);
-              fetchComplaintDetails(complaintId);
-            })
-            .catch((error) => {
-              console.log('complaintError', error);
-            });
-        };
-        useEffect(() => {
-          fetchComplaintResolvedDetails();
-          openInvoiceForm();
-        }, []);
-        const fetchComplaintDetails = async (complaintId: any) => {
-          try {
-            const response = await getComplaintDetails(complaintId);
-            const complaintData = response.data as ComplaintData; // Cast to expected type
-            const complaintDetails = complaintData.ComplaintDetails[0];
-            const customerDetails = complaintData.ComplaintDetails[0].Customer_Details[0];
-            setFieldValue('customerInfo.name', customerDetails.First_Name + ' ' + customerDetails.Last_Name);
-            setFieldValue('customerInfo.email', customerDetails.Email);
-            setFieldValue('customerInfo.contact', customerDetails.Contact);
-            setFieldValue('customerInfo.address', customerDetails.Location);
-            setCustomerId(customerDetails.Id);
-            setCustomerEmail(customerDetails.Email);
-            setCustomerAddress(customerDetails.Location);
-          } catch (error) {
-            console.error('Error fetching technicians:', error);
-          }
-        };
-        const handleCreateInvoice = () => {
-          const date = new Date(values?.date);
-          const formattedDate = date.toISOString().split('T')[0];
-          const invoiceDetails = {
-            invoiceId: values?.invoice_id,
-            //invoiceId: 'INV-002',
-            customerId: customerId,
-            customerEmail: customerEmail,
-            customerAddress: customerAddress,
-            status: values?.status,
-            date: formattedDate,
-            technicianCharges: values?.serviceCharge,
-            taxAmount: values?.gst,
-            discount: values?.discount,
-            totalAmount: total,
-            notes: 'Invoice Details'
+          const fetchComplaintResolvedDetails = () => {
+            const accessToken = 8388;
+            //invoicePreData(accessToken)
+            invoicePreData(myToken)
+              .then((response) => {
+                const complaintResolvedDetails = response.data as ComplaintResolvedData;
+                const complaintId = complaintResolvedDetails.PreData.Complaint_id;
+                const repairParts = complaintResolvedDetails.PreData.Repair_parts;
+                // Map repairParts to invoice_detail and set it in Formik
+                const updatedInvoiceDetail = repairParts.map((part: any) => ({
+                  id: UIDV4(),
+                  name: part.part, // Assuming partName is the relevant field from repairParts
+                  qty: part.quantity,
+                  price: part.price || '0.00'
+                }));
+                setFieldValue('invoice_detail', updatedInvoiceDetail); // Update invoice_detail in Formik
+                setComplaintId(complaintId);
+                setRepairParts(repairParts);
+                fetchComplaintDetails(complaintId);
+              })
+              .catch((error) => {
+                console.log('complaintError', error);
+              });
           };
-          const itemDetails = values?.invoice_detail.map((details, index) => {
-            return {
+          useEffect(() => {
+            fetchComplaintResolvedDetails();
+            openInvoiceForm();
+          }, []);
+          const fetchComplaintDetails = async (complaintId: any) => {
+            try {
+              const response = await getComplaintDetails(complaintId);
+              const complaintData = response.data as ComplaintData; // Cast to expected type
+              const complaintDetails = complaintData.ComplaintDetails[0];
+              const customerDetails = complaintData.ComplaintDetails[0].Customer_Details[0];
+              setFieldValue('customerInfo.name', customerDetails.First_Name + ' ' + customerDetails.Last_Name);
+              setFieldValue('customerInfo.email', customerDetails.Email);
+              setFieldValue('customerInfo.contact', customerDetails.Contact);
+              setFieldValue('customerInfo.address', customerDetails.Location);
+              setCustomerId(customerDetails.Id);
+              setCustomerEmail(customerDetails.Email);
+              setCustomerAddress(customerDetails.Location);
+              setCustomerName(customerDetails.First_Name + ' ' + customerDetails.Last_Name);
+            } catch (error) {
+              console.error('Error fetching technicians:', error);
+            }
+          };
+          const handleCreateInvoice = () => {
+            const date = new Date(values?.date);
+            const formattedDate = date.toISOString().split('T')[0];
+            const invoiceDetails = {
               invoiceId: values?.invoice_id,
-              //invoiceId: 'INV-002',
-              itemName: details.name,
-              quantity: details.qty,
-              unitPrice: details.price
+              customerId: values?.customerInfo.id || customerId,
+              customerName: values?.customerInfo.name || customerName,
+              customerEmail: values?.customerInfo.email || customerEmail,
+              customerAddress: values?.customerInfo.address || customerAddress,
+              status: values?.status,
+              date: formattedDate,
+              technicianCharges: values?.serviceCharge,
+              taxAmount: values?.gst,
+              discount: values?.discount,
+              totalAmount: total,
+              notes: 'Invoice Details'
             };
-          });
-          const createInvoiceData = {
-            invoice: invoiceDetails,
-            items: itemDetails
-          };
-          createInvoice(createInvoiceData)
-            .then((response) => {
-              console.log('createInvoiceResponse', response);
-            })
-            .catch((error) => {
-              console.log('createInvoiceError', error);
+            const itemDetails = values?.invoice_detail.map((details, index) => {
+              return {
+                invoiceId: values?.invoice_id,
+                itemName: details.name,
+                quantity: details.qty,
+                unitPrice: details.price
+              };
             });
-        };
-        return (
-          <Form onSubmit={handleSubmit}>
-            <Grid container spacing={2}>
-              {isLoggedIn && (
+            const createInvoiceData = {
+              invoice: invoiceDetails,
+              items: itemDetails
+            };
+            createInvoice(createInvoiceData)
+              .then((response) => {
+                const createInvoiceResponse = response.data as InvoiceResponse;
+                if (isLoggedIn) {
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 1000);
+                  history('/apps/invoice/list');
+                }
+              })
+              .catch((error) => {
+                const errorData = error as ErrorData;
+                openSnackbar({
+                  open: true,
+                  message: errorData.response.data.error,
+                  variant: 'alert',
+                  alert: {
+                    color: 'error'
+                  }
+                } as SnackbarProps);
+              });
+          };
+          return (
+            <Form onSubmit={handleSubmit}>
+              <Grid container spacing={2}>
+                {isLoggedIn && (
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box color="grey.200">
+                      <Button
+                        size="small"
+                        startIcon={<Add />}
+                        color="primary"
+                        variant="contained"
+                        // onClick={() => handlerCustomerTo(true)}
+                        sx={{ height: '46px', width: '100%', mt: '28px' }} // Adjust height as needed
+                        onClick={() => setShowAddressModal(true)}
+                      >
+                        Add Customer
+                      </Button>
+                      <AddressModal
+                        open={showAddressModal}
+                        setOpen={(value) => setShowAddressModal(value as boolean)}
+                        handlerAddress={(value) => setFieldValue('customerInfo', value)}
+                      />
+                    </Box>
+                  </Grid>
+                )}
                 <Grid item xs={12} sm={6} md={3}>
-                  <Box color="grey.200">
-                    <Button
-                      size="small"
-                      startIcon={<Add />}
-                      color="primary"
-                      variant="contained"
-                      // onClick={() => handlerCustomerTo(true)}
-                      sx={{ height: '46px', width: '100%', mt: '28px' }} // Adjust height as needed
-                      onClick={() => setShowAddressModal(true)}
-                    >
-                      Add Customer
-                    </Button>
-                    <AddressModal
-                      open={showAddressModal}
-                      setOpen={(value) => setShowAddressModal(value as boolean)}
-                      handlerAddress={(value) => setFieldValue('customerInfo', value)}
-                    />
-                  </Box>
+                  <Stack spacing={1}>
+                    <InputLabel>Invoice Id</InputLabel>
+                    <FormControl sx={{ width: '100%' }}>
+                      <TextField
+                        required
+                        disabled
+                        type="text"
+                        name="invoice_id"
+                        id="invoice_id"
+                        value={values.invoice_id}
+                        onChange={handleChange}
+                      />
+                    </FormControl>
+                  </Stack>
                 </Grid>
-              )}
-              <Grid item xs={12} sm={6} md={3}>
-                <Stack spacing={1}>
-                  <InputLabel>Invoice Id</InputLabel>
-                  <FormControl sx={{ width: '100%' }}>
-                    <TextField
-                      required
-                      disabled
-                      type="text"
-                      name="invoice_id"
-                      id="invoice_id"
-                      value={values.invoice_id}
-                      onChange={handleChange}
-                    />
-                  </FormControl>
-                </Stack>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Stack spacing={1}>
-                  <InputLabel>Status</InputLabel>
-                  <FormControl sx={{ width: '100%' }}>
-                    <Select
-                      value={values.status}
-                      displayEmpty
-                      name="status"
-                      renderValue={(selected) => {
-                        if (selected.length === 0) {
-                          return <Box sx={{ color: 'secondary.400' }}>Select status</Box>;
-                        }
-                        return selected;
-                        // return selected.join(', ');
-                      }}
-                      onChange={handleChange}
-                      error={Boolean(errors.status && touched.status)}
-                    >
-                      <MenuItem disabled value="">
-                        Select status
-                      </MenuItem>
-                      <MenuItem value="Paid">Paid</MenuItem>
-                      <MenuItem value="Unpaid">Unpaid</MenuItem>
-                      <MenuItem value="Cancelled">Cancelled</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Stack>
-                {touched.status && errors.status && <FormHelperText error={true}>{errors.status}</FormHelperText>}
-              </Grid>
-              <Grid item xs={12} sm={6} md={3} sx={{ ml: 'auto' }}>
-                <Stack spacing={1}>
-                  <InputLabel>Date</InputLabel>
-                  <FormControl sx={{ width: '100%' }} error={Boolean(touched.date && errors.date)}>
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                      <DatePicker format="dd/MM/yyyy" value={values.date} onChange={(newValue) => setFieldValue('date', newValue)} />
-                    </LocalizationProvider>
-                  </FormControl>
-                </Stack>
-                {touched.date && errors.date && <FormHelperText error={true}>{errors.date as string}</FormHelperText>}
-              </Grid>
-              <>
-                {/* <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Stack spacing={1}>
+                    <InputLabel>Status</InputLabel>
+                    <FormControl sx={{ width: '100%' }}>
+                      <Select
+                        value={values.status}
+                        displayEmpty
+                        name="status"
+                        renderValue={(selected) => {
+                          if (selected.length === 0) {
+                            return <Box sx={{ color: 'secondary.400' }}>Select status</Box>;
+                          }
+                          return selected;
+                          // return selected.join(', ');
+                        }}
+                        onChange={handleChange}
+                        error={Boolean(errors.status && touched.status)}
+                      >
+                        <MenuItem disabled value="">
+                          Select status
+                        </MenuItem>
+                        <MenuItem value="Paid">Paid</MenuItem>
+                        <MenuItem value="PartialPaid">Partial Paid</MenuItem>
+                        <MenuItem value="Unpaid">Unpaid</MenuItem>
+                        <MenuItem value="Cancelled">Cancelled</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Stack>
+                  {touched.status && errors.status && <FormHelperText error={true}>{errors.status}</FormHelperText>}
+                </Grid>
+                <Grid item xs={12} sm={6} md={3} sx={{ ml: 'auto' }}>
+                  <Stack spacing={1}>
+                    <InputLabel>Date</InputLabel>
+                    <FormControl sx={{ width: '100%' }} error={Boolean(touched.date && errors.date)}>
+                      <LocalizationProvider dateAdapter={AdapterDateFns}>
+                        <DatePicker format="dd/MM/yyyy" value={values.date} onChange={(newValue) => setFieldValue('date', newValue)} />
+                      </LocalizationProvider>
+                    </FormControl>
+                  </Stack>
+                  {touched.date && errors.date && <FormHelperText error={true}>{errors.date as string}</FormHelperText>}
+                </Grid>
+                <>
+                  {/* <Grid item xs={12} sm={6} md={3}>
                 <Stack spacing={1}>
                   <InputLabel>Due Date</InputLabel>
                   <FormControl sx={{ width: '100%' }} error={Boolean(touched.due_date && errors.due_date)}>
@@ -531,430 +555,354 @@ function CreateForm({ lists, invoiceMaster }: FormProps) {
                 </Stack>
                 {touched.due_date && errors.due_date && <FormHelperText error={true}>{errors.due_date as string}</FormHelperText>}
               </Grid> */}
-              </>
-              <Grid item xs={12} sm={6}>
-                <MainCard sx={{ minHeight: 168 }}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={8}>
-                      <Stack spacing={2}>
-                        <Typography variant="h5">From:</Typography>
-                        <Stack sx={{ width: '100%' }}>
-                          <Typography variant="subtitle1">{values?.cashierInfo?.name}</Typography>
-                          <Typography color="secondary">{values?.cashierInfo?.address}</Typography>
-                          <Typography color="secondary">{values?.cashierInfo?.contact}</Typography>
-                          <Typography color="secondary">{values?.cashierInfo?.email}</Typography>
-                          <Typography color="secondary">GSTIN: {values?.cashierInfo.gstIn}</Typography>
-                        </Stack>
-                      </Stack>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Box textAlign={{ xs: 'left', sm: 'right' }} color="secondary.200">
-                        <Button
-                          variant="outlined"
-                          startIcon={<Edit />}
-                          color="secondary"
-                          onClick={() => handlerCustomerFrom(true)}
-                          size="small"
-                        >
-                          Change
-                        </Button>
-                        <AddressModal
-                          open={invoiceMaster.open}
-                          setOpen={(value) => handlerCustomerFrom(value as boolean)}
-                          handlerAddress={(address) => setFieldValue('cashierInfo', address)}
-                        />
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </MainCard>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <MainCard sx={{ minHeight: 168 }}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={7}>
-                      <Stack spacing={2}>
-                        <Typography variant="h5">To:</Typography>
-                        <Stack sx={{ width: '100%' }}>
-                          <Typography variant="subtitle1">{values?.customerInfo?.name}</Typography>
-                          <Typography color="secondary">{values?.customerInfo?.address}</Typography>
-                          <Typography color="secondary">{values?.customerInfo?.contact}</Typography>
-                          <Typography color="secondary">{values?.customerInfo?.email}</Typography>
-                        </Stack>
-                      </Stack>
-                    </Grid>
-                    <Grid item xs={12} sm={5}>
-                      <Box textAlign="right" color="grey.200" sx={{ display: 'flex', justifyContent: !isLoggedIn ? 'left' : 'right' }}>
-                        <Button
-                          size="small"
-                          startIcon={<Add />}
-                          color="secondary"
-                          variant="outlined"
-                          // onClick={() => handlerCustomerTo(true)}
-                          onClick={() => setShowAddressModal(true)}
-                        >
-                          Add Customer
-                        </Button>
-                        <AddressModal
-                          open={showAddressModal}
-                          setOpen={(value) => setShowAddressModal(value as boolean)}
-                          handlerAddress={(value) => setFieldValue('customerInfo', value)}
-                        />
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </MainCard>
-                {touched.customerInfo && errors.customerInfo && (
-                  <FormHelperText error={true}>{errors?.customerInfo?.name as string}</FormHelperText>
-                )}
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="h5">Detail</Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <FieldArray
-                  name="invoice_detail"
-                  render={({ remove, push }) => {
-                    return (
-                      <>
-                        <TableContainer>
-                          <Table sx={{ minWidth: 650 }}>
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>#</TableCell>
-                                <TableCell>Name</TableCell>
-                                {/* <TableCell>Description</TableCell> */}
-                                <TableCell>Quantity</TableCell>
-                                <TableCell>Price</TableCell>
-                                <TableCell align="right">Amount</TableCell>
-                                <TableCell align="center">Action</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {values.invoice_detail?.map((item: any, index: number) => (
-                                <TableRow key={item.id}>
-                                  <TableCell>{values.invoice_detail.indexOf(item) + 1}</TableCell>
-                                  <InvoiceItem
-                                    key={item.id}
-                                    id={item.id}
-                                    index={index}
-                                    name={item.name}
-                                    // description={item.description}
-                                    qty={item.qty}
-                                    price={item.price}
-                                    onDeleteItem={(index: number) => remove(index)}
-                                    onEditItem={handleChange}
-                                    Blur={handleBlur}
-                                    errors={errors}
-                                    touched={touched}
-                                  />
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                        <Divider />
-                        {touched.invoice_detail && errors.invoice_detail && !Array.isArray(errors?.invoice_detail) && (
-                          <Stack direction="row" justifyContent="center" sx={{ p: 1.5 }}>
-                            <FormHelperText error={true}>{errors.invoice_detail as string}</FormHelperText>
+                </>
+                <Grid item xs={12} sm={6}>
+                  <MainCard sx={{ minHeight: 168 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={8}>
+                        <Stack spacing={2}>
+                          <Typography variant="h5">From:</Typography>
+                          <Stack sx={{ width: '100%' }}>
+                            <Typography variant="subtitle1">{values?.cashierInfo?.name}</Typography>
+                            <Typography color="secondary">{values?.cashierInfo?.address}</Typography>
+                            <Typography color="secondary">{values?.cashierInfo?.contact}</Typography>
+                            <Typography color="secondary">{values?.cashierInfo?.email}</Typography>
+                            <Typography color="secondary">GSTIN: {values?.cashierInfo.gstIn}</Typography>
                           </Stack>
-                        )}
-                        <Grid container justifyContent="space-between">
-                          <Grid item xs={12} md={6}>
-                            <Box sx={{ pt: 2.5, pr: 2.5, pb: 2.5, pl: 0 }}>
-                              <Button
-                                color="primary"
-                                startIcon={<Add />}
-                                onClick={() =>
-                                  push({
-                                    id: UIDV4(),
-                                    name: '',
-                                    description: '',
-                                    qty: 0,
-                                    price: '0.00'
-                                  })
-                                }
-                                variant="dashed"
-                                sx={{ bgcolor: 'transparent !important' }}
-                              >
-                                Add Item
-                              </Button>
-                            </Box>
-                          </Grid>
-                          <Grid item xs={12} md={6}>
-                            <Grid container spacing={2} sx={{ pt: 2.5, pb: 2.5 }}>
-                              <Grid item xs={4}>
-                                <Stack spacing={1}>
-                                  <InputLabel>Service Charge(₹)</InputLabel>
-                                  <TextField
-                                    type="number"
-                                    fullWidth
-                                    name="serviceCharge"
-                                    id="serviceCharge"
-                                    placeholder="0.0"
-                                    value={values.serviceCharge}
-                                    onChange={handleChange}
-                                    inputProps={{
-                                      min: 0
-                                    }}
-                                  />
-                                </Stack>
-                              </Grid>
-                              <Grid item xs={4}>
-                                <Stack spacing={1}>
-                                  <InputLabel>Discount(%)</InputLabel>
-                                  <TextField
-                                    type="number"
-                                    fullWidth
-                                    name="discount"
-                                    id="discount"
-                                    placeholder="0.0"
-                                    value={values.discount}
-                                    onChange={handleChange}
-                                    inputProps={{
-                                      min: 0
-                                    }}
-                                  />
-                                </Stack>
-                              </Grid>
-                              <Grid item xs={4}>
-                                <Stack spacing={1}>
-                                  <InputLabel>GST(%)</InputLabel>
-                                  <TextField
-                                    type="number"
-                                    fullWidth
-                                    name="gst"
-                                    id="gst"
-                                    placeholder="0.0"
-                                    value={values.gst}
-                                    onChange={handleChange}
-                                    inputProps={{
-                                      min: 0
-                                    }}
-                                  />
-                                </Stack>
+                        </Stack>
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <Box textAlign={{ xs: 'left', sm: 'right' }} color="secondary.200">
+                          <Button
+                            variant="outlined"
+                            startIcon={<Edit />}
+                            color="secondary"
+                            onClick={() => handlerCustomerFrom(true)}
+                            size="small"
+                          >
+                            Change
+                          </Button>
+                          <AddressModal
+                            open={invoiceMaster.open}
+                            setOpen={(value) => handlerCustomerFrom(value as boolean)}
+                            handlerAddress={(address) => setFieldValue('cashierInfo', address)}
+                          />
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </MainCard>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <MainCard sx={{ minHeight: 168 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={7}>
+                        <Stack spacing={2}>
+                          <Typography variant="h5">To:</Typography>
+                          <Stack sx={{ width: '100%' }}>
+                            <Typography variant="subtitle1">{values?.customerInfo?.name}</Typography>
+                            <Typography color="secondary">{values?.customerInfo?.address}</Typography>
+                            <Typography color="secondary">{values?.customerInfo?.contact}</Typography>
+                            <Typography color="secondary">{values?.customerInfo?.email}</Typography>
+                          </Stack>
+                        </Stack>
+                      </Grid>
+                      <Grid item xs={12} sm={5}>
+                        <Box textAlign="right" color="grey.200" sx={{ display: 'flex', justifyContent: !isLoggedIn ? 'left' : 'right' }}>
+                          <Button
+                            size="small"
+                            startIcon={<Add />}
+                            color="secondary"
+                            variant="outlined"
+                            // onClick={() => handlerCustomerTo(true)}
+                            onClick={() => setShowAddressModal(true)}
+                          >
+                            Add Customer
+                          </Button>
+                          <AddressModal
+                            open={showAddressModal}
+                            setOpen={(value) => setShowAddressModal(value as boolean)}
+                            handlerAddress={(value) => setFieldValue('customerInfo', value)}
+                          />
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </MainCard>
+                  {touched.customerInfo && errors.customerInfo && (
+                    <FormHelperText error={true}>{errors?.customerInfo?.name as string}</FormHelperText>
+                  )}
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="h5">Detail</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <FieldArray
+                    name="invoice_detail"
+                    render={({ remove, push }) => {
+                      return (
+                        <>
+                          <TableContainer>
+                            <Table sx={{ minWidth: 650 }}>
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>#</TableCell>
+                                  <TableCell>Name</TableCell>
+                                  {/* <TableCell>Description</TableCell> */}
+                                  <TableCell>Quantity</TableCell>
+                                  <TableCell>Price</TableCell>
+                                  <TableCell align="right">Amount</TableCell>
+                                  <TableCell align="center">Action</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {values.invoice_detail?.map((item: any, index: number) => (
+                                  <TableRow key={item.id}>
+                                    <TableCell>{values.invoice_detail.indexOf(item) + 1}</TableCell>
+                                    <InvoiceItem
+                                      key={item.id}
+                                      id={item.id}
+                                      index={index}
+                                      name={item.name}
+                                      // description={item.description}
+                                      qty={item.qty}
+                                      price={item.price}
+                                      onDeleteItem={(index: number) => remove(index)}
+                                      onEditItem={handleChange}
+                                      Blur={handleBlur}
+                                      errors={errors}
+                                      touched={touched}
+                                    />
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                          <Divider />
+                          {touched.invoice_detail && errors.invoice_detail && !Array.isArray(errors?.invoice_detail) && (
+                            <Stack direction="row" justifyContent="center" sx={{ p: 1.5 }}>
+                              <FormHelperText error={true}>{errors.invoice_detail as string}</FormHelperText>
+                            </Stack>
+                          )}
+                          <Grid container justifyContent="space-between">
+                            <Grid item xs={12} md={4}>
+                              <Box sx={{ pt: 2.5, pr: 2.5, pb: 2.5, pl: 0 }}>
+                                <Button
+                                  color="primary"
+                                  startIcon={<Add />}
+                                  onClick={() =>
+                                    push({
+                                      id: UIDV4(),
+                                      name: '',
+                                      description: '',
+                                      qty: 0,
+                                      price: '0.00'
+                                    })
+                                  }
+                                  variant="dashed"
+                                  sx={{ bgcolor: 'transparent !important' }}
+                                >
+                                  Add Item
+                                </Button>
+                              </Box>
+                            </Grid>
+                            <Grid item xs={12} md={8}>
+                              <Grid container spacing={2} sx={{ pt: 2.5, pb: 2.5 }} justifyContent={'right'}>
+                                {values.status == 'PartialPaid' && (
+                                  <Grid item xs={3}>
+                                    <Stack spacing={1}>
+                                      <InputLabel>Paid Amount(₹)</InputLabel>
+                                      <TextField
+                                        type="number"
+                                        fullWidth
+                                        name="paidAmount"
+                                        id="paidAmount"
+                                        placeholder="0.00"
+                                        value={values.paidAmount > 0 && values.paidAmount}
+                                        onChange={handleChange}
+                                        inputProps={{
+                                          min: 0
+                                        }}
+                                      />
+                                    </Stack>
+                                  </Grid>
+                                )}
+                                <Grid item xs={3}>
+                                  <Stack spacing={1}>
+                                    <InputLabel>Service Charge(₹)</InputLabel>
+                                    <TextField
+                                      type="number"
+                                      fullWidth
+                                      name="serviceCharge"
+                                      id="serviceCharge"
+                                      placeholder="0.00"
+                                      value={values.serviceCharge > 0 && values.serviceCharge}
+                                      onChange={handleChange}
+                                      inputProps={{
+                                        min: 0
+                                      }}
+                                    />
+                                  </Stack>
+                                </Grid>
+                                <Grid item xs={3}>
+                                  <Stack spacing={1}>
+                                    <InputLabel>Discount(%)</InputLabel>
+                                    <TextField
+                                      type="number"
+                                      fullWidth
+                                      name="discount"
+                                      id="discount"
+                                      placeholder="0.00"
+                                      value={values.discount > 0 && values.discount}
+                                      onChange={handleChange}
+                                      inputProps={{
+                                        min: 0
+                                      }}
+                                    />
+                                  </Stack>
+                                </Grid>
+                                <Grid item xs={3}>
+                                  <Stack spacing={1}>
+                                    <InputLabel>GST(%)</InputLabel>
+                                    <TextField
+                                      type="number"
+                                      fullWidth
+                                      name="gst"
+                                      id="gst"
+                                      placeholder="0.00"
+                                      value={values.gst > 0 && values.gst}
+                                      onChange={handleChange}
+                                      inputProps={{
+                                        min: 0
+                                      }}
+                                    />
+                                  </Stack>
+                                </Grid>
                               </Grid>
                             </Grid>
+                            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'right' }}>
+                              <Stack spacing={2}>
+                                <Stack direction="row" justifyContent="space-between" spacing={20}>
+                                  <Typography color={theme.palette.secondary.main}>Sub Total:</Typography>
+                                  <Typography>
+                                    ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </Typography>
+                                </Stack>
+                                <Stack direction="row" justifyContent="space-between">
+                                  <Typography color={theme.palette.secondary.main}>Discount:</Typography>
+                                  <Typography variant="h6" color="success.main">
+                                    ₹{discountRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </Typography>
+                                </Stack>
+                                <Stack direction="row" justifyContent="space-between">
+                                  <Typography color={theme.palette.secondary.main}>Service Charge:</Typography>
+                                  <Typography>
+                                    ₹
+                                    {values.serviceCharge
+                                      ? values.serviceCharge.toLocaleString('en-IN', {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2
+                                        })
+                                      : '0.00'}
+                                  </Typography>
+                                </Stack>
+                                <Stack direction="row" justifyContent="space-between">
+                                  <Typography color={theme.palette.secondary.main}>GST:</Typography>
+                                  <Typography>
+                                    ₹{taxRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </Typography>
+                                </Stack>
+                                {values.status == 'PartialPaid' && (
+                                  <Stack direction="row" justifyContent="space-between">
+                                    <Typography color={theme.palette.secondary.main}>Balance:</Typography>
+                                    <Typography>
+                                      ₹
+                                      {balance % 1 == 0
+                                        ? balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                        : balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </Typography>
+                                  </Stack>
+                                )}
+                                <Stack direction="row" justifyContent="space-between">
+                                  <Typography variant="subtitle1">Grand Total:</Typography>
+                                  <Typography variant="subtitle1">
+                                    ₹
+                                    {total % 1 === 0
+                                      ? total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                      : total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </Typography>
+                                </Stack>
+                              </Stack>
+                            </Grid>
                           </Grid>
-                          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'right' }}>
-                            <Stack spacing={2}>
-                              <Stack direction="row" justifyContent="space-between" spacing={20}>
-                                <Typography color={theme.palette.secondary.main}>Sub Total:</Typography>
-                                {/* <Typography>{invoiceMaster.country?.prefix + '' + subtotal.toFixed(2)}</Typography> */}
-                                {/* <Typography>
-                                  ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography> */}
-                                <Typography>
-                                  ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography>
-                              </Stack>
-                              <Stack direction="row" justifyContent="space-between">
-                                <Typography color={theme.palette.secondary.main}>Discount:</Typography>
-                                {/* <Typography variant="h6" color="success.main">
-                                  {invoiceMaster.country?.prefix + '' + discountRate.toFixed(2)}
-                                </Typography> */}
-                                {/* <Typography variant="h6" color="success.main">
-                                  ₹{discountRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography> */}
-                                <Typography variant="h6" color="success.main">
-                                  ₹{discountRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography>
-                              </Stack>
-                              <Stack direction="row" justifyContent="space-between">
-                                <Typography color={theme.palette.secondary.main}>Service Charge:</Typography>
-                                <Typography variant="h6" color="success.main">
-                                  ₹{values.serviceCharge.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography>
-                              </Stack>
-                              <Stack direction="row" justifyContent="space-between">
-                                <Typography color={theme.palette.secondary.main}>GST:</Typography>
-                                {/* <Typography>{invoiceMaster.country?.prefix + '' + taxRate.toFixed(2)}</Typography> */}
-                                {/* <Typography>
-                                  ₹{taxRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography> */}
-                                <Typography>
-                                  ₹{taxRate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography>
-                              </Stack>
-                              <Stack direction="row" justifyContent="space-between">
-                                <Typography variant="subtitle1">Grand Total:</Typography>
-                                {/* <Typography variant="subtitle1">
-                                  {' '}
-                                  {total % 1 === 0
-                                    ? invoiceMaster.country?.prefix + '' + total
-                                    : invoiceMaster.country?.prefix + '' + total.toFixed(2)}
-                                </Typography> */}
-                                {/* <Typography variant="subtitle1">
-                                  ₹
-                                  {total % 1 === 0
-                                    ? total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                    : total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography> */}
-                                <Typography variant="subtitle1">
-                                  ₹
-                                  {total % 1 === 0
-                                    ? total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                    : total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Typography>
-                              </Stack>
-                            </Stack>
-                          </Grid>
-                        </Grid>
-                      </>
-                    );
-                  }}
-                />
-              </Grid>
-              <>
-                {/* <Grid item xs={12}>
-                <Stack spacing={1}>
-                  <InputLabel>Notes</InputLabel>
-                  <TextField
-                    placeholder="Address"
-                    rows={3}
-                    value={values.notes}
-                    multiline
-                    name="notes"
-                    onChange={handleChange}
-                    inputProps={{
-                      maxLength: notesLimit
+                        </>
+                      );
                     }}
-                    helperText={`${values.notes.length} / ${notesLimit}`}
-                    sx={{
-                      width: '100%',
-                      '& .MuiFormHelperText-root': {
-                        mr: 0,
-                        display: 'flex',
-                        justifyContent: 'flex-end'
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} sx={{ ml: 'auto' }}>
+                  <Stack direction="row" justifyContent="flex-end" alignItems="flex-end" spacing={2} sx={{ height: '100%' }}>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      disabled={
+                        values.status == '' ||
+                        values.date == null ||
+                        values.cashierInfo.address == '' ||
+                        values.customerInfo.address == '' ||
+                        values.invoice_detail[0].name == ''
                       }
-                    }}
-                  />
-                </Stack>
-              </Grid> */}
-              </>
-              <>
-                {/* <Grid item xs={12} sm={6}>
-                <Stack spacing={1}>
-                  <InputLabel>Set Currency*</InputLabel>
-                  <FormControl sx={{ width: { xs: '100%', sm: 250 } }}>
-                    <Autocomplete
-                      id="country-select-demo"
-                      fullWidth
-                      options={invoiceMaster.countries}
-                      defaultValue={invoiceMaster.countries[2]}
-                      value={invoiceMaster.countries.find((option: CountryType) => option.code === invoiceMaster.country?.code)}
-                      onChange={(event, value) => selectCountry(value)}
-                      autoHighlight
-                      getOptionLabel={(option) => option.label}
-                      renderOption={(props, option) => (
-                        <Box component="li" sx={{ display: 'flex', direction: 'row', alignItems: 'center', gap: 1 }} {...props}>
-                          {option.code && (
-                            <img
-                              loading="lazy"
-                              width="20"
-                              src={`https://flagcdn.com/w20/${option.code.toLowerCase()}.png`}
-                              srcSet={`https://flagcdn.com/w40/${option.code.toLowerCase()}.png 2x`}
-                              alt=""
-                            />
-                          )}
-                          {option.label}
-                        </Box>
-                      )}
-                      renderInput={(params) => {
-                        const selected = invoiceMaster.countries.find((option: CountryType) => option.code === invoiceMaster.country?.code);
-                        return (
-                          <TextField
-                            {...params}
-                            name="phoneCode"
-                            placeholder="Select"
-                            InputProps={{
-                              ...params.InputProps,
-                              startAdornment: (
-                                <>
-                                  {selected && selected.code !== '' && (
-                                    <img
-                                      style={{ marginRight: 6 }}
-                                      loading="lazy"
-                                      width="20"
-                                      src={`https://flagcdn.com/w20/${selected.code.toLowerCase()}.png`}
-                                      srcSet={`https://flagcdn.com/w40/${selected.code.toLowerCase()}.png 2x`}
-                                      alt=""
-                                    />
-                                  )}
-                                </>
-                              )
-                            }}
-                            inputProps={{
-                              ...params.inputProps,
-                              autoComplete: 'new-password' // disable autocomplete and autofill
-                            }}
-                          />
-                        );
+                      sx={{ color: 'secondary.dark' }}
+                      onClick={() => handlerPreview(true)}
+                    >
+                      Preview
+                    </Button>
+                    <Button variant="outlined" color="secondary" sx={{ color: 'secondary.dark' }}>
+                      Save
+                    </Button>
+                    <LoadingButton
+                      loading={loading}
+                      color="primary"
+                      variant="contained"
+                      loadingPosition="center"
+                      sx={{ color: 'secondary.lighter' }}
+                      disabled={
+                        values.status == '' ||
+                        values.date == null ||
+                        values.cashierInfo.address == '' ||
+                        values.customerInfo.address == '' ||
+                        values.invoice_detail[0].name == '' ||
+                        values.invoice_detail[0].qty == 0 ||
+                        values.invoice_detail[0].price == ''
+                      }
+                      onClick={() => {
+                        values.status == 'Paid' ? handleEmailPDF() : handleCreateInvoice();
                       }}
+                      //onClick={handleCreateInvoice}
+                    >
+                      Create & Send
+                    </LoadingButton>
+                    <InvoiceModal
+                      isOpen={invoiceMaster.isOpen}
+                      setIsOpen={(value: any) => handlerPreview(value)}
+                      key={values.invoice_id}
+                      invoiceInfo={{
+                        ...values,
+                        subtotal,
+                        taxRate,
+                        discountRate,
+                        total
+                      }}
+                      items={values?.invoice_detail}
+                      onAddNextInvoice={() => handlerPreview(false)}
                     />
-                  </FormControl>
-                </Stack>
-              </Grid> */}
-              </>
-              <Grid item xs={12} sm={6} sx={{ ml: 'auto' }}>
-                <Stack direction="row" justifyContent="flex-end" alignItems="flex-end" spacing={2} sx={{ height: '100%' }}>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    disabled={
-                      values.status == '' ||
-                      values.date == null ||
-                      values.cashierInfo.address == '' ||
-                      values.customerInfo.address == '' ||
-                      values.invoice_detail[0].name == ''
-                    }
-                    sx={{ color: 'secondary.dark' }}
-                    onClick={() => handlerPreview(true)}
-                  >
-                    Preview
-                  </Button>
-                  <Button variant="outlined" color="secondary" sx={{ color: 'secondary.dark' }}>
-                    Save
-                  </Button>
-                  {/* <Button color="primary" variant="contained" type="submit">
-                    Create & Send
-                  </Button> */}
-                  {/* <PDFDownloadLink
-                    document={<ExportPDFView list={values} />}
-                    fileName={`${values?.invoice_id}-${values?.customerInfo.name}.pdf`}
-                  > */}
-                  <LoadingButton
-                    //loading={isLoader}
-                    color="primary"
-                    variant="contained"
-                    loadingPosition="center"
-                    sx={{ color: 'secondary.lighter' }}
-                    onClick={handleGeneratePDF}
-                    //onClick={handleCreateInvoice}
-                  >
-                    Create & Send
-                  </LoadingButton>
-                  {/* </PDFDownloadLink> */}
-                  <InvoiceModal
-                    isOpen={invoiceMaster.isOpen}
-                    setIsOpen={(value: any) => handlerPreview(value)}
-                    key={values.invoice_id}
-                    invoiceInfo={{
-                      ...values,
-                      subtotal,
-                      taxRate,
-                      discountRate,
-                      total
-                    }}
-                    items={values?.invoice_detail}
-                    onAddNextInvoice={() => handlerPreview(false)}
-                  />
-                </Stack>
+                  </Stack>
+                </Grid>
               </Grid>
-            </Grid>
-          </Form>
-        );
-      }}
-    </Formik>
+            </Form>
+          );
+        }}
+      </Formik>
+      {/* )} */}
+    </>
   );
 }
 

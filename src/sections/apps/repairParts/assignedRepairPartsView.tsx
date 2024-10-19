@@ -63,15 +63,25 @@ import { LabelKeyObject } from 'react-csv/lib/core';
 import { Add, Edit, Eye, Trash } from 'iconsax-react';
 
 import { getAllProducts, deleteProduct } from 'apiServices/products';
-import { addCategory, getAllCategories } from 'apiServices/category';
+import { getAssignedRepairPartsQuantity } from 'apiServices/repairParts';
 import AlertProductDelete from 'sections/apps/e-commerce/product-list/AlertProductDelete';
-import CategoryModal from 'sections/apps/category/CategoryModal';
+import CategoryModal from 'sections/apps/repairParts/CategoryModal';
 import SubcategoryModal from 'sections/apps/subcategory/SubcategoryModal';
-import CategoryView from 'sections/apps/category/CategoryView';
 import CircularProgress from '@mui/material/CircularProgress';
+import { repairPartsData, repairPartsData2 } from './repairPartsData';
 interface CategoryData {
   data: any;
   message: any;
+}
+interface Part {
+  id: number;
+  partName: string;
+  assignedQuantity: number;
+  usedQuantity: number;
+}
+interface RepairPartsData {
+  Message: string;
+  RepairParts: any;
 }
 // ==============================|| REACT TABLE - LIST ||============================== //
 
@@ -81,8 +91,7 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
-  const table = useReactTable({
+  const table = useReactTable<Part>({
     data,
     columns,
     state: {
@@ -103,7 +112,6 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
     getPaginationRowModel: getPaginationRowModel(),
     debugTable: true
   });
-
   const backColor = alpha(theme.palette.primary.lighter, 0.1);
   let headers: LabelKeyObject[] = [];
   columns.forEach((column: ColumnDef<any>) => {
@@ -119,27 +127,8 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
       });
     }
   });
-  const history = useNavigate();
-
-  const handleAddProduct = () => {
-    history(`/apps/e-commerce/add-new-product`);
-  };
-
   return (
-    <MainCard content={false}>
-      <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ p: 3 }}>
-        <DebouncedInput
-          value={globalFilter ?? ''}
-          onFilterChange={(value) => setGlobalFilter(String(value))}
-          placeholder={`Search ${data.length} records...`}
-        />
-        <Stack direction="row" spacing={1} alignItems="center">
-          <SelectColumnSorting {...{ getState: table.getState, getAllColumns: table.getAllColumns, setSorting }} />
-          <Button variant="contained" startIcon={<Add />} onClick={modalToggler} size="large">
-            Add Category
-          </Button>
-        </Stack>
-      </Stack>
+    <MainCard content={false} sx={{ ml: '48px' }}>
       <ScrollX>
         <Stack>
           <RowSelection selected={Object.keys(rowSelection).length} />
@@ -180,20 +169,17 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                 <TableBody>
                   {table.getRowModel().rows.map((row) => (
                     <Fragment key={row.id}>
-                      <TableRow>
+                      <TableRow
+                        sx={{
+                          backgroundColor: row.original.assignedQuantity > row.original.usedQuantity ? 'rgba(255, 0, 0, 0.5)' : 'inherit'
+                        }}
+                      >
                         {row.getVisibleCells().map((cell) => (
                           <TableCell key={cell.id} {...cell.column.columnDef.meta}>
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </TableCell>
                         ))}
                       </TableRow>
-                      {row.getIsExpanded() && (
-                        <TableRow sx={{ '&:hover': { bgcolor: `${backColor} !important` } }}>
-                          <TableCell colSpan={row.getVisibleCells().length}>
-                            <CategoryView data={row.original} />
-                          </TableCell>
-                        </TableRow>
-                      )}
                     </Fragment>
                   ))}
                 </TableBody>
@@ -217,7 +203,7 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
             </>
           )}
           <>
-            <Divider />
+            {/* <Divider />
             <Box sx={{ p: 2 }}>
               <TablePagination
                 {...{
@@ -228,7 +214,7 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
                   initialPageSize: 10
                 }}
               />
-            </Box>
+            </Box> */}
           </>
         </Stack>
       </ScrollX>
@@ -238,207 +224,156 @@ function ReactTable({ data, columns, modalToggler, loading }: any) {
 
 // ==============================|| PRODUCT LIST ||============================== //
 
-export default function CategoryList() {
-  //const products = useLoaderData() as Products[];
-  const navigate = useNavigate();
-  const history = useNavigate();
-  //const [selectedCustomer, setSelectedCustomer] = useState<Products | null>(null);
-  const [deleteModal, setDeleteModal] = useState<boolean>(false);
-  const [productDeleteId, setProductDeleteId] = useState<any>('');
-  const [allCategoriesData, setAllCategoriesData] = useState<any>([]);
+export default function AssignedRepairPartsView({ data, onPendingStatusChange }: any) {
+  const [partsData, setPartsData] = useState(data.pending == 'yes' ? repairPartsData : repairPartsData2);
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
-  const [openSubcategoryModal, setOpenSubcategoryModal] = useState(false);
+  const [assignedRepairParts, setAssignedRepairParts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isAnyPending, setIsAnyPending] = useState('no');
   const handleCategoryModal = () => {
     setOpenCategoryModal((prev) => !prev);
   };
-  const handleSubcategoryModal = () => {
-    setOpenSubcategoryModal((prev) => !prev);
-  };
-  const allCategories =
-    allCategoriesData &&
-    allCategoriesData.map((category: any, index: any) => {
-      return {
-        id: category.Category_Id,
-        categoryName: category.Category_Name,
-        isActive: category.IsEnabled
-      };
-    });
-  const handleClose = () => {
-    setDeleteModal(!deleteModal);
-  };
-  const getAllCategoriesAPI = () => {
-    setLoading(true);
-    getAllCategories()
-      .then((response) => {
-        setLoading(false);
-        const categoryData = response.data as CategoryData;
-        setAllCategoriesData(categoryData.data.categories || []);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+  // Function to handle the change in assigned quantity
+  const handleQuantityChange = (id: number, value: number) => {
+    setPartsData((prevData) => prevData.map((part) => (part.id === id ? { ...part, assignedQuantity: value } : part)));
   };
   useEffect(() => {
-    getAllCategoriesAPI();
+    const hasPending = assignedRepairParts.some((data: any) => data.Quantity_Assigned > data.Quantity_Used);
+    const pendingStatus = hasPending ? 'yes' : 'no';
+    setIsAnyPending(pendingStatus);
+    onPendingStatusChange(pendingStatus);
+  }, [assignedRepairParts, onPendingStatusChange]);
+  const allAssignedRepairParts =
+    assignedRepairParts &&
+    assignedRepairParts.map((data: any, index: number) => {
+      return {
+        assignmentId: data.Assignment_Id,
+        otherDetails: data.Other_Details,
+        quantityAssigned: data.Quantity_Assigned,
+        quantityUsed: data.Quantity_Used,
+        repairPart: data.Repair_Part,
+        repairPartId: data.Repair_Part_Id
+      };
+    });
+
+  useEffect(() => {
+    setLoading(true);
+    getAssignedRepairPartsQuantity(data.assignmentId)
+      .then((response) => {
+        setLoading(false);
+        console.log('response', response.data);
+        const repairPartsData = response.data as RepairPartsData;
+        setAssignedRepairParts(repairPartsData.RepairParts);
+      })
+      .catch((error) => {
+        console.log('error', error);
+      });
   }, []);
   const columns = useMemo<ColumnDef<any>[]>(
     () => [
       {
-        id: 'Row Selection',
-        header: ({ table }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <IndeterminateCheckbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
-      {
         header: '#',
-        accessorKey: 'id',
+        accessorKey: 'repairPartId',
         meta: {
           className: 'cell-center'
         }
       },
       {
-        header: 'Category Name',
-        accessorKey: 'categoryName',
+        header: 'Part Name',
+        accessorKey: 'repairPart',
         cell: ({ row, getValue }) => (
           <Stack direction="row" spacing={1.5} alignItems="center">
-            {/* <Avatar
-              variant="rounded"
-              alt={getValue() as string}
-              color="secondary"
-              size="sm"
-              src={getImageUrl(`thumbs/${!row.original.image ? 'prod-11.png' : row.original.image}`, ImagePath.ECOMMERCE)}
-            /> */}
             <Stack spacing={0}>
-              <Typography variant="subtitle1">{row.original.categoryName}</Typography>
-              {/* <Typography variant="caption" color="text.secondary">
-                {row.original.description.charAt(0).toUpperCase() + row.original.description.slice(1).toLowerCase()}
-              </Typography> */}
+              <Typography variant="subtitle1">{row.original.repairPart}</Typography>
             </Stack>
           </Stack>
         )
       },
       {
-        header: 'Status',
-        accessorKey: 'isActive',
-        cell: (cell) => {
-          switch (cell.getValue()) {
-            case 1:
-              return <Chip color="success" label="Active" size="small" variant="light" />;
-            case 0:
-              return <Chip color="error" label="Inactive" size="small" variant="light" />;
-          }
-        }
-      },
-      // {
-      //   header: 'Categories',
-      //   accessorKey: 'category',
-      //   cell: ({ row }) => {
-      //     return row.original.category ? (
-      //       <Stack direction="row" spacing={0.25}>
-      //         <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
-      //           {capitalize(row.original.category)} {'-'} {row.original.item}
-      //         </Typography>
-      //       </Stack>
-      //     ) : (
-      //       <Typography variant="h6">-</Typography>
-      //     );
-      //   }
-      // },
-      // {
-      //   header: 'Price',
-      //   accessorKey: 'price',
-      //   cell: ({ getValue }) => <NumericFormat value={getValue() as number} displayType="text" thousandSeparator prefix="$" />,
-      //   meta: {
-      //     className: 'cell-right'
-      //   }
-      // },
-      // {
-      //   header: 'Qty',
-      //   accessorKey: 'quantity',
-      //   meta: {
-      //     className: 'cell-right'
-      //   }
-      // },
-      // {
-      //   header: 'Status',
-      //   accessorKey: 'stock',
-      //   cell: ({ getValue }) => (
-      //     <Chip
-      //       color={getValue() == 'In Stock' || 'instock' || 'in stock' ? 'success' : 'error'}
-      //       label={getValue() == 'In Stock' || 'instock' || 'in stock' ? 'In Stock' : 'Out of Stock'}
-      //       size="small"
-      //       variant="light"
-      //     />
-      //   )
-      // },
-      {
-        header: 'Actions',
-        meta: {
-          className: 'cell-center'
-        },
-        cell: ({ row }) => {
-          const collapseIcon = row.getCanExpand() && row.getIsExpanded() ? <Add style={{ transform: 'rotate(45deg)' }} /> : <Eye />;
-
+        header: 'Assigned Quantity',
+        accessorKey: 'quantityAssigned',
+        cell: ({ row, getValue }) => {
           return (
-            <Stack direction="row" alignItems="center" justifyContent="center" spacing={0}>
-              <Tooltip title="View Subcategories">
-                <IconButton color={row.getIsExpanded() ? 'error' : 'secondary'} onClick={row.getToggleExpandedHandler()}>
-                  {collapseIcon}
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Edit">
-                <IconButton
-                  color="primary"
-                  onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                    e.stopPropagation();
-                    //navigate('/apps/e-commerce/edit-product', { state: { productData: row.original } }); // Pass the data array in state
-                  }}
-                >
-                  <Edit />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete">
-                <IconButton
-                  color="error"
-                  onClick={(e: MouseEvent<HTMLButtonElement>) => {
-                    e.stopPropagation();
-                    handleClose();
-                    setProductDeleteId(Number(row.original.id));
-                  }}
-                >
-                  <Trash />
-                </IconButton>
-              </Tooltip>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Stack spacing={0}>
+                <input
+                  type="number"
+                  value={row.original.quantityAssigned}
+                  onChange={(e) => handleQuantityChange(row.original.id, Number(e.target.value))} // Use handler to update state
+                  style={{ width: '100%' }}
+                />
+              </Stack>
             </Stack>
           );
         }
+      },
+      {
+        header: 'Used Quantity',
+        accessorKey: 'quantityUsed',
+        cell: ({ row, getValue }) => (
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack spacing={0}>
+              <Typography
+                variant="subtitle1"
+                textAlign="center" // This centers the text within the Typography component
+              >
+                {row.original.quantityUsed}
+              </Typography>
+            </Stack>
+          </Stack>
+        )
       }
+      //   {
+      //     header: 'Actions',
+      //     meta: {
+      //       className: 'cell-center'
+      //     },
+      //     cell: ({ row }) => {
+      //       const collapseIcon = row.getCanExpand() && row.getIsExpanded() ? <Add style={{ transform: 'rotate(45deg)' }} /> : <Eye />;
+
+      //       return (
+      //         <Stack direction="row" alignItems="center" justifyContent="center" spacing={0}>
+      //           {/* <Tooltip title="View">
+      //             <IconButton color={row.getIsExpanded() ? 'error' : 'secondary'} onClick={row.getToggleExpandedHandler()}>
+      //               {collapseIcon}
+      //             </IconButton>
+      //           </Tooltip> */}
+      //           <Tooltip title="Edit">
+      //             <IconButton
+      //               color="primary"
+      //               onClick={(e: MouseEvent<HTMLButtonElement>) => {
+      //                 e.stopPropagation();
+      //                 //navigate('/apps/e-commerce/edit-product', { state: { productData: row.original } }); // Pass the data array in state
+      //               }}
+      //             >
+      //               <Edit />
+      //             </IconButton>
+      //           </Tooltip>
+      //           <Tooltip title="Delete">
+      //             <IconButton
+      //               color="error"
+      //               onClick={(e: MouseEvent<HTMLButtonElement>) => {
+      //                 e.stopPropagation();
+      //                 handleClose();
+      //                 setProductDeleteId(Number(row.original.id));
+      //               }}
+      //             >
+      //               <Trash />
+      //             </IconButton>
+      //           </Tooltip>
+      //         </Stack>
+      //       );
+      //     }
+      //   }
     ],
     []
   );
-  let breadcrumbLinks = [{ title: 'Home', to: APP_DEFAULT_PATH }, { title: 'Product List' }];
+  console.log('assignedRepairParts1', allAssignedRepairParts);
+  console.log('assignedRepairParts2', assignedRepairParts);
   return (
     <>
-      {/* <Breadcrumbs custom heading="Product List" links={breadcrumbLinks} /> */}
       <ReactTable
-        data={allCategories}
+        data={allAssignedRepairParts}
         columns={columns}
         modalToggler={() => {
           setOpenCategoryModal(true);
@@ -447,7 +382,6 @@ export default function CategoryList() {
       />
       {/* <AlertProductDelete id={Number(productDeleteId)} title={productDeleteId} open={deleteModal} handleClose={handleClose} /> */}
       <CategoryModal open={openCategoryModal} modalToggler={setOpenCategoryModal} />
-      {/* <SubcategoryModal open={openSubcategoryModal} modalToggler={setOpenSubcategoryModal} /> */}
     </>
   );
 }

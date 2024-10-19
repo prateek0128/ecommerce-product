@@ -456,3 +456,135 @@ export const categories = [
     ]
   }
 ];
+export const assignedPartsData = [
+  {
+    complaintId: 1,
+    technicianName: 'Rahul Gaur',
+    itemName: 'CCTV Camera HD',
+    status: 'pending',
+    date: '2024-10-01',
+    pending: 'yes'
+  },
+  {
+    complaintId: 2,
+    technicianName: 'Anita Patel',
+    itemName: 'Biometric Attendance Machine',
+    status: 'inProgress',
+    date: '2024-09-28',
+    pending: 'no'
+  },
+  {
+    complaintId: 3,
+    technicianName: 'John Doe',
+    itemName: 'Electric Fencing',
+    status: 'completed',
+    date: '2024-09-25',
+    pending: 'no'
+  },
+  {
+    complaintId: 4,
+    technicianName: 'Emily Clark',
+    itemName: 'Video Door Phone',
+    status: 'cancelled',
+    date: '2024-10-05',
+    pending: 'no'
+  },
+  {
+    complaintId: 5,
+    technicianName: 'Michael Lee',
+    itemName: 'EPABX/INTERCOM',
+    status: 'pending',
+    date: '2024-09-29',
+    pending: 'yes'
+  },
+  {
+    complaintId: 6,
+    technicianName: 'Samantha Brown',
+    itemName: 'GPS',
+    status: 'inProgress',
+    date: '2024-10-03',
+    pending: 'no'
+  },
+  {
+    complaintId: 7,
+    technicianName: 'David Johnson',
+    itemName: 'Electronic Locks',
+    status: 'completed',
+    date: '2024-09-30',
+    pending: 'no'
+  },
+  {
+    complaintId: 8,
+    technicianName: 'Priya Kumar',
+    itemName: 'Wifi/Networking',
+    status: 'cancelled',
+    date: '2024-10-06',
+    pending: 'no'
+  },
+  {
+    complaintId: 9,
+    technicianName: 'Akash Verma',
+    itemName: 'Desktop Computer',
+    status: 'pending',
+    date: '2024-09-27',
+    pending: 'yes'
+  },
+  {
+    complaintId: 10,
+    technicianName: 'Lisa Ray',
+    itemName: 'Servers',
+    status: 'inProgress',
+    date: '2024-10-02',
+    pending: 'no'
+  },
+  {
+    complaintId: 11,
+    technicianName: 'Robert Singh',
+    itemName: 'Printers',
+    status: 'completed',
+    date: '2024-09-26',
+    pending: 'no'
+  },
+  {
+    complaintId: 12,
+    technicianName: 'Sophia Williams',
+    itemName: 'LED Monitors',
+    status: 'cancelled',
+    date: '2024-10-04',
+    pending: 'no'
+  }
+];
+export const itemList = [
+  'CCTV Camera HD',
+  'CCTV Camera IP',
+  'EPABX/INTERCOM',
+  'Biometric Attendance Machine',
+  'GPS',
+  'Electric Fencing',
+  'Desktop Computer',
+  'Printers',
+  'Servers',
+  'Vedio Door Phone',
+  'Electronic Locks',
+  'Wifi/Networking',
+  'LED Monitors'
+];
+export const repairParts = [
+  'Power Supply - 4CH',
+  'Power Supply - 8CH',
+  'Power Supply - 16CH',
+  'HDMI Cable - 1.5mtr',
+  'HDMI Cable - 3mtr',
+  'HDMI Cable - 5mtr',
+  'BNC Connector',
+  'DC Connector',
+  'RJ 45 Connector - IP Setup',
+  '3+1 Wire Cable',
+  'USB Ext Cable',
+  'DVR Famwere',
+  'DVR Lithium',
+  '12V Adapter - 1 Amp',
+  '12V Adapter - 2 Amp',
+  '5V Adapter - 1 Amp',
+  '5V Adapter - 2 Amp'
+];
